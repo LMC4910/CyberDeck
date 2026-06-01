@@ -1,0 +1,11 @@
+.cd-card {
+  background: var(--card-bg);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: var(--space-4);
+}
+.cd-card--no-padding { padding: 0; }
+.cd-card--clickable { cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+.cd-card--clickable:hover { border-color: var(--color-border-hover); box-shadow: var(--card-shadow-hover); }
+.cd-card--glowing { box-shadow: 0 0 20px rgba(123,47,190,0.3), var(--card-shadow); }

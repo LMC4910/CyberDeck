@@ -1,0 +1,17 @@
+.cd-toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.cd-toggle input { display: none; }
+.cd-toggle__track {
+  position: relative; width: 36px; height: 20px;
+  background: var(--gauge-track); border-radius: 99px;
+  transition: background 0.2s;
+}
+.cd-toggle input:checked ~ .cd-toggle__track { background: var(--color-accent-primary); }
+.cd-toggle__thumb {
+  position: absolute; left: 2px; top: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.cd-toggle input:checked ~ .cd-toggle__track .cd-toggle__thumb { left: 18px; }
+.cd-toggle__label { font-size: 12px; color: var(--color-text-secondary); font-family: var(--font-label); }
+.cd-toggle--disabled { opacity: 0.4; pointer-events: none; }

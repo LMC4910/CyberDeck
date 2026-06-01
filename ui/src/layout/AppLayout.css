@@ -1,0 +1,33 @@
+.app-scale-wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+.app-canvas {
+  width: 1280px;
+  height: 800px;
+  background: var(--color-bg-primary);
+  display: flex;
+  flex-shrink: 0;
+  transform-origin: top center;
+  position: relative;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.app-content {
+  flex: 1;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, #141428 0%, #0D0D1A 100%);
+}

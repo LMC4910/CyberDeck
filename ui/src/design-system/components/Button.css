@@ -1,0 +1,25 @@
+.cd-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: var(--font-label); font-weight: 600; letter-spacing: 0.03em;
+  border-radius: var(--btn-radius); transition: all 0.15s; cursor: pointer;
+  white-space: nowrap;
+}
+.cd-btn--sm { padding: 6px 12px; font-size: 11px; min-height: 32px; }
+.cd-btn--md { padding: 10px 18px; font-size: 13px; min-height: 40px; }
+.cd-btn--lg { padding: 12px 24px; font-size: 14px; min-height: 48px; }
+
+.cd-btn--primary { background: linear-gradient(135deg, #7B2FBE, #9B4FDE); color: #fff; }
+.cd-btn--primary:hover { background: linear-gradient(135deg, #9B4FDE, #BB6FFF); box-shadow: 0 0 16px rgba(123,47,190,0.5); }
+.cd-btn--primary:active { box-shadow: 0 0 24px rgba(123,47,190,0.7); }
+
+.cd-btn--secondary { background: transparent; color: var(--color-text-primary); border: 1px solid var(--color-border); }
+.cd-btn--secondary:hover { border-color: var(--color-accent-primary); color: var(--color-accent-primary); }
+
+.cd-btn--ghost { background: transparent; color: var(--color-text-secondary); }
+.cd-btn--ghost:hover { color: var(--color-text-primary); background: rgba(255,255,255,0.05); }
+
+.cd-btn--danger { background: rgba(255,82,82,0.15); color: var(--color-status-error); border: 1px solid rgba(255,82,82,0.3); }
+.cd-btn--danger:hover { background: rgba(255,82,82,0.25); }
+
+.cd-btn:disabled { opacity: 0.4; pointer-events: none; }
+.cd-btn__icon { display: flex; align-items: center; }
