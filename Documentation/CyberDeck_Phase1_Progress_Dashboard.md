@@ -28,12 +28,12 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 8 tickets / 19 pts (PROJ-101, 110, 160, 121, 140, 120, 122, 111) |
+| **Done** | 9 tickets / 21 pts (PROJ-101, 110, 160, 121, 140, 120, 122, 111, 113) |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 63 |
-| **Ready now** | 8 (PROJ-103, 112, 113, 114, 141, 162, 170, 201) |
-| **Completion** | **10%** (19 / 199 pts) |
-| **Critical-path progress** | 8 / 31 pts (PROJ-121 ✓, 120 ✓, 122 ✓) |
+| **Blocked** | 60 |
+| **Ready now** | 10 (PROJ-103, 112, 114, 123, 125, 141, 162, 163, 170, 201) |
+| **Completion** | **11%** (21 / 199 pts) |
+| **Critical-path progress** | 8 / 31 pts (121 ✓, 120 ✓, 122 ✓ · 123 now Ready) |
 | **Current wave** | 1 of 10 |
 
 > **[†] Numbering reconciliation (2026-06-07):** the original dashboard labeled PROJ-121="Identity" and PROJ-120="Trust store", but the authoritative Batch-1 *tickets* define **PROJ-121 = per-OS SecretStore** (root) and **PROJ-120 = engine identity** (→121). The dependency shape is identical; titles corrected here to match the tickets (the ticket wins for scope per Agent Instructions §1).
@@ -49,7 +49,7 @@
 | Epic | Tickets | Points | Done (tix) | Done (pts) | % complete |
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
-| EPIC-2 Persistence | 6 | 12 | 2 | 4 | 33% |
+| EPIC-2 Persistence | 6 | 12 | 3 | 6 | 50% |
 | EPIC-3 Security & Identity | 8 | 19 | 3 | 8 | 42% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
@@ -106,15 +106,15 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-110 | Persistence baseline (SQLite + schema v1) | EPIC-2 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-111 | Migration framework | EPIC-2 | P0 | 2 | 110 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-112 | Documents repository | EPIC-2 | P0 | 3 | 111 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-113 | Trust repository | EPIC-2 | P0 | 2 | 111 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-113 | Trust repository | EPIC-2 | P0 | 2 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-114 | Audit repository | EPIC-2 | P1 | 2 | 111 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-115 | Secret-leak guard (persistence scan) | EPIC-2 | P1 | 1 | 112,113,114 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-120 | Engine identity (Ed25519 keypair + UUID) [†] | EPIC-3 | P0 | 2 | 121 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-121 | Per-OS SecretStore abstraction + impls [†] | EPIC-3 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-122 | Crypto suite (AEAD + KDF) | EPIC-3 | P0 | 3 | 120 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-123 | Pairing handshake (key exchange) | EPIC-3 | P0 | 3 | 122,113 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-123 | Pairing handshake (key exchange) | EPIC-3 | P0 | 3 | 122,113 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-124 | Pairing token issuance + QR payload | EPIC-3 | P1 | 2 | 123,150 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-125 | Permission model + authorize() | EPIC-3 | P0 | 3 | 113 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-125 | Permission model + authorize() | EPIC-3 | P0 | 3 | 113 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-126 | Trust revocation + session teardown | EPIC-3 | P1 | 1 | 123,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-127 | Audit log writer + redaction | EPIC-3 | P1 | 2 | 114,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-130 | Plugin host: launch/supervise/IPC | EPIC-5 | P0 | 3 | 160,103 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -135,7 +135,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-160 | Typed state model + state store core | EPIC-6 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -202,6 +202,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | — | (baseline) | 0 | 0 | 0 | 0% | All tickets at Backlog. Ready set = 6 roots. |
 | 1 | 2026-06-07 | PROJ-101, 110, 160, 121, 140, 120 (+102 authored) | 14 | 14 | 7% | Toolchain: Go 1.26.4 + Task + golangci-lint 2.12.2 + mingw-w64 gcc 16.1.0 (local `-race`) + Flutter 3.44.1 (+ VS C++). **101** monorepo (engine+Flutter client, `flutter build windows` ✓, full `task lint/test/build` green). **110** pure-Go SQLite WAL + migrations (ADR-0001). **160** typed state store (`-race`). **121** `Secret`+SecretStore (Win Cred Mgr live, AES-GCM fallback, mac/linux cross-compiled). **140** transport endpoint/ConnectionManager seam (ADR-0010). **120** engine identity (Ed25519+UUID, seed in SecretStore only; X25519 ECDH derivation deferred to 122 via SigningSeed() seam). **102** CI workflows authored + locally green (live run + branch protection = repo-owner follow-up). Newly Ready: 122, 141, 162, 170, 201. Critical path 5/31. |
 | 2 | 2026-06-07 | PROJ-122, PROJ-111 | 5 | 19 | 10% | **122** Crypto suite (special-care): X25519 ECDH (+Ed25519→X25519 conversion via filippo.io/edwards25519, completing the 120 seam), HKDF-SHA256 directional keys, ChaCha20-Poly1305 AEAD with monotonic per-direction nonce counters, Ed25519 sign/verify. RFC KATs (7748/5869/8439); round-trip/tamper/distinct-session-keys/nonce-uniqueness under `-race`. **111** schema 0001 — 8 durable tables (2B §6) + indexes; round-trip per table, BLOB integrity, AUTOINCREMENT, idempotent. Newly Ready: 112, 113, 114. Critical path 8/31; 123 unblocks once 113 lands. |
+| 3 | 2026-06-07 | PROJ-113 | 2 | 21 | 11% | Trust repo layer: repo_devices (CRUD/revoke/last_seen, public_key BLOB, permissions/locator JSON), repo_meta (get/set/delete — also satisfies identity.PublicStore), repo_accounts (reserved CRUD). No secrets stored. Tests: device CRUD+revoke, full-byte-range BLOB integrity, meta, accounts. Newly Ready: 123 (spine), 125, 163. |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
 
