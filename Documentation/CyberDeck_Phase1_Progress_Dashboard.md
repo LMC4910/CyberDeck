@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 15 tickets / 35 pts (…112, 114, 115, 125, 127) — **EPIC-2 complete; M2 reached** |
+| **Done** | 16 tickets / 37 pts (…114, 115, 125, 127, 162) — **EPIC-2 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 55 |
-| **Ready now** | 9 (PROJ-103, 126, 141, 161, 162, 163, 164, 170, 201) |
-| **Completion** | **18%** (35 / 199 pts) |
+| **Ready now** | 8 (PROJ-103, 126, 141, 161, 163, 164, 170, 201) |
+| **Completion** | **19%** (37 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -53,7 +53,7 @@
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
-| EPIC-6 State, Registries & Event Bus | 5 | 13 | 1 | 3 | 23% |
+| EPIC-6 State, Registries & Event Bus | 5 | 13 | 2 | 5 | 38% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 0 | 0 | 0% |
 | EPIC-9 Designer | 8 | 21 | 0 | 0 | 0% |
@@ -134,7 +134,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-150 | Multi-session fan-out + subscription filter | EPIC-4 | P0 | 3 | 143,160 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-160 | Typed state model + state store core | EPIC-6 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
