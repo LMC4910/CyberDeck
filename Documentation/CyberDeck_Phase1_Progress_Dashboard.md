@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 11 tickets / 27 pts (PROJ-101, 110, 160, 121, 140, 120, 122, 111, 113, 123, 112) |
+| **Done** | 12 tickets / 29 pts (PROJ-101, 110, 160, 121, 140, 120, 122, 111, 113, 123, 112, 114) |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 58 |
-| **Ready now** | 10 (PROJ-103, 114, 125, 141, 161, 162, 163, 164, 170, 201) |
-| **Completion** | **14%** (27 / 199 pts) |
+| **Blocked** | 57 |
+| **Ready now** | 10 (PROJ-103, 115, 125, 141, 161, 162, 163, 164, 170, 201) |
+| **Completion** | **15%** (29 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -49,7 +49,7 @@
 | Epic | Tickets | Points | Done (tix) | Done (pts) | % complete |
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
-| EPIC-2 Persistence | 6 | 12 | 4 | 9 | 75% |
+| EPIC-2 Persistence | 6 | 12 | 5 | 11 | 92% |
 | EPIC-3 Security & Identity | 8 | 19 | 4 | 11 | 58% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
@@ -107,8 +107,8 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-111 | Migration framework | EPIC-2 | P0 | 2 | 110 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-112 | Documents repository | EPIC-2 | P0 | 3 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-113 | Trust repository | EPIC-2 | P0 | 2 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-114 | Audit repository | EPIC-2 | P1 | 2 | 111 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-115 | Secret-leak guard (persistence scan) | EPIC-2 | P1 | 1 | 112,113,114 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-114 | Audit repository | EPIC-2 | P1 | 2 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-115 | Secret-leak guard (persistence scan) | EPIC-2 | P1 | 1 | 112,113,114 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-120 | Engine identity (Ed25519 keypair + UUID) [†] | EPIC-3 | P0 | 2 | 121 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-121 | Per-OS SecretStore abstraction + impls [†] | EPIC-3 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-122 | Crypto suite (AEAD + KDF) | EPIC-3 | P0 | 3 | 120 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -203,6 +203,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 1 | 2026-06-07 | PROJ-101, 110, 160, 121, 140, 120 (+102 authored) | 14 | 14 | 7% | Toolchain: Go 1.26.4 + Task + golangci-lint 2.12.2 + mingw-w64 gcc 16.1.0 (local `-race`) + Flutter 3.44.1 (+ VS C++). **101** monorepo (engine+Flutter client, `flutter build windows` ✓, full `task lint/test/build` green). **110** pure-Go SQLite WAL + migrations (ADR-0001). **160** typed state store (`-race`). **121** `Secret`+SecretStore (Win Cred Mgr live, AES-GCM fallback, mac/linux cross-compiled). **140** transport endpoint/ConnectionManager seam (ADR-0010). **120** engine identity (Ed25519+UUID, seed in SecretStore only; X25519 ECDH derivation deferred to 122 via SigningSeed() seam). **102** CI workflows authored + locally green (live run + branch protection = repo-owner follow-up). Newly Ready: 122, 141, 162, 170, 201. Critical path 5/31. |
 | 2 | 2026-06-07 | PROJ-122, PROJ-111 | 5 | 19 | 10% | **122** Crypto suite (special-care): X25519 ECDH (+Ed25519→X25519 conversion via filippo.io/edwards25519, completing the 120 seam), HKDF-SHA256 directional keys, ChaCha20-Poly1305 AEAD with monotonic per-direction nonce counters, Ed25519 sign/verify. RFC KATs (7748/5869/8439); round-trip/tamper/distinct-session-keys/nonce-uniqueness under `-race`. **111** schema 0001 — 8 durable tables (2B §6) + indexes; round-trip per table, BLOB integrity, AUTOINCREMENT, idempotent. Newly Ready: 112, 113, 114. Critical path 8/31; 123 unblocks once 113 lands. |
 | 3 | 2026-06-07 | PROJ-113, PROJ-123 | 5 | 24 | 12% | **113** Trust repo layer (repo_devices CRUD/revoke + BLOB, repo_meta = identity.PublicStore, repo_accounts). **123** Pairing handshake engine state machine (special-care): ClientHello→ServerHello→KeyConfirm→PairResult, Ed25519 nonce-sig auth, fresh nonce_e + ephemeral X25519, reject bad-token/revoked/bad-sig/replay/out-of-order, trust-record write, forward-secret session keys derived + verified by device↔engine encrypted round-trip. Spine: 121→120→122→123 done = 11/31. |
+| 3b | 2026-06-07 | PROJ-112, PROJ-114 | 5 | 29 | 15% | **112** doc/registry/variable/workflow repos (thin CRUD + JSON-body validation + WithWriteTx multi-row tx rollback; var.* upsert). **114** append-only audit repo (Append + ByActor/ByEventType/ByTimeRange; reflection guard proves no update/delete). EPIC-2 repo layer complete (5/6; only 115 leak-guard left). Newly Ready: 161, 164, 115. |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
 
