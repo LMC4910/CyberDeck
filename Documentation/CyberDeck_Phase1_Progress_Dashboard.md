@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 12 tickets / 29 pts (PROJ-101, 110, 160, 121, 140, 120, 122, 111, 113, 123, 112, 114) |
+| **Done** | 13 tickets / 30 pts (…111, 113, 123, 112, 114, 115) — **EPIC-2 complete** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 57 |
-| **Ready now** | 10 (PROJ-103, 115, 125, 141, 161, 162, 163, 164, 170, 201) |
-| **Completion** | **15%** (29 / 199 pts) |
+| **Ready now** | 9 (PROJ-103, 125, 141, 161, 162, 163, 164, 170, 201) |
+| **Completion** | **15%** (30 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -49,7 +49,7 @@
 | Epic | Tickets | Points | Done (tix) | Done (pts) | % complete |
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
-| EPIC-2 Persistence | 6 | 12 | 5 | 11 | 92% |
+| EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 4 | 11 | 58% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
@@ -108,7 +108,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-112 | Documents repository | EPIC-2 | P0 | 3 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-113 | Trust repository | EPIC-2 | P0 | 2 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-114 | Audit repository | EPIC-2 | P1 | 2 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-115 | Secret-leak guard (persistence scan) | EPIC-2 | P1 | 1 | 112,113,114 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-115 | Secret-leak guard (persistence scan) | EPIC-2 | P1 | 1 | 112,113,114 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-120 | Engine identity (Ed25519 keypair + UUID) [†] | EPIC-3 | P0 | 2 | 121 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-121 | Per-OS SecretStore abstraction + impls [†] | EPIC-3 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-122 | Crypto suite (AEAD + KDF) | EPIC-3 | P0 | 3 | 120 | ✅ Done | Claude | ✅ Ready | 100% |
