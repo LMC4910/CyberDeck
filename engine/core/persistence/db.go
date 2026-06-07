@@ -19,6 +19,10 @@ import (
 
 const driverName = "sqlite"
 
+// ErrNotFound is returned by repository Get/Update/Revoke calls when no row
+// matches the requested key.
+var ErrNotFound = errors.New("persistence: record not found")
+
 // DB is the engine's single SQLite store. It holds two *sql.DB handles over the
 // same file in WAL mode:
 //
