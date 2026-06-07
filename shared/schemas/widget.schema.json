@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/widget.schema.json",
+  "title": "CyberDeck Widget Descriptor",
+  "description": "Placeholder schema for widget descriptors. Filled in by PROJ-161/PROJ-181.",
+  "type": "object",
+  "additionalProperties": true
+}

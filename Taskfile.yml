@@ -1,0 +1,79 @@
+# CyberDeck monorepo task runner (https://taskfile.dev).
+# Cross-platform replacement for make on Windows. Targets fan out to the Go
+# engine and the Flutter client. Client targets no-op gracefully until the
+# Flutter client/ scaffold exists (PROJ-101 client half).
+version: "3"
+
+tasks:
+  default:
+    desc: "Show available targets"
+    silent: true
+    cmds:
+      - 'echo "CyberDeck — task lint | task test | task build (run \"task --list-all\" for all)"'
+
+  lint:
+    desc: "Lint engine (go vet + golangci-lint) and client (dart analyze)"
+    cmds:
+      - task: lint:engine
+      - task: lint:client
+
+  lint:engine:
+    desc: "go vet + golangci-lint on the engine module"
+    dir: engine
+    cmds:
+      - go vet ./...
+      - golangci-lint run
+
+  lint:client:
+    desc: "dart analyze on the Flutter client (skipped until client/ exists)"
+    cmds:
+      - cmd: |
+          if [ -d client ]; then
+            cd client && dart analyze
+          else
+            echo "client/ not present yet (Flutter scaffold pending) - skipping dart analyze"
+          fi
+
+  test:
+    desc: "Test engine and client"
+    cmds:
+      - task: test:engine
+      - task: test:client
+
+  test:engine:
+    desc: "go test on the engine module"
+    dir: engine
+    cmds:
+      - go test ./...
+
+  test:client:
+    desc: "flutter test (skipped until client/ exists)"
+    cmds:
+      - cmd: |
+          if [ -d client ]; then
+            cd client && flutter test
+          else
+            echo "client/ not present yet - skipping flutter test"
+          fi
+
+  build:
+    desc: "Build engine and client"
+    cmds:
+      - task: build:engine
+      - task: build:client
+
+  build:engine:
+    desc: "go build the engine module"
+    dir: engine
+    cmds:
+      - go build ./...
+
+  build:client:
+    desc: "flutter build (host desktop) (skipped until client/ exists)"
+    cmds:
+      - cmd: |
+          if [ -d client ]; then
+            cd client && flutter build windows
+          else
+            echo "client/ not present yet - skipping flutter build"
+          fi

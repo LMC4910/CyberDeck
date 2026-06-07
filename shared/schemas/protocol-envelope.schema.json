@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/protocol-envelope.schema.json",
+  "title": "CyberDeck Protocol Envelope",
+  "description": "Placeholder schema for the wire protocol envelope. Filled in by PROJ-141/PROJ-142.",
+  "type": "object",
+  "additionalProperties": true
+}

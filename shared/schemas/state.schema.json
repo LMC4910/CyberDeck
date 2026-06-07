@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/state.schema.json",
+  "title": "CyberDeck State Descriptor",
+  "description": "Placeholder schema for typed state descriptors. Filled in by PROJ-160.",
+  "type": "object",
+  "additionalProperties": true
+}

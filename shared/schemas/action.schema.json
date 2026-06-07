@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/action.schema.json",
+  "title": "CyberDeck Action Descriptor",
+  "description": "Placeholder schema for action descriptors. Filled in by PROJ-161 (registries).",
+  "type": "object",
+  "additionalProperties": true
+}
