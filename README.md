@@ -1,66 +1,130 @@
 # CyberDeck
 
-A premium, cyberpunk-themed Touch Portal ecosystem that turns an Android/iOS tablet
-into a full PC command center: live system telemetry, media control, gaming
-optimization, smart-home control, and unified notifications — all behind a single
-dark-neon interface.
+A cross-platform command center that turns a phone, tablet, or second screen into a
+live, **end-to-end-encrypted** control surface for your PC — real-time system
+telemetry, permissioned actions, and desktop-authored layouts that render natively
+on the paired device.
 
-CyberDeck ships as two things working together:
+CyberDeck is two programs working together over the LAN:
 
-1. **A Touch Portal plugin** (`com.shishir.cyberdeck`) — a Node.js service that talks
-   to Touch Portal over its plugin socket, exposing **states**, **actions**, **events**
-   and **connectors**, and feeding live data into the UI.
-2. **A custom Touch Portal UI** — a set of skinned Touch Portal pages whose tiles are
-   rendered at runtime by the plugin as full-bleed graphics (gauges, album art,
-   sparklines, charts), so the deck looks nothing like a default Touch Portal grid.
+1. **Host engine** (`engine/`, Go) — a headless background service that owns identity,
+   trust, persistence, the typed state store, the transport/session layer, and an
+   out-of-process plugin host. It runs independently of any UI window.
+2. **Client + Designer** (`client/`, Flutter) — the device runtime that pairs with the
+   engine, renders the layout, and captures gestures; the desktop build additionally
+   hosts the **Designer** for authoring layouts that reflect live onto paired devices.
+
+Capabilities (telemetry, power actions, launchers, …) are **out-of-process plugins**
+(`plugins/`) on a single contract — first-party and third-party alike — so a crashing
+plugin can never take down the engine.
 
 | Field | Value |
 | --- | --- |
 | Product | CyberDeck |
 | Plugin ID | `com.shishir.cyberdeck` |
-| Backend | Node.js 20 LTS |
-| Touch Portal API | 12 (Touch Portal 4.5+) |
-| Target host OS | Windows 10 20H2+ / Windows 11 |
-| Touch Portal client | Android / iOS / desktop companion |
-| Doc version | 1.0 (June 2026) |
+| Host engine | Go (module `github.com/shishir/cyberdeck/engine`) |
+| Client / Designer | Flutter (Android / iOS / desktop) |
+| Target host OS | Windows · macOS · Linux |
+| Transport | Encrypted LAN (X25519 + AEAD), forward-secret per session |
+| Status | **Phase 1 — Foundation (in progress)** |
 
-## Documentation map
+## Architecture at a glance
 
-This repository's technical documentation lives in [`docs/`](docs/):
+- **Engine-side authority** — the engine is the single source of truth for layout,
+  state, and trust; the client renders and the designer sends ops (ADR-0003).
+- **Typed state, not strings** — state values are stored typed (`42.0`, not `"42.0 °C"`)
+  so flows compare numerically and gauges use raw numbers; formatting is render-time
+  (ADR-0019).
+- **Remote-ready transport seam** — all addressing flows through
+  `TransportEndpoint`/`ConnectionManager`; nothing above it knows the endpoint kind, so
+  a relay can be added later with no rewrite (ADR-0010).
+- **Security first** — every device is identified (Ed25519), trusted, encrypted, and
+  permissioned; secrets live only in the OS keystore, never in SQLite/config/logs.
+- **What you design is what the device shows** — the designer canvas reuses the client
+  renderer rather than forking it.
+
+See [`STRUCTURE.md`](STRUCTURE.md) for the full monorepo layout (per
+`Documentation/CyberDeck_TRD_2_Master.md` §7.1).
+
+```
+engine/     Go host engine (cmd/, core/, pluginhost/, pal/, internal/)
+client/     Flutter client + desktop Designer (lib/{net,render,gestures,app,theme,tray,designer})
+plugins/    First-party plugins, each its own process binary
+shared/     JSON schemas (action / widget / flow-node / state descriptors + protocol envelope)
+installers/ Per-OS packaging
+docs/       Implementation-time engineering docs (ADRs, acceptance evidence)
+```
+
+## Documentation
+
+The authoritative product and architecture documentation lives in
+[`Documentation/`](Documentation/):
 
 | Doc | Contents |
 | --- | --- |
-| [01 — Product Requirements](docs/01-product-requirements.md) | Vision, personas, journeys, feature breakdown, functional & non-functional requirements, acceptance criteria. |
-| [02 — Technical Architecture](docs/02-technical-architecture.md) | Layered architecture, Node.js module structure, dependency map (Python→Node), data-source providers, telemetry/media/gaming/smart-home/notification pipelines. |
-| [03 — Plugin API Specification](docs/03-plugin-api-spec.md) | The `entry.tp` manifest, every state/action/event/connector/setting, the Touch Portal socket protocol, and the `touchportal-api` Node SDK usage. |
-| [04 — UI & Design System](docs/04-ui-and-design-system.md) | The tile-rendering pipeline, the seven page specifications, and the cyberpunk design tokens (color, type, components). |
-| [05 — Operations & Roadmap](docs/05-operations-and-roadmap.md) | Configuration, secrets, logging, error handling, testing, packaging, deployment, and the phased delivery roadmap. |
-| [06 — Project Execution Plan](docs/06-project-execution-plan.md) | Senior-PM delivery roadmap: the `.tpp`/`.tpz` split, per-phase tasks/effort/risks/acceptance, integration sequence diagrams, dependency matrix, testing, release gates, resourcing (RACI), milestones, and the risk register. |
+| `CyberDeck_PRD.md` | Product requirements: vision, personas, journeys, FRs/NFRs, acceptance criteria. |
+| `CyberDeck_Foundation_Architecture.md` | Layered architecture and the system foundation. |
+| `CyberDeck_Complete_Documentation.md` | The consolidated architecture, ADRs, and subsystem TRDs. |
+| `CyberDeck_TRD_2_Master.md` + `CyberDeck_TRD_2A…2G_*.md` | Subsystem technical reference designs (transport, engine core, layout/designer, flow engine, security/identity, plugin architecture, PAL). |
+| `CyberDeck_TRD_2ADR_Decision_Log.md` | Architecture Decision Records. |
+| `CyberDeck_Phase1_*` | The Phase-1 execution system: deep dive, dependency graph & execution plan, ticket batches 1–4, kanban board, **progress dashboard**, and the agent operating instructions. |
+| `CyberDeck_Phase2…8_DeepDive.md` | Forward-looking per-phase deep dives. |
 
-## Repository layout (target)
+> **Note on `Touch Portal/`:** that folder holds the project's *original* Touch
+> Portal / Node.js product direction and its reference UI. It is retained for
+> history; the current architecture is the Go engine + Flutter client described above.
 
+## Development
+
+### Prerequisites
+
+| Tool | Version used | Purpose |
+| --- | --- | --- |
+| Go | 1.25+ (developed on 1.26) | Engine + plugins |
+| Flutter (+ Dart) | stable (3.44+) | Client + Designer |
+| [Task](https://taskfile.dev) | 3.x | Cross-platform task runner (`Taskfile.yml`) |
+| golangci-lint | v2.x | Go linting |
+| A C compiler (gcc/clang) | — | Only for `go test -race` (the race detector needs cgo) |
+| Visual Studio “Desktop development with C++” | — | Only for `flutter build windows` |
+
+### Build, lint, and test
+
+From the repository root, the task runner fans out to both the engine and the client:
+
+```bash
+task lint    # go vet + golangci-lint  ·  dart analyze
+task test    # go test                 ·  flutter test
+task build   # go build                ·  flutter build (host desktop)
 ```
-CyberDeck/
-├── entry.tp                 # Touch Portal plugin manifest (see doc 03)
-├── package.json
-├── src/
-│   ├── main.js              # Bootstrap + touchportal-api connection
-│   ├── core/                # State manager, event bus, tile renderer
-│   ├── services/            # telemetry, media, gaming, smarthome, notifications, fans
-│   ├── render/              # Canvas tile templates (gauges, sparklines, cards)
-│   └── util/                # credentials, ring buffer, formatters, logger
-├── pages/                   # Custom Touch Portal pages (.tml / exported .tpz)
-├── assets/                  # Icons, backgrounds, fonts
-├── config/                  # config.json (non-secret)
-└── docs/                    # This documentation set
+
+Or per component:
+
+```bash
+# Engine (from engine/)
+go vet ./... && golangci-lint run && go test -race ./... && go build ./...
+
+# Client (from client/)
+dart analyze && flutter test && flutter build windows
 ```
 
-## Status
+CI mirrors these gates on every push/PR — see [`ci/README.md`](ci/README.md).
 
-This is the **technical documentation phase**, and the documentation set (docs 01–06) is
-now complete — including a senior-PM [project execution plan](docs/06-project-execution-plan.md)
-that an engineering team can deliver from. No application code is included yet; these documents define the contract the
-implementation must satisfy. The backend language is fixed to **Node.js**; the data-source
-and rendering decisions in doc 02 and doc 04 are the authoritative reference for
-implementation. The reference UI for all seven pages lives in
-[`Reference Images`](../Reference%20Images).
+## Status — Phase 1 (Foundation)
+
+Phase 1 stands up the engine + client foundation: identity, trust, crypto, encrypted
+transport, persistence, the state store, the plugin host, the client renderer, and the
+designer. Live progress against all 80 tickets is tracked in
+[`Documentation/CyberDeck_Phase1_Progress_Dashboard.md`](Documentation/CyberDeck_Phase1_Progress_Dashboard.md).
+
+Landed so far:
+
+- **PROJ-101** — Go + Flutter monorepo scaffold and tooling.
+- **PROJ-110** — SQLite persistence (pure-Go driver, WAL, forward-only migration runner).
+- **PROJ-160** — Typed state store with delta suppression and in-memory series buffers.
+- **PROJ-121** — Redaction-safe `Secret` type + per-OS SecretStore (with encrypted-file fallback).
+- **PROJ-120** — Engine identity (Ed25519 keypair + UUID, account-independent).
+- **PROJ-140** — Transport endpoint abstraction + ConnectionManager (the remote-ready seam).
+- **PROJ-102** — CI gate workflows (authored; live run pending first push).
+
+The engine builds and passes `go test -race ./...` clean; the client passes
+`dart analyze`, `flutter test`, and `flutter build windows`.
