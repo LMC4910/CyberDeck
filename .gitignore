@@ -160,3 +160,36 @@ config/config.local.json
 config/config.dev.json
 .claude
 .copilot
+
+# ============================================================================
+# Go (engine + plugins) — monorepo (PROJ-101)
+# ============================================================================
+# Compiled binaries / test binaries / coverage. go.mod and go.sum ARE tracked.
+cyberdeck
+cyberdeck.exe
+engine/cyberdeck
+engine/cyberdeck.exe
+engine/bin/
+plugins/**/bin/
+*.test
+*.out
+coverage.txt
+# Local SQLite stores created at runtime (never commit a DB or its WAL/SHM)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# ============================================================================
+# Flutter / Dart (client) — monorepo (PROJ-101)
+# ============================================================================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/doc/api/
+*.iml
+# client/ keeps its own flutter-generated .gitignore for platform folders.
