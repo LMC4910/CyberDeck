@@ -3,6 +3,8 @@ module github.com/shishir/cyberdeck/engine
 go 1.25.0
 
 require (
+	filippo.io/edwards25519 v1.2.0
+	golang.org/x/crypto v0.52.0
 	golang.org/x/sys v0.45.0
 	modernc.org/sqlite v1.52.0
 )
