@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 10 tickets / 24 pts (PROJ-101, 110, 160, 121, 140, 120, 122, 111, 113, 123) |
+| **Done** | 11 tickets / 27 pts (PROJ-101, 110, 160, 121, 140, 120, 122, 111, 113, 123, 112) |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 60 |
-| **Ready now** | 9 (PROJ-103, 112, 114, 125, 141, 162, 163, 170, 201) |
-| **Completion** | **12%** (24 / 199 pts) |
+| **Blocked** | 58 |
+| **Ready now** | 10 (PROJ-103, 114, 125, 141, 161, 162, 163, 164, 170, 201) |
+| **Completion** | **14%** (27 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -49,7 +49,7 @@
 | Epic | Tickets | Points | Done (tix) | Done (pts) | % complete |
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
-| EPIC-2 Persistence | 6 | 12 | 3 | 6 | 50% |
+| EPIC-2 Persistence | 6 | 12 | 4 | 9 | 75% |
 | EPIC-3 Security & Identity | 8 | 19 | 4 | 11 | 58% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
@@ -105,7 +105,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-109 | Tray/menubar control app | EPIC-1 | P1 | 3 | 105,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-110 | Persistence baseline (SQLite + schema v1) | EPIC-2 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-111 | Migration framework | EPIC-2 | P0 | 2 | 110 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-112 | Documents repository | EPIC-2 | P0 | 3 | 111 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-112 | Documents repository | EPIC-2 | P0 | 3 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-113 | Trust repository | EPIC-2 | P0 | 2 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-114 | Audit repository | EPIC-2 | P1 | 2 | 111 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-115 | Secret-leak guard (persistence scan) | EPIC-2 | P1 | 1 | 112,113,114 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -133,10 +133,10 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-149 | Versioned resync on gap | EPIC-4 | P1 | 2 | 143 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-150 | Multi-session fan-out + subscription filter | EPIC-4 | P0 | 3 | 143,160 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-160 | Typed state model + state store core | EPIC-6 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-172 | 1P plugin: GPU telemetry provider chain | EPIC-5 | P1 | 3 | 171 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
