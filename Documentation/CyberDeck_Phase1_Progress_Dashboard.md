@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 21 tickets / 50 pts (…161, 164, 141, 142) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 22 tickets / 53 pts (…164, 141, 142, 143) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 49 |
-| **Ready now** | 9 (PROJ-103, 126, 143, 144, 145, 147, 170, 200, 201) |
-| **Completion** | **25%** (50 / 199 pts) |
+| **Blocked** | 47 |
+| **Ready now** | 10 (PROJ-103, 126, 144, 145, 147, 149, 150, 170, 200, 201) |
+| **Completion** | **27%** (53 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -51,7 +51,7 @@
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
-| EPIC-4 Transport & Connectivity | 11 | 27 | 3 | 7 | 26% |
+| EPIC-4 Transport & Connectivity | 11 | 27 | 4 | 10 | 37% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
@@ -124,14 +124,14 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-140 | Endpoint abstraction + ConnectionManager | EPIC-4 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-141 | Framing + Serializer seam | EPIC-4 | P0 | 2 | 140 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-142 | Encrypted session (reader/writer/demux) | EPIC-4 | P0 | 3 | 141,122 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-143 | Three channels + backpressure | EPIC-4 | P0 | 3 | 142 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-143 | Three channels + backpressure | EPIC-4 | P0 | 3 | 142 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-144 | Loopback privileged control channel | EPIC-4 | P1 | 2 | 142 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-145 | Heartbeat / keepalive (sleep-tolerant) | EPIC-4 | P1 | 2 | 142 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-146 | Reconnect (backoff→mDNS→scan) | EPIC-4 | P1 | 3 | 145,147 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-147 | Discovery: mDNS advertise/browse | EPIC-4 | P0 | 3 | 141,120 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-148 | Discovery: manual + active scan | EPIC-4 | P1 | 2 | 147 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-149 | Versioned resync on gap | EPIC-4 | P1 | 2 | 143 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-150 | Multi-session fan-out + subscription filter | EPIC-4 | P0 | 3 | 143,160 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-149 | Versioned resync on gap | EPIC-4 | P1 | 2 | 143 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-150 | Multi-session fan-out + subscription filter | EPIC-4 | P0 | 3 | 143,160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-160 | Typed state model + state store core | EPIC-6 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -210,6 +210,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 8 | 2026-06-07 | PROJ-164 | 2 | 45 | 23% | Variables-as-state: core/vars VarManager bridges VariableRepo (durable) + state store (live). SetVar → live fan-out + persist; Load restores var.* at startup; typed fidelity (number/string/bool); var.* are bindable states. **EPIC-6 complete (5/5).** Full engine `go test -race ./...` green. |
 | 9 | 2026-06-08 | PROJ-141 | 2 | 47 | 24% | Transport framing/serializer seam: uint32 length-prefix Framer (bounded, oversize-rejected), Envelope {v,ch,type,seq,ts,payload} + per-channel monotonic SeqCounter, Serializer interface + JSONSerializer (swap proven via gob fake). Newly Ready: 142 (encrypted session), 147 (mDNS). EPIC-4 15%. |
 | 10 | 2026-06-08 | PROJ-142 | 3 | 50 | 25% | Encrypted session (special-care): reader/writer goroutines over a Conn with crypto Cipher (per-direction nonce) + framing; Send/Received/Done/Close; clean teardown. Tests (`-race`): encrypted round-trip with wire capture proving **no plaintext on the wire**, goroutine-leak-free teardown, tamper→AEAD-failure→session error. Implements transport.Session. Newly Ready: 143, 144, 145. **25% of Phase 1.** |
+| 11 | 2026-06-08 | PROJ-143 | 3 | 53 | 27% | Three channels + backpressure: ChannelMux over a session — State coalesce latest-wins by id (droppable), Layout ordered/lossless (never drop), Preview bounded drop-oldest (never block); Flush to session in priority order; inbound demux by ch (Layout lossless, State/Preview droppable). Transport chain 141→142→143 complete. Newly Ready: 149, 150 (fan-out). EPIC-4 37%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
