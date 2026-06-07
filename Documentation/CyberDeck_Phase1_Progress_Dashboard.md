@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 17 tickets / 40 pts (…115, 125, 127, 162, 163) — **EPIC-2 complete; M2 reached** |
+| **Done** | 18 tickets / 43 pts (…125, 127, 162, 163, 161) — **EPIC-2 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 55 |
-| **Ready now** | 7 (PROJ-103, 126, 141, 161, 164, 170, 201) |
-| **Completion** | **20%** (40 / 199 pts) |
+| **Blocked** | 54 |
+| **Ready now** | 7 (PROJ-103, 126, 141, 164, 170, 200, 201) |
+| **Completion** | **22%** (43 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -53,7 +53,7 @@
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
-| EPIC-6 State, Registries & Event Bus | 5 | 13 | 3 | 8 | 62% |
+| EPIC-6 State, Registries & Event Bus | 5 | 13 | 4 | 11 | 85% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 0 | 0 | 0% |
 | EPIC-9 Designer | 8 | 21 | 0 | 0 | 0% |
@@ -133,7 +133,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-149 | Versioned resync on gap | EPIC-4 | P1 | 2 | 143 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-150 | Multi-session fan-out + subscription filter | EPIC-4 | P0 | 3 | 143,160 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-160 | Typed state model + state store core | EPIC-6 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
@@ -157,7 +157,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-190 | Installer — Windows | EPIC-1 | P1 | 3 | 106,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-191 | Installer — macOS | EPIC-1 | P1 | 3 | 107,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-192 | Installer — Linux | EPIC-1 | P1 | 3 | 108,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-200 | Flow model + document persistence | EPIC-7 | P1 | 2 | 112,161 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-200 | Flow model + document persistence | EPIC-7 | P1 | 2 | 112,161 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-201 | Expression language (lexer/parser/eval) | EPIC-7 | P1 | 3 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-202 | Flow executor + run context | EPIC-7 | P1 | 3 | 200,201,162 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-203 | Core nodes (action/if/setVar/wait/loop/…) | EPIC-7 | P1 | 3 | 202,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -206,6 +206,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 3b | 2026-06-07 | PROJ-112, PROJ-114 | 5 | 29 | 15% | **112** doc/registry/variable/workflow repos (thin CRUD + JSON-body validation + WithWriteTx multi-row tx rollback; var.* upsert). **114** append-only audit repo (Append + ByActor/ByEventType/ByTimeRange; reflection guard proves no update/delete). EPIC-2 repo layer complete (5/6; only 115 leak-guard left). Newly Ready: 161, 164, 115. |
 | 4 | 2026-06-07 | PROJ-115, PROJ-125 | 4 | 33 | 17% | **115** secret-leak guard (secrets.ContainsSecret reflection + persistence entity scan → EPIC-2 100%). **125** permission model + pure Authorize() 5-step check (exhaustive truth table, check-order, P1-AC-07 destructive-deny, ParsePermissions). Newly Ready: 126, 127. **M2 now gated only on PROJ-127.** EPIC-3 74%. |
 | 6 | 2026-06-07 | PROJ-162, PROJ-163 | 5 | 40 | 20% | **162** event bus (ordered per topic, bounded queues, non-blocking publish + overflow drop/log, unsubscribe; `-race`). **163** session/profile model (isolated Session{perms,activeProfile,subscriptions,mode} + Manager create/get/teardown; inert activation hook). EPIC-6 62%. **20% of Phase 1 complete.** |
+| 7 | 2026-06-07 | PROJ-161 | 3 | 43 | 22% | Registries keystone: action/widget/flow-node descriptors + schema-of-schemas validation, Merge with ID-collision diagnostics + atomicity, query API (ActionsByCategory/WidgetsAcceptingKind/…), persistence round-trip via injected store (real SQLite test), real shared/schemas/*. Unblocks 132/200/214. EPIC-6 85%. P1-AC-10 backing. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
