@@ -2,7 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cyberdeck.shishir.com/schemas/flownode.schema.json",
   "title": "CyberDeck Flow-Node Descriptor",
-  "description": "Placeholder schema for flow-node descriptors. Filled in by PROJ-161/PROJ-203.",
+  "description": "A flow-node type contributed to the flow-node registry (TRD 2B §3.3). execHandle is the handle into the flow executor's execution contract (2D / PROJ-202). Enforced in code by PROJ-161.",
   "type": "object",
-  "additionalProperties": true
+  "required": ["kind", "label", "execHandle"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "type": "string", "minLength": 1, "description": "flow-node kind id, e.g. if, setVar, wait" },
+    "label": { "type": "string", "minLength": 1 },
+    "source": { "type": "string" },
+    "execHandle": { "type": "string", "minLength": 1 },
+    "params": { "type": "array", "items": { "$ref": "action.schema.json#/$defs/param" } }
+  }
 }

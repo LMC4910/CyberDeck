@@ -2,7 +2,42 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cyberdeck.shishir.com/schemas/action.schema.json",
   "title": "CyberDeck Action Descriptor",
-  "description": "Placeholder schema for action descriptors. Filled in by PROJ-161 (registries).",
+  "description": "An invokable action contributed to the action registry (TRD 2B §3.1). category + destructive feed the permission model (2E §5). The engine enforces these rules in code (PROJ-161).",
   "type": "object",
-  "additionalProperties": true
+  "required": ["id", "label", "category"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "description": "globally-unique action id, e.g. media.volume.set" },
+    "label": { "type": "string", "minLength": 1 },
+    "category": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "description": "contributing plugin, e.g. plugin:core.media" },
+    "confirmation": { "type": "boolean", "default": false },
+    "destructive": { "type": "boolean", "default": false },
+    "elevated": { "type": "boolean", "default": false },
+    "params": { "type": "array", "items": { "$ref": "#/$defs/param" } }
+  },
+  "$defs": {
+    "param": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "enum": ["int", "float", "string", "bool", "choice", "color", "entity", "file", "folder", "duration"]
+        },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "choices": { "type": "array", "items": { "type": "string" } },
+        "required": { "type": "boolean", "default": false }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "choice" } } },
+          "then": { "required": ["choices"], "properties": { "choices": { "minItems": 1 } } }
+        }
+      ]
+    }
+  }
 }
