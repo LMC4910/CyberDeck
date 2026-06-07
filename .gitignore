@@ -165,10 +165,9 @@ config/config.dev.json
 # Go (engine + plugins) — monorepo (PROJ-101)
 # ============================================================================
 # Compiled binaries / test binaries / coverage. go.mod and go.sum ARE tracked.
-cyberdeck
 cyberdeck.exe
-engine/cyberdeck
-engine/cyberdeck.exe
+/engine/cyberdeck
+/engine/cyberdeck.exe
 engine/bin/
 plugins/**/bin/
 *.test
