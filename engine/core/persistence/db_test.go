@@ -65,14 +65,13 @@ func TestFreshOpenAndMigrate(t *testing.T) {
 	if err := db.Migrate(ctx); err != nil {
 		t.Fatalf("Migrate: %v", err)
 	}
-	// PROJ-110 ships no .sql migrations yet; a fresh DB has the meta harness and
-	// schema version 0. (The nine tables arrive in PROJ-111.)
+	// A fresh DB applies the embedded migrations; 0001_init brings it to v1.
 	v, err := db.SchemaVersion(ctx)
 	if err != nil {
 		t.Fatalf("SchemaVersion: %v", err)
 	}
-	if v != 0 {
-		t.Errorf("fresh schema version = %d, want 0", v)
+	if v != 1 {
+		t.Errorf("fresh schema version = %d, want 1", v)
 	}
 }
 

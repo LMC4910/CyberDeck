@@ -104,17 +104,17 @@ func TestMigratePartialThenResume(t *testing.T) {
 	}
 }
 
-func TestMigrateEmbeddedNoSQLFiles(t *testing.T) {
+func TestMigrateEmbeddedAppliesInit(t *testing.T) {
 	ctx := context.Background()
 	db := openMigrated(t)
 
-	// The embedded migrations/ dir holds only README.md in PROJ-110, so Migrate
-	// applies nothing but still bootstraps meta at version 0.
+	// The embedded migrations/ dir contains 0001_init.sql (PROJ-111), so Migrate
+	// brings a fresh DB to schema version 1.
 	if err := db.Migrate(ctx); err != nil {
 		t.Fatalf("Migrate: %v", err)
 	}
-	if v, _ := db.SchemaVersion(ctx); v != 0 {
-		t.Errorf("schema version = %d, want 0", v)
+	if v, _ := db.SchemaVersion(ctx); v != 1 {
+		t.Errorf("schema version = %d, want 1", v)
 	}
 }
 
