@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 14 tickets / 33 pts (…113, 123, 112, 114, 115, 125) — **EPIC-2 complete** |
+| **Done** | 15 tickets / 35 pts (…112, 114, 115, 125, 127) — **EPIC-2 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 55 |
-| **Ready now** | 10 (PROJ-103, 126, 127, 141, 161, 162, 163, 164, 170, 201) |
-| **Completion** | **17%** (33 / 199 pts) |
+| **Ready now** | 9 (PROJ-103, 126, 141, 161, 162, 163, 164, 170, 201) |
+| **Completion** | **18%** (35 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -50,7 +50,7 @@
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
-| EPIC-3 Security & Identity | 8 | 19 | 5 | 14 | 74% |
+| EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 1 | 3 | 23% |
@@ -116,7 +116,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-124 | Pairing token issuance + QR payload | EPIC-3 | P1 | 2 | 123,150 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-125 | Permission model + authorize() | EPIC-3 | P0 | 3 | 113 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-126 | Trust revocation + session teardown | EPIC-3 | P1 | 1 | 123,125 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-127 | Audit log writer + redaction | EPIC-3 | P1 | 2 | 114,125 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-127 | Audit log writer + redaction | EPIC-3 | P1 | 2 | 114,125 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-130 | Plugin host: launch/supervise/IPC | EPIC-5 | P0 | 3 | 160,103 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-131 | Plugin host: restart/fault policy | EPIC-5 | P0 | 2 | 130 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-132 | Plugin manifest validation + registry merge | EPIC-5 | P0 | 2 | 130,161 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -184,7 +184,7 @@ Advance a milestone to ✅ only when **every** gating ticket is Done.
 | Gate | Milestone | Gating tickets (all must be Done) | Status |
 |------|-----------|-----------------------------------|--------|
 | **M1** | Bootstrap green | 101, 102, 103 | ⬜ Not started |
-| **M2** | Persistence + security base | 110, 111, 112, 113, 114, 115, 120, 121, 122, 125, 127 | ⬜ Not started |
+| **M2** | Persistence + security base | 110, 111, 112, 113, 114, 115, 120, 121, 122, 125, 127 | ✅ Done (2026-06-07) |
 | **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | ⬜ Not started |
 | **M4** | Actions + permissions on device | 125, 133, 173, 174, 175, 187, 188 | ⬜ Not started |
 | **M5** | Resilience proven | 145, 146, 148, 149, 188 | ⬜ Not started |
@@ -204,6 +204,8 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 2 | 2026-06-07 | PROJ-122, PROJ-111 | 5 | 19 | 10% | **122** Crypto suite (special-care): X25519 ECDH (+Ed25519→X25519 conversion via filippo.io/edwards25519, completing the 120 seam), HKDF-SHA256 directional keys, ChaCha20-Poly1305 AEAD with monotonic per-direction nonce counters, Ed25519 sign/verify. RFC KATs (7748/5869/8439); round-trip/tamper/distinct-session-keys/nonce-uniqueness under `-race`. **111** schema 0001 — 8 durable tables (2B §6) + indexes; round-trip per table, BLOB integrity, AUTOINCREMENT, idempotent. Newly Ready: 112, 113, 114. Critical path 8/31; 123 unblocks once 113 lands. |
 | 3 | 2026-06-07 | PROJ-113, PROJ-123 | 5 | 24 | 12% | **113** Trust repo layer (repo_devices CRUD/revoke + BLOB, repo_meta = identity.PublicStore, repo_accounts). **123** Pairing handshake engine state machine (special-care): ClientHello→ServerHello→KeyConfirm→PairResult, Ed25519 nonce-sig auth, fresh nonce_e + ephemeral X25519, reject bad-token/revoked/bad-sig/replay/out-of-order, trust-record write, forward-secret session keys derived + verified by device↔engine encrypted round-trip. Spine: 121→120→122→123 done = 11/31. |
 | 3b | 2026-06-07 | PROJ-112, PROJ-114 | 5 | 29 | 15% | **112** doc/registry/variable/workflow repos (thin CRUD + JSON-body validation + WithWriteTx multi-row tx rollback; var.* upsert). **114** append-only audit repo (Append + ByActor/ByEventType/ByTimeRange; reflection guard proves no update/delete). EPIC-2 repo layer complete (5/6; only 115 leak-guard left). Newly Ready: 161, 164, 115. |
+| 4 | 2026-06-07 | PROJ-115, PROJ-125 | 4 | 33 | 17% | **115** secret-leak guard (secrets.ContainsSecret reflection + persistence entity scan → EPIC-2 100%). **125** permission model + pure Authorize() 5-step check (exhaustive truth table, check-order, P1-AC-07 destructive-deny, ParsePermissions). Newly Ready: 126, 127. **M2 now gated only on PROJ-127.** EPIC-3 74%. |
+| 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
 
