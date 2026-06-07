@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 18 tickets / 43 pts (…125, 127, 162, 163, 161) — **EPIC-2 complete; M2 reached** |
+| **Done** | 19 tickets / 45 pts (…127, 162, 163, 161, 164) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 54 |
-| **Ready now** | 7 (PROJ-103, 126, 141, 164, 170, 200, 201) |
-| **Completion** | **22%** (43 / 199 pts) |
+| **Ready now** | 6 (PROJ-103, 126, 141, 170, 200, 201) |
+| **Completion** | **23%** (45 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -53,7 +53,7 @@
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
-| EPIC-6 State, Registries & Event Bus | 5 | 13 | 4 | 11 | 85% |
+| EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 0 | 0 | 0% |
 | EPIC-9 Designer | 8 | 21 | 0 | 0 | 0% |
@@ -136,7 +136,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-172 | 1P plugin: GPU telemetry provider chain | EPIC-5 | P1 | 3 | 171 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -207,6 +207,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 4 | 2026-06-07 | PROJ-115, PROJ-125 | 4 | 33 | 17% | **115** secret-leak guard (secrets.ContainsSecret reflection + persistence entity scan → EPIC-2 100%). **125** permission model + pure Authorize() 5-step check (exhaustive truth table, check-order, P1-AC-07 destructive-deny, ParsePermissions). Newly Ready: 126, 127. **M2 now gated only on PROJ-127.** EPIC-3 74%. |
 | 6 | 2026-06-07 | PROJ-162, PROJ-163 | 5 | 40 | 20% | **162** event bus (ordered per topic, bounded queues, non-blocking publish + overflow drop/log, unsubscribe; `-race`). **163** session/profile model (isolated Session{perms,activeProfile,subscriptions,mode} + Manager create/get/teardown; inert activation hook). EPIC-6 62%. **20% of Phase 1 complete.** |
 | 7 | 2026-06-07 | PROJ-161 | 3 | 43 | 22% | Registries keystone: action/widget/flow-node descriptors + schema-of-schemas validation, Merge with ID-collision diagnostics + atomicity, query API (ActionsByCategory/WidgetsAcceptingKind/…), persistence round-trip via injected store (real SQLite test), real shared/schemas/*. Unblocks 132/200/214. EPIC-6 85%. P1-AC-10 backing. |
+| 8 | 2026-06-07 | PROJ-164 | 2 | 45 | 23% | Variables-as-state: core/vars VarManager bridges VariableRepo (durable) + state store (live). SetVar → live fan-out + persist; Load restores var.* at startup; typed fidelity (number/string/bool); var.* are bindable states. **EPIC-6 complete (5/5).** Full engine `go test -race ./...` green. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
