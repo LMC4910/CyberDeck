@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 13 tickets / 30 pts (…111, 113, 123, 112, 114, 115) — **EPIC-2 complete** |
+| **Done** | 14 tickets / 33 pts (…113, 123, 112, 114, 115, 125) — **EPIC-2 complete** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 57 |
-| **Ready now** | 9 (PROJ-103, 125, 141, 161, 162, 163, 164, 170, 201) |
-| **Completion** | **15%** (30 / 199 pts) |
+| **Blocked** | 55 |
+| **Ready now** | 10 (PROJ-103, 126, 127, 141, 161, 162, 163, 164, 170, 201) |
+| **Completion** | **17%** (33 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -50,7 +50,7 @@
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
-| EPIC-3 Security & Identity | 8 | 19 | 4 | 11 | 58% |
+| EPIC-3 Security & Identity | 8 | 19 | 5 | 14 | 74% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 1 | 3 | 23% |
@@ -114,9 +114,9 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-122 | Crypto suite (AEAD + KDF) | EPIC-3 | P0 | 3 | 120 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-123 | Pairing handshake (key exchange) | EPIC-3 | P0 | 3 | 122,113 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-124 | Pairing token issuance + QR payload | EPIC-3 | P1 | 2 | 123,150 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-125 | Permission model + authorize() | EPIC-3 | P0 | 3 | 113 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-126 | Trust revocation + session teardown | EPIC-3 | P1 | 1 | 123,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-127 | Audit log writer + redaction | EPIC-3 | P1 | 2 | 114,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-125 | Permission model + authorize() | EPIC-3 | P0 | 3 | 113 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-126 | Trust revocation + session teardown | EPIC-3 | P1 | 1 | 123,125 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-127 | Audit log writer + redaction | EPIC-3 | P1 | 2 | 114,125 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-130 | Plugin host: launch/supervise/IPC | EPIC-5 | P0 | 3 | 160,103 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-131 | Plugin host: restart/fault policy | EPIC-5 | P0 | 2 | 130 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-132 | Plugin manifest validation + registry merge | EPIC-5 | P0 | 2 | 130,161 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
