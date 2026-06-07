@@ -28,12 +28,12 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 6 tickets / 14 pts (PROJ-101, 110, 160, 121, 140, 120) |
+| **Done** | 7 tickets / 17 pts (PROJ-101, 110, 160, 121, 140, 120, 122) |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 66 |
-| **Ready now** | 7 (PROJ-103, 111, 122, 141, 162, 170, 201) |
-| **Completion** | **7%** (14 / 199 pts) |
-| **Critical-path progress** | 5 / 31 pts (PROJ-121 ✓, PROJ-120 ✓) |
+| **Ready now** | 6 (PROJ-103, 111, 141, 162, 170, 201) |
+| **Completion** | **9%** (17 / 199 pts) |
+| **Critical-path progress** | 8 / 31 pts (PROJ-121 ✓, 120 ✓, 122 ✓) |
 | **Current wave** | 1 of 10 |
 
 > **[†] Numbering reconciliation (2026-06-07):** the original dashboard labeled PROJ-121="Identity" and PROJ-120="Trust store", but the authoritative Batch-1 *tickets* define **PROJ-121 = per-OS SecretStore** (root) and **PROJ-120 = engine identity** (→121). The dependency shape is identical; titles corrected here to match the tickets (the ticket wins for scope per Agent Instructions §1).
@@ -50,7 +50,7 @@
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 1 | 2 | 6% |
 | EPIC-2 Persistence | 6 | 12 | 1 | 2 | 17% |
-| EPIC-3 Security & Identity | 8 | 19 | 2 | 5 | 26% |
+| EPIC-3 Security & Identity | 8 | 19 | 3 | 8 | 42% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 1 | 2 | 7% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 1 | 3 | 23% |
@@ -111,7 +111,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-115 | Secret-leak guard (persistence scan) | EPIC-2 | P1 | 1 | 112,113,114 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-120 | Engine identity (Ed25519 keypair + UUID) [†] | EPIC-3 | P0 | 2 | 121 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-121 | Per-OS SecretStore abstraction + impls [†] | EPIC-3 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-122 | Crypto suite (AEAD + KDF) | EPIC-3 | P0 | 3 | 120 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-122 | Crypto suite (AEAD + KDF) | EPIC-3 | P0 | 3 | 120 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-123 | Pairing handshake (key exchange) | EPIC-3 | P0 | 3 | 122,113 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-124 | Pairing token issuance + QR payload | EPIC-3 | P1 | 2 | 123,150 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-125 | Permission model + authorize() | EPIC-3 | P0 | 3 | 113 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -201,6 +201,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 |---------|------|----------------|------------|----------------|--------------|-------|
 | — | (baseline) | 0 | 0 | 0 | 0% | All tickets at Backlog. Ready set = 6 roots. |
 | 1 | 2026-06-07 | PROJ-101, 110, 160, 121, 140, 120 (+102 authored) | 14 | 14 | 7% | Toolchain: Go 1.26.4 + Task + golangci-lint 2.12.2 + mingw-w64 gcc 16.1.0 (local `-race`) + Flutter 3.44.1 (+ VS C++). **101** monorepo (engine+Flutter client, `flutter build windows` ✓, full `task lint/test/build` green). **110** pure-Go SQLite WAL + migrations (ADR-0001). **160** typed state store (`-race`). **121** `Secret`+SecretStore (Win Cred Mgr live, AES-GCM fallback, mac/linux cross-compiled). **140** transport endpoint/ConnectionManager seam (ADR-0010). **120** engine identity (Ed25519+UUID, seed in SecretStore only; X25519 ECDH derivation deferred to 122 via SigningSeed() seam). **102** CI workflows authored + locally green (live run + branch protection = repo-owner follow-up). Newly Ready: 122, 141, 162, 170, 201. Critical path 5/31. |
+| 2 | 2026-06-07 | PROJ-122 | 3 | 17 | 9% | Crypto suite (special-care): X25519 ECDH (+Ed25519→X25519 conversion via filippo.io/edwards25519, completing the 120 seam), HKDF-SHA256 directional key derivation, ChaCha20-Poly1305 AEAD with monotonic per-direction nonce counters, Ed25519 sign/verify. RFC KATs (7748/5869/8439) pass; round-trip/tamper/distinct-session-keys/nonce-uniqueness all green under `-race`. Vetted libs only. Critical path 8/31 (122✓). Dependents 123/142 still blocked (need 113/141). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
 
