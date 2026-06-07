@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 23 tickets / 56 pts (…141, 142, 143, 150) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 24 tickets / 59 pts (…142, 143, 150, 170) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 46 |
-| **Ready now** | 10 (PROJ-103, 124, 126, 144, 145, 147, 149, 170, 200, 201) |
-| **Completion** | **28%** (56 / 199 pts) |
+| **Ready now** | 9 (PROJ-103, 124, 126, 144, 145, 147, 149, 200, 201) |
+| **Completion** | **30%** (59 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -52,7 +52,7 @@
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 5 | 13 | 48% |
-| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 0 | 0 | 0% |
+| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 1 | 3 | 11% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 0 | 0 | 0% |
@@ -137,7 +137,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-162 | Event bus | EPIC-6 | P0 | 2 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-172 | 1P plugin: GPU telemetry provider chain | EPIC-5 | P1 | 3 | 171 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-173 | 1P plugin: power actions | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -212,6 +212,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 10 | 2026-06-08 | PROJ-142 | 3 | 50 | 25% | Encrypted session (special-care): reader/writer goroutines over a Conn with crypto Cipher (per-direction nonce) + framing; Send/Received/Done/Close; clean teardown. Tests (`-race`): encrypted round-trip with wire capture proving **no plaintext on the wire**, goroutine-leak-free teardown, tamper→AEAD-failure→session error. Implements transport.Session. Newly Ready: 143, 144, 145. **25% of Phase 1.** |
 | 11 | 2026-06-08 | PROJ-143 | 3 | 53 | 27% | Three channels + backpressure: ChannelMux over a session — State coalesce latest-wins by id (droppable), Layout ordered/lossless (never drop), Preview bounded drop-oldest (never block); Flush to session in priority order; inbound demux by ch (Layout lossless, State/Preview droppable). Transport chain 141→142→143 complete. Newly Ready: 149, 150 (fan-out). EPIC-4 37%. |
 | 12 | 2026-06-08 | PROJ-150 | 3 | 56 | 28% | Multi-session fan-out (special-care): Fanout over per-device Subscribers; BroadcastState filters deltas by each session's SubscriptionSet (encode once), BroadcastLayout gated on edited-profile + edit-mode, FlushAll, per-subscriber isolation. Tests (`-race`): subscription filter, two-profile isolation (P1-AC-11), 8-session fan-out, concurrent broadcast+churn. EPIC-4 48%. Newly Ready: 124. Key unlock toward M3. |
+| 13 | 2026-06-08 | PROJ-170 | 3 | 59 | 30% | PAL capability/provider-chain framework: generic Provider[T] + Chain[T] (probe→bind highest-available→Capability (value,ok)→Rebind on fault→degrade to unavailable, no panic); Telemetry/Power capability interface stubs. Tests: bind order, all-unavailable degradation (P1-AC-05), re-probe-on-fault. EPIC-5 started (11%). **30% of Phase 1.** |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
