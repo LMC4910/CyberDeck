@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 25 tickets / 61 pts (…143, 150, 170, 103) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 26 tickets / 63 pts (…150, 170, 103, 104) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 44 |
-| **Ready now** | 10 (PROJ-104, 124, 126, 130, 144, 145, 147, 149, 200, 201) |
-| **Completion** | **31%** (61 / 199 pts) |
+| **Blocked** | 43 |
+| **Ready now** | 10 (PROJ-105, 124, 126, 130, 144, 145, 147, 149, 200, 201) |
+| **Completion** | **32%** (63 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -48,7 +48,7 @@
 
 | Epic | Tickets | Points | Done (tix) | Done (pts) | % complete |
 |------|---------|--------|------------|------------|------------|
-| EPIC-1 Lifecycle & Packaging | 12 | 32 | 2 | 4 | 13% |
+| EPIC-1 Lifecycle & Packaging | 12 | 32 | 3 | 6 | 19% |
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 5 | 13 | 48% |
@@ -97,8 +97,8 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-101 | Monorepo bootstrap (Go + Flutter) | EPIC-1 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-102 | CI baseline (lint/test/build gates) | EPIC-1 | P0 | 2 | — | 🟨 In Progress | Claude | ✅ Ready | 70% |
 | PROJ-103 | Config loader + schema | EPIC-1 | P0 | 2 | 101 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-104 | Engine service skeleton (daemon lifecycle) | EPIC-1 | P0 | 2 | 101,103 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-105 | Service orchestration (wire subsystems) | EPIC-1 | P0 | 3 | 104,110,150 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-104 | Engine service skeleton (daemon lifecycle) | EPIC-1 | P0 | 2 | 101,103 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-105 | Service orchestration (wire subsystems) | EPIC-1 | P0 | 3 | 104,110,150 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-106 | Build artifacts — Windows | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-107 | Build artifacts — macOS | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-108 | Build artifacts — Linux | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -214,6 +214,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 12 | 2026-06-08 | PROJ-150 | 3 | 56 | 28% | Multi-session fan-out (special-care): Fanout over per-device Subscribers; BroadcastState filters deltas by each session's SubscriptionSet (encode once), BroadcastLayout gated on edited-profile + edit-mode, FlushAll, per-subscriber isolation. Tests (`-race`): subscription filter, two-profile isolation (P1-AC-11), 8-session fan-out, concurrent broadcast+churn. EPIC-4 48%. Newly Ready: 124. Key unlock toward M3. |
 | 13 | 2026-06-08 | PROJ-170 | 3 | 59 | 30% | PAL capability/provider-chain framework: generic Provider[T] + Chain[T] (probe→bind highest-available→Capability (value,ok)→Rebind on fault→degrade to unavailable, no panic); Telemetry/Power capability interface stubs. Tests: bind order, all-unavailable degradation (P1-AC-05), re-probe-on-fault. EPIC-5 started (11%). **30% of Phase 1.** |
 | 14 | 2026-06-08 | PROJ-103 | 2 | 61 | 31% | Config loader: typed Config (telemetry/media/smarthome/thresholds/display) + Default() + resilient Load (missing→defaults, malformed→defaults+err, out-of-range→clamped, no crash); no secret fields (115 guard). Sample config.json. Newly Ready: 104 (entrypoint), 130 (plugin host). M1 now gated only on 102 live-CI. EPIC-1 13%. |
+| 15 | 2026-06-08 | PROJ-104 | 2 | 63 | 32% | Engine entrypoint: --service/--console/--version/--config flags, config load, staged Boot→READY (documented 2B §7.1 ordering, stub stages), SIGINT/SIGTERM→graceful Shutdown (2B §7.2). lifecycle pkg (Boot/Shutdown + Default stages/steps). Tests: flag parse, boot/shutdown ordering, console-run→shutdown. Newly Ready: 105. EPIC-1 19%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
