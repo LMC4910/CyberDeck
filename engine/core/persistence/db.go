@@ -95,6 +95,23 @@ func (db *DB) JournalMode(ctx context.Context) (string, error) {
 	return mode, nil
 }
 
+// WithWriteTx runs fn inside a single write transaction, committing on success
+// and rolling back on any error so a multi-row write is all-or-nothing.
+func (db *DB) WithWriteTx(ctx context.Context, fn func(tx *sql.Tx) error) error {
+	tx, err := db.writer.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("persistence: begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }() // no-op after a successful Commit
+	if err := fn(tx); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("persistence: commit tx: %w", err)
+	}
+	return nil
+}
+
 // Close closes both handles, reader first.
 func (db *DB) Close() error {
 	var errs []error
