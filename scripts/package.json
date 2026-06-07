@@ -1,0 +1,13 @@
+{
+  "name": "cyberdeck-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build-tpz": "node build-tpz.mjs",
+    "screenshots": "node build-tpz.mjs --screenshots-only"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "puppeteer": "^24.0.0"
+  }
+}
