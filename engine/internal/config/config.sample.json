@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "telemetry": {
+    "cpu_interval_ms": 1000,
+    "gpu_interval_ms": 2000,
+    "storage_interval_ms": 5000
+  },
+  "media": {
+    "poll_interval_ms": 1000
+  },
+  "smarthome": {
+    "ha_base_url": ""
+  },
+  "thresholds": {
+    "cpu_temp_warn": 85,
+    "gpu_temp_warn": 85,
+    "ram_warn_percent": 90
+  },
+  "display": {
+    "theme": "cyberpunk"
+  }
+}
