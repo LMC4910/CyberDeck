@@ -8,7 +8,9 @@ package security
 import (
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -120,6 +122,16 @@ func load(sec secretstore.SecretStore, pub PublicStore, uuid string) (*Identity,
 // SigningPublicKey returns the Ed25519 public key (safe to share/advertise).
 func (i *Identity) SigningPublicKey() ed25519.PublicKey {
 	return i.signingPublic
+}
+
+// Fingerprint is the engine's public-key fingerprint: lowercase hex of
+// SHA-256(Ed25519 public key). It is the stable, shareable anti-MITM identifier
+// advertised in mDNS TXT records (PROJ-147) and verified at pairing (PROJ-123/124,
+// 2E §3) — a client confirms this matches what it saw via QR/TXT/visual before key
+// confirm. Safe to publish (derived only from public material).
+func (i *Identity) Fingerprint() string {
+	sum := sha256.Sum256(i.signingPublic)
+	return hex.EncodeToString(sum[:])
 }
 
 // Sign signs msg with the engine's Ed25519 private key (used for handshake nonce

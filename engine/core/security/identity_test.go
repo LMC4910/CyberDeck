@@ -52,6 +52,40 @@ func TestCreateThenLoad(t *testing.T) {
 	}
 }
 
+func TestFingerprintStableAndKeyDependent(t *testing.T) {
+	sec := secretstore.NewMemoryStore()
+	pub := newMemPublicStore()
+
+	id1, err := LoadOrCreate(sec, pub, "e")
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	// Stable across reload (same key → same fingerprint).
+	id2, err := LoadOrCreate(sec, pub, "e")
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	fp := id1.Fingerprint()
+	if fp != id2.Fingerprint() {
+		t.Errorf("fingerprint changed across reload: %s vs %s", fp, id2.Fingerprint())
+	}
+	// SHA-256 hex is 64 lowercase hex chars.
+	if len(fp) != 64 {
+		t.Errorf("fingerprint length = %d, want 64", len(fp))
+	}
+	if strings.TrimLeft(fp, "0123456789abcdef") != "" {
+		t.Fatalf("fingerprint has non-lowercase-hex chars: %s", fp)
+	}
+	// A different identity (different key) yields a different fingerprint.
+	other, err := LoadOrCreate(secretstore.NewMemoryStore(), newMemPublicStore(), "e")
+	if err != nil {
+		t.Fatalf("create other: %v", err)
+	}
+	if other.Fingerprint() == fp {
+		t.Error("distinct keys produced the same fingerprint")
+	}
+}
+
 func TestSignVerifyAcrossReload(t *testing.T) {
 	sec := secretstore.NewMemoryStore()
 	pub := newMemPublicStore()

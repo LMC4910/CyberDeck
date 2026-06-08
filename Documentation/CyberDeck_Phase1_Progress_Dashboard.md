@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 33 tickets / 78 pts (…132, 133, 171, 105) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 34 tickets / 81 pts (…133, 171, 105, 147) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 31 |
-| **Ready now** | 16 (106, 107, 108, 124, 126, 144, 145, 147, 149, 172, 173, 174, 175, 176, 200, 201) |
-| **Completion** | **39%** (78 / 199 pts) |
+| **Blocked** | 30 |
+| **Ready now** | 16 (106, 107, 108, 124, 126, 144, 145, 148, 149, 172, 173, 174, 175, 176, 200, 201) |
+| **Completion** | **41%** (81 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -51,7 +51,7 @@
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 4 | 9 | 28% |
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
-| EPIC-4 Transport & Connectivity | 11 | 27 | 5 | 13 | 48% |
+| EPIC-4 Transport & Connectivity | 11 | 27 | 6 | 16 | 59% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 6 | 15 | 56% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
@@ -128,8 +128,8 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-144 | Loopback privileged control channel | EPIC-4 | P1 | 2 | 142 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-145 | Heartbeat / keepalive (sleep-tolerant) | EPIC-4 | P1 | 2 | 142 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-146 | Reconnect (backoff→mDNS→scan) | EPIC-4 | P1 | 3 | 145,147 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-147 | Discovery: mDNS advertise/browse | EPIC-4 | P0 | 3 | 141,120 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-148 | Discovery: manual + active scan | EPIC-4 | P1 | 2 | 147 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-147 | Discovery: mDNS advertise/browse | EPIC-4 | P0 | 3 | 141,120 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-148 | Discovery: manual + active scan | EPIC-4 | P1 | 2 | 147 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-149 | Versioned resync on gap | EPIC-4 | P1 | 2 | 143 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-150 | Multi-session fan-out + subscription filter | EPIC-4 | P0 | 3 | 143,160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-160 | Typed state model + state store core | EPIC-6 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 22 | 2026-06-08 | PROJ-147 | 3 | 81 | 41% | **mDNS / DNS-SD discovery (engine + client).** Engine: `Identity.Fingerprint()` (lowercase hex SHA-256 of the Ed25519 pubkey — the anti-MITM id reused by pairing/QR). `core/transport/discovery_mdns.go` advertises `_cyberdeck._tcp.local` with TXT `{name,uuid,ver,fp}` and browses, via maintained `github.com/libp2p/zeroconf/v2`; pure `encodeTXT`/`parseTXT` codec (uuid+fp required, unknown keys tolerated); `DiscoveredEngine.Endpoint()` maps onto the `SourceMDNS` candidate (kind stays below the manager); `MDNSService` Start/Stop adapter (structurally satisfies the lifecycle Service seam — no import coupling) ready to wire into the boot mDNS stage once identity is constructed in main. Client: `net/discovery.dart` — `DiscoveredEngine` model + pure `fromTxt`/`parseTxtEntries` + `MdnsEngineDiscovery` (official `multicast_dns`, PTR→SRV→TXT→A). Tests: engine (`-race`) codec round-trip, required-field rejection, unknown-key tolerance, endpoint mapping, in-memory advertise→browse through the seams, fingerprint determinism, + best-effort real-multicast round-trip (skips cleanly when multicast blocked); client (9 tests) fromTxt/equality/TXT parsing. `dart analyze` + `flutter test` green. Discovery is the happy path, not a hard pairing dep (148 manual is the fallback). Newly Ready: 148. EPIC-4 59%. |
 | 21 | 2026-06-08 | PROJ-105 | 3 | 78 | 39% | **Real boot wiring + graceful shutdown + single-instance guard.** `lifecycle.Subsystems` (injected interfaces: Migrator/Closer/Service + InitCore/FlushCore funcs; any nil = logged+skipped so not-yet-built stages — LAN listener/mDNS, 147 — hold their documented place) drives `BuildStages` (config→SQLite→core→plugin host→transport→mDNS→READY, 2B §7.1) and `BuildShutdownSteps` (stop sessions→flush→stop plugins→close SQLite, 2B §7.2). Single-instance guard: portable `AcquireInstance(name, onFocus)` over an OS lock listener with per-OS endpoints — `singleinstance_{linux(abstract socket),darwin(TMPDIR socket+unlink),windows(loopback TCP)}.go`; second launch dials + signals focus then returns `ErrAlreadyRunning`. Added `Host.Shutdown` (close all plugins). Entrypoint now opens+migrates real SQLite, builds core (state store + plugin host), claims the instance lock, boots on its own context (signal drives only the post-boot shutdown wait), `--data` dir flag. Tests (`-race`): boot/shutdown order with fakes, stage-error abort, nil-skip, single-instance refusal+focus + re-acquire, **integration boot with real SQLite→READY→clean close**; cross-compiles linux/darwin. Newly Ready: 106/107/108. EPIC-1 28%. |
 | 20 | 2026-06-08 | PROJ-171 | 3 | 75 | 38% | **First real out-of-process 1P plugin (M3 engine-side).** Factored the IPC wire protocol into a stdlib-only `engine/pluginhost/ipcproto` pkg (Message/payloads/MsgType + Encode/Decode); pluginhost re-exports via type aliases so host + all tests stay green. Added root `go.work` (engine + plugins/telemetry) and the **`plugins/telemetry` module** (gopsutil v4, `replace` → ../../engine): `providers.Gopsutil` implements `pal.Telemetry` ((value,ok) per metric — cpu/ram/net-delta/disk/uptime); `Publisher` emits typed `system.*` stateUpdates on per-metric cadences (cpu/ram/net 1s, disk 10s, uptime 60s) + under→over threshold events (cpu>85, ram>90); `main.go` stdio IPC loop (init→register→publish→heartbeat→exit on stdin close); manifest.json (telemetry.read). Tests (`-race`, both modules): deterministic Publisher (clock-driven cadence + threshold-transition + unavailable-skip), gopsutil smoke (contract), **end-to-end via `pluginhost.Host` launching the plugin as a real subprocess → `system.uptime` reaches the state setter** (P1-AC-04 pipeline + IPC declared-state gate). Newly Ready: 172 (GPU chain). EPIC-5 56%. |
 
