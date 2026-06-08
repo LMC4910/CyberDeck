@@ -273,8 +273,8 @@ func (h *Handshake) OnKeyConfirm(ctx context.Context, kc KeyConfirm) (PairResult
 		StaticPeerPub:     devStaticPub,
 		EphemeralSelfPriv: h.engEph,
 		EphemeralPeerPub:  devEphPub,
-		NonceInitiator:    kc.NonceD,  // device initiated
-		NonceResponder:    h.nonceE,   // engine responded
+		NonceInitiator:    kc.NonceD, // device initiated
+		NonceResponder:    h.nonceE,  // engine responded
 	})
 	if err != nil {
 		h.state = stateFailed

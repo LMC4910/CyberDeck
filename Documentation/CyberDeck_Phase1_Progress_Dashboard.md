@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 31 tickets / 72 pts (…130, 131, 132, 133) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 32 tickets / 75 pts (…130, 131, 132, 133, 171) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 35 |
-| **Ready now** | 14 (105, 124, 126, 144, 145, 147, 149, 171, 173, 174, 175, 176, 200, 201) |
-| **Completion** | **36%** (72 / 199 pts) |
+| **Blocked** | 34 |
+| **Ready now** | 14 (105, 124, 126, 144, 145, 147, 149, 172, 173, 174, 175, 176, 200, 201) |
+| **Completion** | **38%** (75 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -52,7 +52,7 @@
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 5 | 13 | 48% |
-| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 5 | 12 | 44% |
+| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 6 | 15 | 56% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 0 | 0 | 0% |
@@ -138,8 +138,8 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-163 | Session/profile model + activation hook | EPIC-6 | P0 | 3 | 160,113 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-164 | Variables (var.*) typed+durable+bindable | EPIC-6 | P1 | 2 | 160,112 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-172 | 1P plugin: GPU telemetry provider chain | EPIC-5 | P1 | 3 | 171 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-172 | 1P plugin: GPU telemetry provider chain | EPIC-5 | P1 | 3 | 171 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-173 | 1P plugin: power actions | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-174 | 1P plugin: volume (system master) | EPIC-5 | P1 | 2 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-175 | 1P plugin: launchers + system tools | EPIC-5 | P1 | 2 | 132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
@@ -185,7 +185,7 @@ Advance a milestone to ✅ only when **every** gating ticket is Done.
 |------|-----------|-----------------------------------|--------|
 | **M1** | Bootstrap green | 101, 102, 103 | ⬜ Not started |
 | **M2** | Persistence + security base | 110, 111, 112, 113, 114, 115, 120, 121, 122, 125, 127 | ✅ Done (2026-06-07) |
-| **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | ⬜ Not started |
+| **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | 🟨 In progress (6/9 — 180, 181, 184 left) |
 | **M4** | Actions + permissions on device | 125, 133, 173, 174, 175, 187, 188 | ⬜ Not started |
 | **M5** | Resilience proven | 145, 146, 148, 149, 188 | ⬜ Not started |
 | **M6** | Author on desktop, watch live (headline) | 210, 211, 212, 181, 150, 214 | ⬜ Not started |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 20 | 2026-06-08 | PROJ-171 | 3 | 75 | 38% | **First real out-of-process 1P plugin (M3 engine-side).** Factored the IPC wire protocol into a stdlib-only `engine/pluginhost/ipcproto` pkg (Message/payloads/MsgType + Encode/Decode); pluginhost re-exports via type aliases so host + all tests stay green. Added root `go.work` (engine + plugins/telemetry) and the **`plugins/telemetry` module** (gopsutil v4, `replace` → ../../engine): `providers.Gopsutil` implements `pal.Telemetry` ((value,ok) per metric — cpu/ram/net-delta/disk/uptime); `Publisher` emits typed `system.*` stateUpdates on per-metric cadences (cpu/ram/net 1s, disk 10s, uptime 60s) + under→over threshold events (cpu>85, ram>90); `main.go` stdio IPC loop (init→register→publish→heartbeat→exit on stdin close); manifest.json (telemetry.read). Tests (`-race`, both modules): deterministic Publisher (clock-driven cadence + threshold-transition + unavailable-skip), gopsutil smoke (contract), **end-to-end via `pluginhost.Host` launching the plugin as a real subprocess → `system.uptime` reaches the state setter** (P1-AC-04 pipeline + IPC declared-state gate). Newly Ready: 172 (GPU chain). EPIC-5 56%. |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
 

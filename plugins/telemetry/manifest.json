@@ -1,0 +1,18 @@
+{
+  "id": "com.shishir.cyberdeck.telemetry",
+  "name": "System Telemetry",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["telemetry.read"],
+    "network": "none",
+    "filesystem": "none"
+  },
+  "states": [
+    "system.cpu.percent",
+    "system.ram.percent",
+    "system.net.throughput",
+    "system.disk.percent",
+    "system.uptime"
+  ],
+  "contributes": {}
+}

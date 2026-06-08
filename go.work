@@ -1,0 +1,9 @@
+go 1.25.0
+
+// Workspace tying the engine module and the first-party plugin modules together so
+// plugins can import the engine's ipcproto/pal packages locally (no replace
+// directives). Each plugin is still its own module + separate process binary.
+use (
+	./engine
+	./plugins/telemetry
+)
