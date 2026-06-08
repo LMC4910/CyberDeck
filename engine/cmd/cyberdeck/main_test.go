@@ -25,7 +25,7 @@ func TestRunConsoleBootsAndShutsDown(t *testing.T) {
 	cancel() // signal already delivered
 
 	var buf bytes.Buffer
-	if err := run(ctx, []string{"--console", "--config", "does-not-exist.json"}, &buf); err != nil {
+	if err := run(ctx, []string{"--console", "--config", "does-not-exist.json", "--data", t.TempDir()}, &buf); err != nil {
 		t.Fatalf("run --console: %v", err)
 	}
 	out := buf.String()
@@ -40,7 +40,7 @@ func TestRunServiceModeSelected(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	var buf bytes.Buffer
-	if err := run(ctx, []string{"--service", "--config", "none.json"}, &buf); err != nil {
+	if err := run(ctx, []string{"--service", "--config", "none.json", "--data", t.TempDir()}, &buf); err != nil {
 		t.Fatalf("run --service: %v", err)
 	}
 	if !strings.Contains(buf.String(), "service mode") {

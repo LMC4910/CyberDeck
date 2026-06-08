@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 32 tickets / 75 pts (…130, 131, 132, 133, 171) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 33 tickets / 78 pts (…132, 133, 171, 105) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 34 |
-| **Ready now** | 14 (105, 124, 126, 144, 145, 147, 149, 172, 173, 174, 175, 176, 200, 201) |
-| **Completion** | **38%** (75 / 199 pts) |
+| **Blocked** | 31 |
+| **Ready now** | 16 (106, 107, 108, 124, 126, 144, 145, 147, 149, 172, 173, 174, 175, 176, 200, 201) |
+| **Completion** | **39%** (78 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -48,7 +48,7 @@
 
 | Epic | Tickets | Points | Done (tix) | Done (pts) | % complete |
 |------|---------|--------|------------|------------|------------|
-| EPIC-1 Lifecycle & Packaging | 12 | 32 | 3 | 6 | 19% |
+| EPIC-1 Lifecycle & Packaging | 12 | 32 | 4 | 9 | 28% |
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 5 | 13 | 48% |
@@ -98,10 +98,10 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-102 | CI baseline (lint/test/build gates) | EPIC-1 | P0 | 2 | — | 🟨 In Progress | Claude | ✅ Ready | 70% |
 | PROJ-103 | Config loader + schema | EPIC-1 | P0 | 2 | 101 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-104 | Engine service skeleton (daemon lifecycle) | EPIC-1 | P0 | 2 | 101,103 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-105 | Service orchestration (wire subsystems) | EPIC-1 | P0 | 3 | 104,110,150 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-106 | Build artifacts — Windows | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-107 | Build artifacts — macOS | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-108 | Build artifacts — Linux | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-105 | Service orchestration (wire subsystems) | EPIC-1 | P0 | 3 | 104,110,150 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-106 | Build artifacts — Windows | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-107 | Build artifacts — macOS | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-108 | Build artifacts — Linux | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-109 | Tray/menubar control app | EPIC-1 | P1 | 3 | 105,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-110 | Persistence baseline (SQLite + schema v1) | EPIC-2 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-111 | Migration framework | EPIC-2 | P0 | 2 | 110 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 21 | 2026-06-08 | PROJ-105 | 3 | 78 | 39% | **Real boot wiring + graceful shutdown + single-instance guard.** `lifecycle.Subsystems` (injected interfaces: Migrator/Closer/Service + InitCore/FlushCore funcs; any nil = logged+skipped so not-yet-built stages — LAN listener/mDNS, 147 — hold their documented place) drives `BuildStages` (config→SQLite→core→plugin host→transport→mDNS→READY, 2B §7.1) and `BuildShutdownSteps` (stop sessions→flush→stop plugins→close SQLite, 2B §7.2). Single-instance guard: portable `AcquireInstance(name, onFocus)` over an OS lock listener with per-OS endpoints — `singleinstance_{linux(abstract socket),darwin(TMPDIR socket+unlink),windows(loopback TCP)}.go`; second launch dials + signals focus then returns `ErrAlreadyRunning`. Added `Host.Shutdown` (close all plugins). Entrypoint now opens+migrates real SQLite, builds core (state store + plugin host), claims the instance lock, boots on its own context (signal drives only the post-boot shutdown wait), `--data` dir flag. Tests (`-race`): boot/shutdown order with fakes, stage-error abort, nil-skip, single-instance refusal+focus + re-acquire, **integration boot with real SQLite→READY→clean close**; cross-compiles linux/darwin. Newly Ready: 106/107/108. EPIC-1 28%. |
 | 20 | 2026-06-08 | PROJ-171 | 3 | 75 | 38% | **First real out-of-process 1P plugin (M3 engine-side).** Factored the IPC wire protocol into a stdlib-only `engine/pluginhost/ipcproto` pkg (Message/payloads/MsgType + Encode/Decode); pluginhost re-exports via type aliases so host + all tests stay green. Added root `go.work` (engine + plugins/telemetry) and the **`plugins/telemetry` module** (gopsutil v4, `replace` → ../../engine): `providers.Gopsutil` implements `pal.Telemetry` ((value,ok) per metric — cpu/ram/net-delta/disk/uptime); `Publisher` emits typed `system.*` stateUpdates on per-metric cadences (cpu/ram/net 1s, disk 10s, uptime 60s) + under→over threshold events (cpu>85, ram>90); `main.go` stdio IPC loop (init→register→publish→heartbeat→exit on stdin close); manifest.json (telemetry.read). Tests (`-race`, both modules): deterministic Publisher (clock-driven cadence + threshold-transition + unavailable-skip), gopsutil smoke (contract), **end-to-end via `pluginhost.Host` launching the plugin as a real subprocess → `system.uptime` reaches the state setter** (P1-AC-04 pipeline + IPC declared-state gate). Newly Ready: 172 (GPU chain). EPIC-5 56%. |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):

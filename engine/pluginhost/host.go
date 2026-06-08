@@ -149,6 +149,27 @@ func (h *Host) Launch(spec LaunchSpec) (*Plugin, error) {
 	return p, nil
 }
 
+// Shutdown closes every launched plugin (each plugin's Close does SIGTERM-then-kill
+// with a grace period) and clears the registry. It is the lifecycle "stop plugins"
+// step (PROJ-105). Safe to call with no plugins launched.
+func (h *Host) Shutdown(context.Context) error {
+	h.mu.Lock()
+	plugins := make([]*Plugin, 0, len(h.plugins))
+	for _, p := range h.plugins {
+		plugins = append(plugins, p)
+	}
+	h.plugins = make(map[string]*Plugin)
+	h.mu.Unlock()
+
+	var first error
+	for _, p := range plugins {
+		if err := p.Close(); err != nil && first == nil {
+			first = err
+		}
+	}
+	return first
+}
+
 // Plugin returns a launched plugin by name.
 func (h *Host) Plugin(name string) (*Plugin, bool) {
 	h.mu.Lock()
