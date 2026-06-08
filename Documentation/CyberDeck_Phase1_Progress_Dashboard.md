@@ -28,12 +28,12 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 34 tickets / 81 pts (…133, 171, 105, 147) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 35 tickets / 84 pts (…171, 105, 147, 180) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 30 |
-| **Ready now** | 16 (106, 107, 108, 124, 126, 144, 145, 148, 149, 172, 173, 174, 175, 176, 200, 201) |
-| **Completion** | **41%** (81 / 199 pts) |
-| **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
+| **Blocked** | 28 |
+| **Ready now** | 18 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 173, 174, 175, 176, 181, 200, 201) |
+| **Completion** | **42%** (84 / 199 pts) |
+| **Critical-path progress** | 14 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓) |
 | **Current wave** | 1 of 10 |
 
 > **[†] Numbering reconciliation (2026-06-07):** the original dashboard labeled PROJ-121="Identity" and PROJ-120="Trust store", but the authoritative Batch-1 *tickets* define **PROJ-121 = per-OS SecretStore** (root) and **PROJ-120 = engine identity** (→121). The dependency shape is identical; titles corrected here to match the tickets (the ticket wins for scope per Agent Instructions §1).
@@ -55,7 +55,7 @@
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 6 | 15 | 56% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
-| EPIC-8 Client Runtime & Widgets | 10 | 24 | 0 | 0 | 0% |
+| EPIC-8 Client Runtime & Widgets | 10 | 24 | 1 | 3 | 13% |
 | EPIC-9 Designer | 8 | 21 | 0 | 0 | 0% |
 | EPIC-10 Hardening & Acceptance | 4 | 11 | 0 | 0 | 0% |
 | **TOTAL** | **80** | **199** | **0** | **0** | **0%** |
@@ -102,7 +102,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-106 | Build artifacts — Windows | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-107 | Build artifacts — macOS | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-108 | Build artifacts — Linux | EPIC-1 | P1 | 3 | 105 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-109 | Tray/menubar control app | EPIC-1 | P1 | 3 | 105,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-109 | Tray/menubar control app | EPIC-1 | P1 | 3 | 105,180 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-110 | Persistence baseline (SQLite + schema v1) | EPIC-2 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-111 | Migration framework | EPIC-2 | P0 | 2 | 110 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-112 | Documents repository | EPIC-2 | P0 | 3 | 111 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -144,8 +144,8 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-174 | 1P plugin: volume (system master) | EPIC-5 | P1 | 2 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-175 | 1P plugin: launchers + system tools | EPIC-5 | P1 | 2 | 132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-176 | 1P plugin: notification count | EPIC-5 | P1 | 2 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-180 | Client connection mgr + pairing UI (QR) | EPIC-8 | P0 | 3 | 147,123 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-181 | Renderer registry + layout interpreter | EPIC-8 | P0 | 3 | 180,161 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-180 | Client connection mgr + pairing UI (QR) | EPIC-8 | P0 | 3 | 147,123 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-181 | Renderer registry + layout interpreter | EPIC-8 | P0 | 3 | 180,161 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-182 | Widget: button + toggle | EPIC-8 | P0 | 2 | 181 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-183 | Widget: slider + label + image | EPIC-8 | P0 | 2 | 181 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-184 | Widget: circular + linear gauge | EPIC-8 | P0 | 3 | 181 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -185,7 +185,7 @@ Advance a milestone to ✅ only when **every** gating ticket is Done.
 |------|-----------|-----------------------------------|--------|
 | **M1** | Bootstrap green | 101, 102, 103 | ⬜ Not started |
 | **M2** | Persistence + security base | 110, 111, 112, 113, 114, 115, 120, 121, 122, 125, 127 | ✅ Done (2026-06-07) |
-| **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | 🟨 In progress (6/9 — 180, 181, 184 left) |
+| **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | 🟨 In progress (7/9 — 181, 184 left) |
 | **M4** | Actions + permissions on device | 125, 133, 173, 174, 175, 187, 188 | ⬜ Not started |
 | **M5** | Resilience proven | 145, 146, 148, 149, 188 | ⬜ Not started |
 | **M6** | Author on desktop, watch live (headline) | 210, 211, 212, 181, 150, 214 | ⬜ Not started |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 23 | 2026-06-08 | PROJ-180 | 3 | 84 | 42% | **Client connection manager + pairing (CRITICAL PATH; M3 client side).** Full Dart client stack mirroring the engine wire/crypto: `crypto/crypto.dart` (X25519/Ed25519/HKDF-SHA256/ChaCha20-Poly1305 via package:cryptography + BigInt Ed25519→X25519 conversions) **proven interoperable by cross-language KAT vectors emitted from the Go engine**; `net/{framing,envelope,encrypted_session,channels,conn}.dart` (uint32 frames, base64-payload JSON envelope, per-direction AEAD session, channel router); `net/pairing.dart` (device-side ClientHello→ServerHello→KeyConfirm→PairResult state machine — **engine fingerprint verify (anti-MITM)**, sigD/sigE, forward-secret keys; defines the handshake wire encoding since the engine has none yet; DeviceIdentity + injectable KeyStore); `net/connection_manager.dart` (resolve+dial+pair, candidate fallback, bounded retry/backoff); `app/pairing.dart` (engine list, QR scan — mobile_scanner on Android, manual entry on desktop — fingerprint + error UI). Tests (44, all green): crypto KAT, framing, envelope (byte-exact vs Go JSON), session (round-trip + **no plaintext on the wire** + tamper teardown), pairing vs a faithful Dart mock engine (**pair success / fingerprint mismatch / bad token / forged sig**), connection-manager retry, QR parse, pairing widget. `dart analyze` clean; **`flutter build windows` + `flutter build apk` both green** (dropped flutter_secure_storage to avoid the VS-ATL dep — secure keystore injected per-platform; disabled Kotlin incremental for the mobile_scanner build). P1-AC-02 + P1-AC-03(client) met. Live Go↔Dart interop awaits the engine accept/handshake-over-wire glue (future ticket). Newly Ready: 181, 109. EPIC-8 started (13%). Critical path 14/31. |
 | 22 | 2026-06-08 | PROJ-147 | 3 | 81 | 41% | **mDNS / DNS-SD discovery (engine + client).** Engine: `Identity.Fingerprint()` (lowercase hex SHA-256 of the Ed25519 pubkey — the anti-MITM id reused by pairing/QR). `core/transport/discovery_mdns.go` advertises `_cyberdeck._tcp.local` with TXT `{name,uuid,ver,fp}` and browses, via maintained `github.com/libp2p/zeroconf/v2`; pure `encodeTXT`/`parseTXT` codec (uuid+fp required, unknown keys tolerated); `DiscoveredEngine.Endpoint()` maps onto the `SourceMDNS` candidate (kind stays below the manager); `MDNSService` Start/Stop adapter (structurally satisfies the lifecycle Service seam — no import coupling) ready to wire into the boot mDNS stage once identity is constructed in main. Client: `net/discovery.dart` — `DiscoveredEngine` model + pure `fromTxt`/`parseTxtEntries` + `MdnsEngineDiscovery` (official `multicast_dns`, PTR→SRV→TXT→A). Tests: engine (`-race`) codec round-trip, required-field rejection, unknown-key tolerance, endpoint mapping, in-memory advertise→browse through the seams, fingerprint determinism, + best-effort real-multicast round-trip (skips cleanly when multicast blocked); client (9 tests) fromTxt/equality/TXT parsing. `dart analyze` + `flutter test` green. Discovery is the happy path, not a hard pairing dep (148 manual is the fallback). Newly Ready: 148. EPIC-4 59%. |
 | 21 | 2026-06-08 | PROJ-105 | 3 | 78 | 39% | **Real boot wiring + graceful shutdown + single-instance guard.** `lifecycle.Subsystems` (injected interfaces: Migrator/Closer/Service + InitCore/FlushCore funcs; any nil = logged+skipped so not-yet-built stages — LAN listener/mDNS, 147 — hold their documented place) drives `BuildStages` (config→SQLite→core→plugin host→transport→mDNS→READY, 2B §7.1) and `BuildShutdownSteps` (stop sessions→flush→stop plugins→close SQLite, 2B §7.2). Single-instance guard: portable `AcquireInstance(name, onFocus)` over an OS lock listener with per-OS endpoints — `singleinstance_{linux(abstract socket),darwin(TMPDIR socket+unlink),windows(loopback TCP)}.go`; second launch dials + signals focus then returns `ErrAlreadyRunning`. Added `Host.Shutdown` (close all plugins). Entrypoint now opens+migrates real SQLite, builds core (state store + plugin host), claims the instance lock, boots on its own context (signal drives only the post-boot shutdown wait), `--data` dir flag. Tests (`-race`): boot/shutdown order with fakes, stage-error abort, nil-skip, single-instance refusal+focus + re-acquire, **integration boot with real SQLite→READY→clean close**; cross-compiles linux/darwin. Newly Ready: 106/107/108. EPIC-1 28%. |
 | 20 | 2026-06-08 | PROJ-171 | 3 | 75 | 38% | **First real out-of-process 1P plugin (M3 engine-side).** Factored the IPC wire protocol into a stdlib-only `engine/pluginhost/ipcproto` pkg (Message/payloads/MsgType + Encode/Decode); pluginhost re-exports via type aliases so host + all tests stay green. Added root `go.work` (engine + plugins/telemetry) and the **`plugins/telemetry` module** (gopsutil v4, `replace` → ../../engine): `providers.Gopsutil` implements `pal.Telemetry` ((value,ok) per metric — cpu/ram/net-delta/disk/uptime); `Publisher` emits typed `system.*` stateUpdates on per-metric cadences (cpu/ram/net 1s, disk 10s, uptime 60s) + under→over threshold events (cpu>85, ram>90); `main.go` stdio IPC loop (init→register→publish→heartbeat→exit on stdin close); manifest.json (telemetry.read). Tests (`-race`, both modules): deterministic Publisher (clock-driven cadence + threshold-transition + unavailable-skip), gopsutil smoke (contract), **end-to-end via `pluginhost.Host` launching the plugin as a real subprocess → `system.uptime` reaches the state setter** (P1-AC-04 pipeline + IPC declared-state gate). Newly Ready: 172 (GPU chain). EPIC-5 56%. |

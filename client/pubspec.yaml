@@ -38,6 +38,14 @@ dependencies:
   # mDNS / DNS-SD engine discovery (PROJ-147). Pure-Dart, no native plugin.
   multicast_dns: ^0.3.2
 
+  # Session crypto (PROJ-180): X25519 / Ed25519 / HKDF-SHA256 / ChaCha20-Poly1305,
+  # mirroring the engine's PROJ-122 scheme.
+  cryptography: ^2.7.0
+
+  # Camera QR scanning for pairing (PROJ-180, Android). Dart API is cross-platform;
+  # the camera is only opened on supported platforms (desktop uses manual entry).
+  mobile_scanner: ^5.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
