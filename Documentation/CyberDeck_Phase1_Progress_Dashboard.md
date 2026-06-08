@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 30 tickets / 70 pts (…104, 130, 131, 132) — **EPIC-2 & EPIC-6 complete; M2 reached** |
+| **Done** | 31 tickets / 72 pts (…130, 131, 132, 133) — **EPIC-2 & EPIC-6 complete; M2 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 35 |
-| **Ready now** | 15 (105, 124, 126, 133, 144, 145, 147, 149, 171, 173, 174, 175, 176, 200, 201) |
-| **Completion** | **35%** (70 / 199 pts) |
+| **Ready now** | 14 (105, 124, 126, 144, 145, 147, 149, 171, 173, 174, 175, 176, 200, 201) |
+| **Completion** | **36%** (72 / 199 pts) |
 | **Critical-path progress** | 11 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -52,7 +52,7 @@
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 5 | 13 | 48% |
-| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 4 | 10 | 37% |
+| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 5 | 12 | 44% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 0 | 0 | 0% |
@@ -120,7 +120,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-130 | Plugin host: launch/supervise/IPC | EPIC-5 | P0 | 3 | 160,103 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-131 | Plugin host: restart/fault policy | EPIC-5 | P0 | 2 | 130 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-132 | Plugin manifest validation + registry merge | EPIC-5 | P0 | 2 | 130,161 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-133 | Permission enforcement at IPC boundary | EPIC-5 | P0 | 2 | 132,125 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-133 | Permission enforcement at IPC boundary | EPIC-5 | P0 | 2 | 132,125 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-140 | Endpoint abstraction + ConnectionManager | EPIC-4 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-141 | Framing + Serializer seam | EPIC-4 | P0 | 2 | 140 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-142 | Encrypted session (reader/writer/demux) | EPIC-4 | P0 | 3 | 141,122 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -218,6 +218,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 16 | 2026-06-08 | PROJ-130 | 3 | 66 | 33% | Plugin host (special-care): Host.Launch spawns plugin subprocess over stdio, newline-JSON IPC (init/register/stateUpdate/log/heartbeat/actionResult), stateUpdate→StateSetter, register→callback, log→logger; heartbeat liveness (detect hung); clean Close with kill fallback. Test plugin via TestMain re-exec (normal/hang/crash). Tests (`-race`): launch→init→register→stateUpdate, hung-detect, log capture, crash-exit (engine survives). Newly Ready: 131, 132. EPIC-5 22%. |
 | 17 | 2026-06-08 | PROJ-131 | 2 | 68 | 34% | Plugin restart/fault policy (special-care): Supervisor launches via Host, watches Exited/Unhealthy, restarts with capped backoff, FAULTED after N failures; on fault keeps contributions + marks declared states unavailable; READY→RESTARTING→FAULTED. Added Plugin.DeclaredStates() + panic test-plugin mode. Tests (`-race`): crash→restart→fault, **engine survives induced panic (P1-AC-13)**, faulted states unavailable, normal stays READY. Crash-isolation complete. EPIC-5 30%. |
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
+| 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
