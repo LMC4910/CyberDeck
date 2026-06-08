@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/plugin_manifest.schema.json",
+  "title": "CyberDeck Plugin Manifest",
+  "description": "plugin.manifest.json (TRD 2F §3): a plugin's id, apiVersion, declared permissions, and registry contributions. The engine validates this, gates on apiVersion major (Master §6.4), and merges contributions into the registries (PROJ-132 enforces these rules in code).",
+  "type": "object",
+  "required": ["id", "name", "apiVersion"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "description": "reverse-DNS plugin id, e.g. com.shishir.cyberdeck.telemetry" },
+    "name": { "type": "string", "minLength": 1 },
+    "apiVersion": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)*$", "description": "engine refuses an incompatible major" },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "categories": { "type": "array", "items": { "type": "string" } },
+        "network": { "type": "string", "enum": ["none", "localhost", "outbound"] },
+        "filesystem": { "type": "string", "enum": ["none", "own-dir"] }
+      }
+    },
+    "contributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actions": { "type": "array", "items": { "$ref": "action.schema.json" } },
+        "widgets": { "type": "array", "items": { "$ref": "widget.schema.json" } },
+        "flowNodes": { "type": "array", "items": { "$ref": "flownode.schema.json" } }
+      }
+    }
+  }
+}
