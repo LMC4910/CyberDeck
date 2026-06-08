@@ -173,8 +173,25 @@ type Plugin struct {
 
 	registered chan RegisterPayload
 
+	stateMu        sync.Mutex
+	declaredStates []string
+
 	resultsMu sync.Mutex
 	results   map[string]chan ActionResultPayload
+}
+
+// DeclaredStates returns the state IDs the plugin declared in its register message
+// (used by the supervisor to mark them unavailable on fault, PROJ-131).
+func (p *Plugin) DeclaredStates() []string {
+	p.stateMu.Lock()
+	defer p.stateMu.Unlock()
+	return append([]string(nil), p.declaredStates...)
+}
+
+func (p *Plugin) setDeclaredStates(states []string) {
+	p.stateMu.Lock()
+	p.declaredStates = append([]string(nil), states...)
+	p.stateMu.Unlock()
 }
 
 // Name returns the plugin name.
@@ -223,6 +240,7 @@ func (p *Plugin) dispatch(m Message) {
 	switch m.Type {
 	case MsgRegister:
 		if m.Register != nil {
+			p.setDeclaredStates(m.Register.States)
 			if p.host.onRegister != nil {
 				p.host.onRegister(p.name, *m.Register)
 			}

@@ -42,6 +42,8 @@ func testPluginMain(mode string) {
 	switch mode {
 	case "crash":
 		os.Exit(2)
+	case "panic":
+		panic("induced plugin panic") // genuine panic → process dies (P1-AC-13)
 	case "hang":
 		select {} // never heartbeat, never read → host must detect + kill
 	}
