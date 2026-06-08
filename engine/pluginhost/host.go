@@ -26,6 +26,7 @@ type Host struct {
 	setter     StateSetter
 	logger     *log.Logger
 	onRegister func(plugin string, rp RegisterPayload)
+	denier     AuditDenier
 	hbTimeout  time.Duration
 
 	mu      sync.Mutex
@@ -51,6 +52,9 @@ func WithLogger(l *log.Logger) Option {
 func WithOnRegister(fn func(string, RegisterPayload)) Option {
 	return func(h *Host) { h.onRegister = fn }
 }
+
+// WithAuditDenier sets the sink for plugin permission denials (PROJ-133/127).
+func WithAuditDenier(d AuditDenier) Option { return func(h *Host) { h.denier = d } }
 
 // WithHeartbeatTimeout sets the liveness timeout (a plugin silent longer than this
 // is considered hung).
@@ -84,7 +88,8 @@ type LaunchSpec struct {
 	Dir          string
 	Config       json.RawMessage
 	GrantedPerms []string
-	Stderr       io.Writer // per-plugin log sink (nil = discard)
+	Permissions  ManifestPermissions // network/filesystem levels for the IPC gate (PROJ-133)
+	Stderr       io.Writer           // per-plugin log sink (nil = discard)
 }
 
 // Launch starts a plugin process, sends init, and begins the IPC + supervision
@@ -116,6 +121,7 @@ func (h *Host) Launch(spec LaunchSpec) (*Plugin, error) {
 		name:       spec.Name,
 		host:       h,
 		cmd:        cmd,
+		perms:      spec.Permissions,
 		stdin:      stdin,
 		ctx:        ctx,
 		cancel:     cancel,
@@ -153,9 +159,10 @@ func (h *Host) Plugin(name string) (*Plugin, bool) {
 
 // Plugin is one supervised plugin process.
 type Plugin struct {
-	name string
-	host *Host
-	cmd  *exec.Cmd
+	name  string
+	host  *Host
+	cmd   *exec.Cmd
+	perms ManifestPermissions
 
 	stdin   io.WriteCloser
 	writeMu sync.Mutex
@@ -250,9 +257,17 @@ func (p *Plugin) dispatch(m Message) {
 			}
 		}
 	case MsgStateUpdate:
-		if m.State != nil && p.host.setter != nil {
-			if err := p.host.setter.Set(m.State.ID, m.State.Value); err != nil {
-				p.host.logger.Printf("pluginhost: %s: stateUpdate %q rejected: %v", p.name, m.State.ID, err)
+		if m.State != nil {
+			// IPC permission gate (PROJ-133): a plugin may only publish states it
+			// declared in its register/manifest.
+			if !p.allowsState(m.State.ID) {
+				p.host.auditDenied(p.name, "state", m.State.ID)
+				return
+			}
+			if p.host.setter != nil {
+				if err := p.host.setter.Set(m.State.ID, m.State.Value); err != nil {
+					p.host.logger.Printf("pluginhost: %s: stateUpdate %q rejected: %v", p.name, m.State.ID, err)
+				}
 			}
 		}
 	case MsgLog:

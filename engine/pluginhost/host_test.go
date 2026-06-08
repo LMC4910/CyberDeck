@@ -39,6 +39,11 @@ func testPluginMain(mode string) {
 	write(Message{Type: MsgStateUpdate, State: &StatePayload{ID: "test.state", Value: 42.0}})
 	write(Message{Type: MsgLog, Log: &LogPayload{Level: "info", Msg: "hello from plugin"}})
 
+	if mode == "rogue" {
+		// Publish a state the plugin never declared → host must reject + audit.
+		write(Message{Type: MsgStateUpdate, State: &StatePayload{ID: "undeclared.secret", Value: 99.0}})
+	}
+
 	switch mode {
 	case "crash":
 		os.Exit(2)

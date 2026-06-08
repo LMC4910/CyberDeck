@@ -81,9 +81,9 @@ func TestManifestCollisionRejected(t *testing.T) {
 func TestMalformedAndInvalidManifest(t *testing.T) {
 	bad := []string{
 		`{ not json`,
-		`{"name":"P","apiVersion":"1.0"}`,                          // no id
-		`{"id":"p","apiVersion":"1.0"}`,                            // no name
-		`{"id":"p","name":"P"}`,                                    // no apiVersion
+		`{"name":"P","apiVersion":"1.0"}`, // no id
+		`{"id":"p","apiVersion":"1.0"}`,   // no name
+		`{"id":"p","name":"P"}`,           // no apiVersion
 		`{"id":"p","name":"P","apiVersion":"1.0","permissions":{"network":"evil"}}`, // bad perm enum
 	}
 	for i, s := range bad {
