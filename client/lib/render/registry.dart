@@ -10,6 +10,8 @@ library;
 import 'package:flutter/material.dart';
 
 import 'model.dart';
+import 'widgets/gauge_circular.dart';
+import 'widgets/gauge_linear.dart';
 
 /// Inputs to a widget builder: the descriptor node and its current bound value.
 class WidgetRenderContext {
@@ -48,6 +50,9 @@ class RendererRegistry {
   factory RendererRegistry.withBuiltins() {
     final r = RendererRegistry();
     r.register('label', buildLabel);
+    r.register('gauge.circular', buildCircularGauge);
+    r.register('gauge.linear', buildLinearGauge);
+    r.register('gauge.bar', buildLinearGauge); // alias (2C §7.1 "linear gauge/bar")
     return r;
   }
 }
