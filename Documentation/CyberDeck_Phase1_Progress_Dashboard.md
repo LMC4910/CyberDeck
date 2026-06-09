@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 43 tickets / 107 pts (…214, 173, 182) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
+| **Done** | 44 tickets / 109 pts (…173, 182, 183) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 14 |
-| **Ready now** | 24 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 183, 185, 186, 187, 200, 201, 213, 215, 216, 217) |
-| **Completion** | **54%** (107 / 199 pts) |
+| **Ready now** | 23 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 185, 186, 187, 200, 201, 213, 215, 216, 217) |
+| **Completion** | **55%** (109 / 199 pts) |
 | **Critical-path progress** | 26 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓, 181 ✓, 210 ✓, 211 ✓, 212 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -55,7 +55,7 @@
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 7 | 18 | 67% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
-| EPIC-8 Client Runtime & Widgets | 10 | 24 | 4 | 11 | 46% |
+| EPIC-8 Client Runtime & Widgets | 10 | 24 | 5 | 13 | 54% |
 | EPIC-9 Designer | 8 | 21 | 4 | 12 | 57% |
 | EPIC-10 Hardening & Acceptance | 4 | 11 | 0 | 0 | 0% |
 | **TOTAL** | **80** | **199** | **0** | **0** | **0%** |
@@ -147,7 +147,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-180 | Client connection mgr + pairing UI (QR) | EPIC-8 | P0 | 3 | 147,123 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-181 | Renderer registry + layout interpreter | EPIC-8 | P0 | 3 | 180,161 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-182 | Widget: button + toggle | EPIC-8 | P0 | 2 | 181 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-183 | Widget: slider + label + image | EPIC-8 | P0 | 2 | 181 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-183 | Widget: slider + label + image | EPIC-8 | P0 | 2 | 181 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-184 | Widget: circular + linear gauge | EPIC-8 | P0 | 3 | 181 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-185 | Widget: sparkline (series state) | EPIC-8 | P1 | 2 | 181,160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-186 | Widget: media card (basic) + page-nav | EPIC-8 | P1 | 2 | 181 | ⬜ Backlog | Claude | ✅ Ready | 0% |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 32 | 2026-06-09 | PROJ-183 | 2 | 109 | 55% | **Slider + label + image widgets.** `render/widgets/slider.dart` (bound numeric within config min/max; reflects state; drag emits `dragValue` slot **with the level** — extended `InteractionSink`/`emit` to carry an optional value), `label.dart` (moved out of registry + **presentation-side unit formatting**, ADR-0019: int as-is, double→1 decimal → "42.0 °C"), `image.dart` (asset via `Image.asset` with broken-image fallback, else a named icon from the built-in set). Registered `slider`/`image` (label re-registered from its file). Tests: label format matrix + bound-value-with-unit render, slider reflect + drag-emits-dragValue-in-range, image renders an icon. `dart analyze` clean; full client suite **90 green**. EPIC-8 54%. |
 | 31 | 2026-06-09 | PROJ-182 | 2 | 107 | 54% | **Button + toggle widgets.** `client/lib/render/widgets/button.dart` (action trigger: immediate pressed-state ≤100ms on tap-down via GestureDetector + AnimatedScale; emits its `tap` slot) and `toggle.dart` (Switch bound to a boolean state — reflects host state, emits `tap` on change; the mapped action does the real toggle round-trip). Both apply `valueRules` accent. Added a minimal **`InteractionSink` seam** (typedef + `WidgetRenderContext.onInteraction`/`emit`, threaded through `LayoutInterpreter.interactionSink` → `RenderedWidget`) so interactive widgets emit gesture slots today; PROJ-187 formalises the full gesture vocab + 2-tap. Registered `button`/`toggle` in `withBuiltins`. Tests (widget): button render + **pressed-state on tap-down** + tap-slot emit; toggle **reflects bound bool** + emit on tap. `dart analyze` clean; full client suite **86 green**. EPIC-8 46%. |
 | 30 | 2026-06-09 | PROJ-173 | 3 | 105 | 53% | **First-party power-actions plugin (toward M4).** New `plugins/power` module (go.work + `replace`→engine, like 171): `provider.go` (six action ids, `destructive` map [shutdown/restart/hibernate/logoff], optional `delay` for shutdown/restart, a `runner` seam so commands are mockable — never power off CI, `execute`→per-OS `commandFor`), `power_{windows,darwin,linux}.go` (per-OS command tables; unsupported actions degrade cleanly), `main.go` (stdio IPC: register the six `registry.ActionDescriptor`s with destructive flags → handle `MsgInvokeAction` → run via provider → `MsgActionResult`; `CYBERDECK_POWER_DRYRUN` for tests). Added **`pluginhost.Plugin.Invoke`** (host→plugin action RPC: send `MsgInvokeAction` + await `MsgActionResult`) — the send side the host was built for. Tests: provider execute/unsupported/destructive-flags/descriptors, windows command table, **integration dispatch via `pluginhost.Host`** (`-race`: register has 6 actions + correct destructive flags, Invoke lock/shutdown→OK dry-run, bogus→failed result). golangci-lint 0; both modules `go test`+build green; engine pluginhost still green. **AC P1-AC-06** (destructive flag for 2-tap). M4 3/7 (174/175/187/188 left). EPIC-5 67%. |
 | 29 | 2026-06-09 | PROJ-214 | 3 | 102 | 51% | **Schema-driven inspector — 🏁 milestone M6 gating complete.** `client/lib/designer/inspector/`: `param_schema.dart` (`ParamSchema{name,type,min,max,choices,default}` + tolerant `parseParamType`), `editor_factory.dart` (the single generic `buildParamEditor` switch: int/number→slider or numeric field, **choice→dropdown**, bool→switch, text/color→field, entity→Phase-4 stub; each keyed `editor-<name>`), `inspector.dart` (renders editors from a widget's schema; each edit commits a `SetConfig` op via `OpBuilder` → broadcasts live via 212). The leverage payoff: a brand-new plugin action's `choice` param renders a working dropdown with **zero inspector code** (P1-AC-10). Tests (widget): per-type editor generation, **new-choice-action dropdown→SetConfig (no code change)**, bool edit→SetConfig op, empty-schema placeholder, type-synonym parsing. `dart analyze` clean; full client suite **84 green**. **🏁 M6 "author on desktop, watch live" gating complete** (210/211/212/181/150/214). EPIC-9 57%. Critical path 26/31 (only 302/303 acceptance left). |

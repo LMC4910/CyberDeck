@@ -6,7 +6,7 @@ Future<({List<String> events, LayoutInterpreter interp})> pumpButtonToggle(
     WidgetTester tester) async {
   final events = <String>[];
   final interp = LayoutInterpreter(registry: RendererRegistry.withBuiltins())
-    ..interactionSink = (node, slot) => events.add('${node.id}:$slot');
+    ..interactionSink = (node, slot, {value}) => events.add('${node.id}:$slot');
   interp.load(const LayoutPage(
     id: 'p',
     grid: GridConfig(columns: 1, rows: 2, gutter: 0, marginX: 0, marginY: 0),

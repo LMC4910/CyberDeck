@@ -13,6 +13,9 @@ import 'model.dart';
 import 'widgets/gauge_circular.dart';
 import 'widgets/button.dart';
 import 'widgets/gauge_linear.dart';
+import 'widgets/image.dart';
+import 'widgets/label.dart';
+import 'widgets/slider.dart';
 import 'widgets/toggle.dart';
 
 /// Receives an interaction from a widget: the widget node and the gesture slot
@@ -20,7 +23,8 @@ import 'widgets/toggle.dart';
 /// navigate target and dispatches it. The full gesture vocabulary + 2-tap confirm
 /// is PROJ-187; this seam lets interactive widgets (button/toggle, PROJ-182) emit
 /// their tap slot today.
-typedef InteractionSink = void Function(WidgetNode node, String slot);
+typedef InteractionSink = void Function(WidgetNode node, String slot,
+    {Object? value});
 
 /// Inputs to a widget builder: the descriptor node, its current bound value, and an
 /// optional interaction sink.
@@ -39,8 +43,10 @@ class WidgetRenderContext {
   /// Sink for gesture-slot interactions (null = no-op).
   final InteractionSink? onInteraction;
 
-  /// Emits an interaction for [slot] if a sink is wired.
-  void emit(String slot) => onInteraction?.call(node, slot);
+  /// Emits an interaction for [slot] (with an optional [value], e.g. a slider
+  /// level) if a sink is wired.
+  void emit(String slot, {Object? value}) =>
+      onInteraction?.call(node, slot, value: value);
 }
 
 /// Builds a native widget from a render context.
@@ -72,6 +78,8 @@ class RendererRegistry {
     r.register('label', buildLabel);
     r.register('button', buildButton);
     r.register('toggle', buildToggle);
+    r.register('slider', buildSlider);
+    r.register('image', buildImage);
     r.register('gauge.circular', buildCircularGauge);
     r.register('gauge.linear', buildLinearGauge);
     r.register('gauge.bar', buildLinearGauge); // alias (2C §7.1 "linear gauge/bar")
@@ -96,27 +104,6 @@ Widget buildUnknownPlaceholder(BuildContext context, WidgetNode node) {
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 11, color: Colors.orange),
         ),
-      ),
-    ),
-  );
-}
-
-/// Reference built-in: a label that shows its style label and bound value, with
-/// client-side [valueRules] applied for zero-latency conditional styling (2C §7.2).
-Widget buildLabel(BuildContext context, WidgetRenderContext ctx) {
-  final node = ctx.node;
-  final label = node.appearance.style['label'] as String? ?? '';
-  final valueText = ctx.value == null ? '--' : '${ctx.value}';
-  final matched = evaluateValueRules(ctx.value, node.appearance.valueRules);
-  final isError = (matched?['theme'] as String?)?.contains('error') ?? false;
-
-  return Center(
-    child: Text(
-      label.isEmpty ? valueText : '$label: $valueText',
-      key: Key('label-${node.id}'),
-      style: TextStyle(
-        color: isError ? Colors.redAccent : null,
-        fontWeight: isError ? FontWeight.bold : FontWeight.normal,
       ),
     ),
   );
