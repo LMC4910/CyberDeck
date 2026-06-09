@@ -185,10 +185,8 @@ class _LayoutView extends StatelessWidget {
         final grid = interp.grid;
         return LayoutBuilder(
           builder: (context, constraints) {
-            final cellW = _cell(constraints.maxWidth, grid.marginX, grid.gutter,
-                grid.columns);
-            final cellH = _cell(_finite(constraints.maxHeight), grid.marginY,
-                grid.gutter, grid.rows);
+            final cellW = grid.cellWidth(constraints.maxWidth);
+            final cellH = grid.cellHeight(_finite(constraints.maxHeight));
             return Stack(
               children: [
                 for (final id in interp.widgetIds)
@@ -222,13 +220,6 @@ class _LayoutView extends StatelessWidget {
   }
 
   static double _finite(double v) => v.isFinite ? v : 600.0;
-
-  static double _cell(double total, double margin, double gutter, int n) {
-    if (n <= 0) return 0;
-    final usable = total - 2 * margin - (n - 1) * gutter;
-    final c = usable / n;
-    return c.isFinite && c > 0 ? c : 1;
-  }
 }
 
 /// Renders a single widget node: rebuilds when its node changes (per-widget op) or

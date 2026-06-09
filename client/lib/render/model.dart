@@ -142,6 +142,20 @@ class GridConfig {
         background: (m?['background'] as Map?)?.cast<String, dynamic>() ?? const {},
         deviceClass: m?['deviceClass'] as String?,
       );
+
+  /// Width of one column cell within a total available width (shared by the
+  /// renderer's layout and the Designer's grid overlay so geometry never diverges).
+  double cellWidth(double totalWidth) => _cell(totalWidth, marginX, columns);
+
+  /// Height of one row cell within a total available height.
+  double cellHeight(double totalHeight) => _cell(totalHeight, marginY, rows);
+
+  double _cell(double total, double margin, int n) {
+    if (n <= 0) return 0;
+    final usable = total - 2 * margin - (n - 1) * gutter;
+    final c = usable / n;
+    return c.isFinite && c > 0 ? c : 1;
+  }
 }
 
 /// A renderable page: grid + widgets + the document version it reflects (2C §4.2).

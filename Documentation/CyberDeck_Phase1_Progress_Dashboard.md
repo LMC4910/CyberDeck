@@ -28,12 +28,12 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 37 tickets / 90 pts (…180, 181, 184) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
+| **Done** | 38 tickets / 93 pts (…181, 184, 210) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 21 |
-| **Ready now** | 23 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 173, 174, 175, 176, 182, 183, 185, 186, 187, 200, 201, 210) |
-| **Completion** | **45%** (90 / 199 pts) |
-| **Critical-path progress** | 17 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓, 181 ✓) |
+| **Blocked** | 19 |
+| **Ready now** | 24 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 173, 174, 175, 176, 182, 183, 185, 186, 187, 200, 201, 211, 217) |
+| **Completion** | **47%** (93 / 199 pts) |
+| **Critical-path progress** | 20 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓, 181 ✓, 210 ✓) |
 | **Current wave** | 1 of 10 |
 
 > **[†] Numbering reconciliation (2026-06-07):** the original dashboard labeled PROJ-121="Identity" and PROJ-120="Trust store", but the authoritative Batch-1 *tickets* define **PROJ-121 = per-OS SecretStore** (root) and **PROJ-120 = engine identity** (→121). The dependency shape is identical; titles corrected here to match the tickets (the ticket wins for scope per Agent Instructions §1).
@@ -56,7 +56,7 @@
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 3 | 9 | 38% |
-| EPIC-9 Designer | 8 | 21 | 0 | 0 | 0% |
+| EPIC-9 Designer | 8 | 21 | 1 | 3 | 14% |
 | EPIC-10 Hardening & Acceptance | 4 | 11 | 0 | 0 | 0% |
 | **TOTAL** | **80** | **199** | **0** | **0** | **0%** |
 
@@ -162,14 +162,14 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-202 | Flow executor + run context | EPIC-7 | P1 | 3 | 200,201,162 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-203 | Core nodes (action/if/setVar/wait/loop/…) | EPIC-7 | P1 | 3 | 202,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-204 | Triggers (manual/event/stateChange) | EPIC-7 | P1 | 2 | 202,162 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-210 | Designer canvas (renders as target device) | EPIC-9 | P0 | 3 | 181,163 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-211 | Op model + op-log apply/version | EPIC-9 | P0 | 3 | 210,112 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-210 | Designer canvas (renders as target device) | EPIC-9 | P0 | 3 | 181,163 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-211 | Op model + op-log apply/version | EPIC-9 | P0 | 3 | 210,112 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-212 | Op-log broadcast + live device reflection | EPIC-9 | P0 | 3 | 211,150 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-213 | Drag-drop placement + move/resize ghosts | EPIC-9 | P1 | 3 | 211,143 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-214 | Schema-driven inspector | EPIC-9 | P0 | 3 | 211,161 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-215 | Undo/redo (op inverses) | EPIC-9 | P1 | 2 | 211 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-216 | Profile mgmt + explicit device targeting | EPIC-9 | P1 | 2 | 211,163 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-217 | Grid config editor (no caps) | EPIC-9 | P1 | 2 | 210 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-217 | Grid config editor (no caps) | EPIC-9 | P1 | 2 | 210 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-300 | Security test suite (sniff/MITM/rogue/leak) | EPIC-10 | P0 | 3 | 127,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-301 | Performance soak (8h, ≥8 sessions) | EPIC-10 | P0 | 3 | 171,150,184 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-302 | E2E journeys (J0/J1/J2/J6) | EPIC-10 | P0 | 3 | 212,214,173,175 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 26 | 2026-06-09 | PROJ-210 | 3 | 93 | 47% | **Designer canvas (CRITICAL PATH; EPIC-9 started).** Desktop WYSIWYG canvas that renders a layout through the **same client renderer** (181 — never fork the renderer) at a target device-class grid. Factored the cell geometry onto `GridConfig.cellWidth/cellHeight` (refactored `_LayoutView`) so the canvas grid overlay and rendered widgets share one geometry. `designer/device_class.dart` (interim presets until 217: tablet-landscape-10 24×18, tablet-portrait, phone-portrait + aspect). `designer/placement.dart` (pure `snapToCell`/`clampToGrid`/`overlaps`/`anyOverlap`). `designer/canvas.dart`: `DesignerController` (`tryMove`/`tryAdd` clamp + **reject on overlap** → emit Move/Add op; `setDeviceClass` → ChangeGrid) + `DesignerCanvas` (device-class dropdown + AspectRatio + grid-overlay CustomPaint + `interp.build()`). Tests (9): snap/clamp/overlap+anyOverlap, controller move free vs **occupied-rejected**, add-overlap-rejected, **render-at-grid** + overlay, **device-class switch re-grids**. `dart analyze` clean; full client suite **69 green**; `flutter build windows` green. Newly Ready: 211 (op model — spine), 217. EPIC-9 14%. Critical path 20/31. |
 | 25 | 2026-06-09 | PROJ-184 | 3 | 90 | 45% | **Circular + linear gauges — 🏁 milestone M3 (live telemetry on a phone) gating complete.** `client/lib/render/widgets/`: `widget_theme.dart` (interim theme tokens until 189), `gauge_common.dart` (pure `gaugeFraction`/`gaugeAccent`/`formatValue` + config min/max/unit), `gauge_circular.dart` (custom-painted swept arc + centered value/label, FittedBox-safe) and `gauge_linear.dart` (track + proportional fill); both bind a scalar state and apply `valueRules` client-side (red ≥85, zero round-trip). Registered `gauge.circular`/`gauge.linear`/`gauge.bar` in `RendererRegistry.withBuiltins()`. Tests (8): fraction clamp, **accent flips at threshold**, format ("--"/unit), circular **render + update-on-delta** (P1-AC-04), `--`-before-value, linear render, bar alias. `dart analyze` clean; full client suite **60 green**. M3 gating tickets (160/150/170/171/180/181/184/130/132) all Done — live E2E still awaits the engine accept/handshake-over-wire glue. EPIC-8 38%. |
 | 24 | 2026-06-09 | PROJ-181 | 3 | 87 | 44% | **Renderer registry + layout interpreter (CRITICAL PATH; one widget from M3).** `client/lib/render/`: layout-doc model (`LayoutPage`/`WidgetNode`/`GridConfig`/`Placement` + JSON, 2C §2/§3); `ClientStateStore` (per-id `ValueNotifier` → a state update repaints only bound widgets); `RendererRegistry` (`widgetType→builder`, unknown→safe placeholder, reference `label` built-in + client-side `valueRules` eval); `LayoutOp` (parse + structural/per-widget split, 2C §4); `LayoutInterpreter` + `LayoutView` building the tree once with **disciplined repaint** (nested `ValueListenableBuilder`: a state update or per-widget op rebuilds only the affected node; structural ops bump a page notifier); exposes `subscriptionSet`. Tests (9): build-from-doc, unknown→placeholder, **state update repaints only the bound widget**, per-widget op targeted repaint, Add/Remove, subscriptionSet+SetBinding, JSON parse, valueRules. `dart analyze` clean; full client suite 53 green. Newly Ready: 182–187 + 210 (designer canvas). EPIC-8 25%. Critical path 17/31. |
 | 23 | 2026-06-08 | PROJ-180 | 3 | 84 | 42% | **Client connection manager + pairing (CRITICAL PATH; M3 client side).** Full Dart client stack mirroring the engine wire/crypto: `crypto/crypto.dart` (X25519/Ed25519/HKDF-SHA256/ChaCha20-Poly1305 via package:cryptography + BigInt Ed25519→X25519 conversions) **proven interoperable by cross-language KAT vectors emitted from the Go engine**; `net/{framing,envelope,encrypted_session,channels,conn}.dart` (uint32 frames, base64-payload JSON envelope, per-direction AEAD session, channel router); `net/pairing.dart` (device-side ClientHello→ServerHello→KeyConfirm→PairResult state machine — **engine fingerprint verify (anti-MITM)**, sigD/sigE, forward-secret keys; defines the handshake wire encoding since the engine has none yet; DeviceIdentity + injectable KeyStore); `net/connection_manager.dart` (resolve+dial+pair, candidate fallback, bounded retry/backoff); `app/pairing.dart` (engine list, QR scan — mobile_scanner on Android, manual entry on desktop — fingerprint + error UI). Tests (44, all green): crypto KAT, framing, envelope (byte-exact vs Go JSON), session (round-trip + **no plaintext on the wire** + tamper teardown), pairing vs a faithful Dart mock engine (**pair success / fingerprint mismatch / bad token / forged sig**), connection-manager retry, QR parse, pairing widget. `dart analyze` clean; **`flutter build windows` + `flutter build apk` both green** (dropped flutter_secure_storage to avoid the VS-ATL dep — secure keystore injected per-platform; disabled Kotlin incremental for the mobile_scanner build). P1-AC-02 + P1-AC-03(client) met. Live Go↔Dart interop awaits the engine accept/handshake-over-wire glue (future ticket). Newly Ready: 181, 109. EPIC-8 started (13%). Critical path 14/31. |
