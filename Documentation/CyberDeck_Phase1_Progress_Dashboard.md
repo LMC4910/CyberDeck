@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 47 tickets / 117 pts (…187, 200, 201) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
+| **Done** | 48 tickets / 120 pts (…200, 201, 202) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 13 |
-| **Ready now** | 21 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 185, 186, 202, 213, 215, 216, 217) |
-| **Completion** | **59%** (117 / 199 pts) |
+| **Blocked** | 11 |
+| **Ready now** | 22 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 185, 186, 203, 204, 213, 215, 216, 217) |
+| **Completion** | **60%** (120 / 199 pts) |
 | **Critical-path progress** | 26 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓, 181 ✓, 210 ✓, 211 ✓, 212 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -54,7 +54,7 @@
 | EPIC-4 Transport & Connectivity | 11 | 27 | 6 | 16 | 59% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 7 | 18 | 67% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
-| EPIC-7 Flow Engine Core | 5 | 13 | 2 | 5 | 38% |
+| EPIC-7 Flow Engine Core | 5 | 13 | 3 | 8 | 62% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 6 | 16 | 67% |
 | EPIC-9 Designer | 8 | 21 | 4 | 12 | 57% |
 | EPIC-10 Hardening & Acceptance | 4 | 11 | 0 | 0 | 0% |
@@ -159,9 +159,9 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-192 | Installer — Linux | EPIC-1 | P1 | 3 | 108,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-200 | Flow model + document persistence | EPIC-7 | P1 | 2 | 112,161 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-201 | Expression language (lexer/parser/eval) | EPIC-7 | P1 | 3 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-202 | Flow executor + run context | EPIC-7 | P1 | 3 | 200,201,162 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-203 | Core nodes (action/if/setVar/wait/loop/…) | EPIC-7 | P1 | 3 | 202,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-204 | Triggers (manual/event/stateChange) | EPIC-7 | P1 | 2 | 202,162 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-202 | Flow executor + run context | EPIC-7 | P1 | 3 | 200,201,162 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-203 | Core nodes (action/if/setVar/wait/loop/…) | EPIC-7 | P1 | 3 | 202,125 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-204 | Triggers (manual/event/stateChange) | EPIC-7 | P1 | 2 | 202,162 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-210 | Designer canvas (renders as target device) | EPIC-9 | P0 | 3 | 181,163 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-211 | Op model + op-log apply/version | EPIC-9 | P0 | 3 | 210,112 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-212 | Op-log broadcast + live device reflection | EPIC-9 | P0 | 3 | 211,150 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 36 | 2026-06-09 | PROJ-202 | 3 | 120 | 60% | **Flow executor + run context (2D §7/§8, AC P1-AC-08) — 🎯 60%.** `engine/core/flow`: `runcontext.go` (`RunContext`: run-locals + global resolver (states/vars) + `VarWriter`; implements `expr.Context` so conditions read locals-shadow-globals; `Set` routes `var.*`→global else local; cancellation ctx) and `executor.go` (`Executor` over a `NodeRunner` handler registry [impls = 203]; entry-node detection, step loop following `next`/branch edges, **loop-iteration cap** (anti-runaway), **ctx cancellation**, node error/**panic → fail the run safely** + emit `flow.run`/`flow.completed`/`flow.failed` (162), bounded async `Start`). Tests (`-race`): happy path, **branch (P1-AC-08)**, node-failure (engine survives), panic-recover, prompt cancellation, loop cap, local-var-into-expr, async start. golangci-lint 0; engine `-race`+build green. Unblocks **203** (core nodes) + **204** (triggers). EPIC-7 62%. |
 | 35 | 2026-06-09 | PROJ-201 | 3 | 117 | 59% | **Sandboxed expression language (security boundary, ADR-0013 / 2D §5).** New `engine/core/flow/expr`: hand-written `lexer.go` (numbers/strings/idents/ops — no call syntax), `parser.go` (recursive-descent precedence, rejects malformed/trailing), `ast.go` (Literal/Ident/Unary/Binary), `eval.go` over a `Context` of states (160) + vars (164). Operators: `+ - * / %`, `== != < <= > >=`, `&& || !`, dotted state tokens. **No function calls, I/O, host callbacks, or reflection — there is no code-execution path.** Unavailable token → nil safe default (comparisons false), never a crash; type-mismatch + div/mod-by-zero → returned errors, not panics. Tests: operator/precedence matrix, state-token eval, **unavailable→safe-default**, type-mismatch errors, div-by-zero, **malformed/injection rejected at parse** (`exec('x')`, `a=1`, backticks, `;`, unbalanced). golangci-lint 0; engine test+build green. Unblocks **202** (flow executor). EPIC-7 38%. |
 | 34 | 2026-06-09 | PROJ-200 | 2 | 114 | 57% | **Flow model + document persistence (EPIC-7 started).** New `engine/core/flow`: `model.go` (`Flow{id,label,version,trigger,nodes[],edges[]}` + JSON), `validate.go` (validates against the flow-node **registry** (161): unknown-kind reject, per-param required/numeric-range/bool/choice checks, unique node ids, edges reference real nodes, trigger kind required), `store.go` (`Store` over a `WorkflowStore` seam — `*persistence.WorkflowRepo` satisfies it: `Save` validates → version-bumps (new=1, else +1) → persists; `Load`; invalid flows never written). Op-model/undo deferred to Phase 3 (ADR-0022) — V1 persists whole docs. Tests: save/load round-trip + version increment, reject matrix (no-trigger/unknown-kind/missing-required/below-min/dangling-edge/dup-id), invalid-not-persisted, choice validation, JSON round-trip. golangci-lint 0; engine `go test`+build green. Unblocks 202 (with 201). EPIC-7 15%. |
 | 33 | 2026-06-09 | PROJ-187 | 3 | 112 | 56% | **Gesture capture (all slots) + 2-tap confirm (toward M4).** `client/lib/gestures/`: `slots.dart` (slot ids + `InteractionTarget` parse from `node.interaction[slot]`), `capture.dart` (`GestureCapture` maps tap/doubleTap/longPress/pressDown/pressUp/swipe* → slot events; **pressed-state ≤100ms via raw `Listener` pointer events** so it's immediate despite tap-vs-drag arena), `confirm.dart` (`TwoTapConfirmer`: non-destructive executes on first tap; **destructive arms then executes on a second tap within a window** — AC P1-AC-06; + `ConfirmCard`). Tests: interaction parse, confirmer arm/execute/window-expiry/reset, GestureCapture tap+longPress+pressed-state + fling→swipe. `dart analyze` clean; full client suite **97 green**. M4 4/7. EPIC-8 67%. |
