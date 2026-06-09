@@ -28,6 +28,9 @@ class LayoutInterpreter {
   final RendererRegistry registry;
   final ClientStateStore stateStore;
 
+  /// Optional sink for widget gesture-slot interactions (wired by the app / PROJ-187).
+  InteractionSink? interactionSink;
+
   final Map<String, ValueNotifier<WidgetNode>> _nodes = {};
   final List<String> _order = [];
   GridConfig _grid = const GridConfig();
@@ -215,6 +218,7 @@ class _LayoutView extends StatelessWidget {
         node: interp.nodeListenable(id),
         store: interp.stateStore,
         registry: interp.registry,
+        onInteraction: interp.interactionSink,
       ),
     );
   }
@@ -230,11 +234,13 @@ class RenderedWidget extends StatelessWidget {
     required this.node,
     required this.store,
     required this.registry,
+    this.onInteraction,
   });
 
   final ValueListenable<WidgetNode> node;
   final ClientStateStore store;
   final RendererRegistry registry;
+  final InteractionSink? onInteraction;
 
   @override
   Widget build(BuildContext context) {
@@ -254,6 +260,7 @@ class RenderedWidget extends StatelessWidget {
   Widget _content(BuildContext context, WidgetNode n, Object? value) {
     final builder = registry.builderFor(n.type);
     if (builder == null) return buildUnknownPlaceholder(context, n);
-    return builder(context, WidgetRenderContext(node: n, value: value));
+    return builder(context,
+        WidgetRenderContext(node: n, value: value, onInteraction: onInteraction));
   }
 }

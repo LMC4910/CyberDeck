@@ -11,16 +11,36 @@ import 'package:flutter/material.dart';
 
 import 'model.dart';
 import 'widgets/gauge_circular.dart';
+import 'widgets/button.dart';
 import 'widgets/gauge_linear.dart';
+import 'widgets/toggle.dart';
 
-/// Inputs to a widget builder: the descriptor node and its current bound value.
+/// Receives an interaction from a widget: the widget node and the gesture slot
+/// (e.g. "tap"). The consumer maps `node.interaction[slot]` to an action / flow /
+/// navigate target and dispatches it. The full gesture vocabulary + 2-tap confirm
+/// is PROJ-187; this seam lets interactive widgets (button/toggle, PROJ-182) emit
+/// their tap slot today.
+typedef InteractionSink = void Function(WidgetNode node, String slot);
+
+/// Inputs to a widget builder: the descriptor node, its current bound value, and an
+/// optional interaction sink.
 class WidgetRenderContext {
-  const WidgetRenderContext({required this.node, required this.value});
+  const WidgetRenderContext({
+    required this.node,
+    required this.value,
+    this.onInteraction,
+  });
 
   final WidgetNode node;
 
   /// The bound state's current value (null when unbound or not yet received).
   final Object? value;
+
+  /// Sink for gesture-slot interactions (null = no-op).
+  final InteractionSink? onInteraction;
+
+  /// Emits an interaction for [slot] if a sink is wired.
+  void emit(String slot) => onInteraction?.call(node, slot);
 }
 
 /// Builds a native widget from a render context.
@@ -50,6 +70,8 @@ class RendererRegistry {
   factory RendererRegistry.withBuiltins() {
     final r = RendererRegistry();
     r.register('label', buildLabel);
+    r.register('button', buildButton);
+    r.register('toggle', buildToggle);
     r.register('gauge.circular', buildCircularGauge);
     r.register('gauge.linear', buildLinearGauge);
     r.register('gauge.bar', buildLinearGauge); // alias (2C §7.1 "linear gauge/bar")
