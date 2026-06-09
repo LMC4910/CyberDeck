@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 45 tickets / 112 pts (…182, 183, 187) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
+| **Done** | 46 tickets / 114 pts (…183, 187, 200) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 14 |
-| **Ready now** | 22 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 185, 186, 200, 201, 213, 215, 216, 217) |
-| **Completion** | **56%** (112 / 199 pts) |
+| **Ready now** | 21 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 185, 186, 201, 213, 215, 216, 217) |
+| **Completion** | **57%** (114 / 199 pts) |
 | **Critical-path progress** | 26 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓, 181 ✓, 210 ✓, 211 ✓, 212 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -54,7 +54,7 @@
 | EPIC-4 Transport & Connectivity | 11 | 27 | 6 | 16 | 59% |
 | EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 7 | 18 | 67% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
-| EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
+| EPIC-7 Flow Engine Core | 5 | 13 | 1 | 2 | 15% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 6 | 16 | 67% |
 | EPIC-9 Designer | 8 | 21 | 4 | 12 | 57% |
 | EPIC-10 Hardening & Acceptance | 4 | 11 | 0 | 0 | 0% |
@@ -157,7 +157,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-190 | Installer — Windows | EPIC-1 | P1 | 3 | 106,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-191 | Installer — macOS | EPIC-1 | P1 | 3 | 107,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-192 | Installer — Linux | EPIC-1 | P1 | 3 | 108,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
-| PROJ-200 | Flow model + document persistence | EPIC-7 | P1 | 2 | 112,161 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-200 | Flow model + document persistence | EPIC-7 | P1 | 2 | 112,161 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-201 | Expression language (lexer/parser/eval) | EPIC-7 | P1 | 3 | 160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-202 | Flow executor + run context | EPIC-7 | P1 | 3 | 200,201,162 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-203 | Core nodes (action/if/setVar/wait/loop/…) | EPIC-7 | P1 | 3 | 202,125 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 34 | 2026-06-09 | PROJ-200 | 2 | 114 | 57% | **Flow model + document persistence (EPIC-7 started).** New `engine/core/flow`: `model.go` (`Flow{id,label,version,trigger,nodes[],edges[]}` + JSON), `validate.go` (validates against the flow-node **registry** (161): unknown-kind reject, per-param required/numeric-range/bool/choice checks, unique node ids, edges reference real nodes, trigger kind required), `store.go` (`Store` over a `WorkflowStore` seam — `*persistence.WorkflowRepo` satisfies it: `Save` validates → version-bumps (new=1, else +1) → persists; `Load`; invalid flows never written). Op-model/undo deferred to Phase 3 (ADR-0022) — V1 persists whole docs. Tests: save/load round-trip + version increment, reject matrix (no-trigger/unknown-kind/missing-required/below-min/dangling-edge/dup-id), invalid-not-persisted, choice validation, JSON round-trip. golangci-lint 0; engine `go test`+build green. Unblocks 202 (with 201). EPIC-7 15%. |
 | 33 | 2026-06-09 | PROJ-187 | 3 | 112 | 56% | **Gesture capture (all slots) + 2-tap confirm (toward M4).** `client/lib/gestures/`: `slots.dart` (slot ids + `InteractionTarget` parse from `node.interaction[slot]`), `capture.dart` (`GestureCapture` maps tap/doubleTap/longPress/pressDown/pressUp/swipe* → slot events; **pressed-state ≤100ms via raw `Listener` pointer events** so it's immediate despite tap-vs-drag arena), `confirm.dart` (`TwoTapConfirmer`: non-destructive executes on first tap; **destructive arms then executes on a second tap within a window** — AC P1-AC-06; + `ConfirmCard`). Tests: interaction parse, confirmer arm/execute/window-expiry/reset, GestureCapture tap+longPress+pressed-state + fling→swipe. `dart analyze` clean; full client suite **97 green**. M4 4/7. EPIC-8 67%. |
 | 32 | 2026-06-09 | PROJ-183 | 2 | 109 | 55% | **Slider + label + image widgets.** `render/widgets/slider.dart` (bound numeric within config min/max; reflects state; drag emits `dragValue` slot **with the level** — extended `InteractionSink`/`emit` to carry an optional value), `label.dart` (moved out of registry + **presentation-side unit formatting**, ADR-0019: int as-is, double→1 decimal → "42.0 °C"), `image.dart` (asset via `Image.asset` with broken-image fallback, else a named icon from the built-in set). Registered `slider`/`image` (label re-registered from its file). Tests: label format matrix + bound-value-with-unit render, slider reflect + drag-emits-dragValue-in-range, image renders an icon. `dart analyze` clean; full client suite **90 green**. EPIC-8 54%. |
 | 31 | 2026-06-09 | PROJ-182 | 2 | 107 | 54% | **Button + toggle widgets.** `client/lib/render/widgets/button.dart` (action trigger: immediate pressed-state ≤100ms on tap-down via GestureDetector + AnimatedScale; emits its `tap` slot) and `toggle.dart` (Switch bound to a boolean state — reflects host state, emits `tap` on change; the mapped action does the real toggle round-trip). Both apply `valueRules` accent. Added a minimal **`InteractionSink` seam** (typedef + `WidgetRenderContext.onInteraction`/`emit`, threaded through `LayoutInterpreter.interactionSink` → `RenderedWidget`) so interactive widgets emit gesture slots today; PROJ-187 formalises the full gesture vocab + 2-tap. Registered `button`/`toggle` in `withBuiltins`. Tests (widget): button render + **pressed-state on tap-down** + tap-slot emit; toggle **reflects bound bool** + emit on tap. `dart analyze` clean; full client suite **86 green**. EPIC-8 46%. |
