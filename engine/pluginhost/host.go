@@ -206,6 +206,7 @@ type Plugin struct {
 
 	resultsMu sync.Mutex
 	results   map[string]chan ActionResultPayload
+	callSeq   atomic.Uint64
 }
 
 // DeclaredStates returns the state IDs the plugin declared in its register message
@@ -313,6 +314,36 @@ func (p *Plugin) deliverResult(r ActionResultPayload) {
 	p.resultsMu.Unlock()
 	if ok {
 		ch <- r
+	}
+}
+
+// Invoke sends an action invocation to the plugin and awaits its result (the
+// host→plugin half of the action RPC; the plugin replies with MsgActionResult).
+// It returns when the result arrives, ctx is cancelled, or the plugin exits.
+func (p *Plugin) Invoke(ctx context.Context, actionID string, params json.RawMessage) (ActionResultPayload, error) {
+	callID := fmt.Sprintf("call-%d", p.callSeq.Add(1))
+	ch := make(chan ActionResultPayload, 1)
+	p.resultsMu.Lock()
+	p.results[callID] = ch
+	p.resultsMu.Unlock()
+	defer func() {
+		p.resultsMu.Lock()
+		delete(p.results, callID)
+		p.resultsMu.Unlock()
+	}()
+
+	if err := p.send(Message{Type: MsgInvokeAction, Action: &ActionPayload{
+		CallID: callID, ActionID: actionID, Params: params,
+	}}); err != nil {
+		return ActionResultPayload{}, err
+	}
+	select {
+	case r := <-ch:
+		return r, nil
+	case <-ctx.Done():
+		return ActionResultPayload{}, ctx.Err()
+	case <-p.exited:
+		return ActionResultPayload{}, fmt.Errorf("pluginhost: %s exited before action result", p.name)
 	}
 }
 

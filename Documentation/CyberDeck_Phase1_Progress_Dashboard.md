@@ -28,11 +28,11 @@
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 41 tickets / 102 pts (…211, 212, 214) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
+| **Done** | 42 tickets / 105 pts (…212, 214, 173) — **EPIC-2 & EPIC-6 complete; M2 + M3 reached** |
 | **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
 | **Blocked** | 14 |
-| **Ready now** | 26 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 173, 174, 175, 176, 182, 183, 185, 186, 187, 200, 201, 213, 215, 216, 217) |
-| **Completion** | **51%** (102 / 199 pts) |
+| **Ready now** | 25 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 182, 183, 185, 186, 187, 200, 201, 213, 215, 216, 217) |
+| **Completion** | **53%** (105 / 199 pts) |
 | **Critical-path progress** | 26 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓, 181 ✓, 210 ✓, 211 ✓, 212 ✓) |
 | **Current wave** | 1 of 10 |
 
@@ -52,7 +52,7 @@
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
 | EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
 | EPIC-4 Transport & Connectivity | 11 | 27 | 6 | 16 | 59% |
-| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 6 | 15 | 56% |
+| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 7 | 18 | 67% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 0 | 0 | 0% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 3 | 9 | 38% |
@@ -140,7 +140,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-170 | PAL capability interfaces + provider chain | EPIC-5 | P0 | 3 | 160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-172 | 1P plugin: GPU telemetry provider chain | EPIC-5 | P1 | 3 | 171 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-173 | 1P plugin: power actions | EPIC-5 | P0 | 3 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-173 | 1P plugin: power actions | EPIC-5 | P0 | 3 | 170,132 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-174 | 1P plugin: volume (system master) | EPIC-5 | P1 | 2 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-175 | 1P plugin: launchers + system tools | EPIC-5 | P1 | 2 | 132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-176 | 1P plugin: notification count | EPIC-5 | P1 | 2 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
@@ -186,7 +186,7 @@ Advance a milestone to ✅ only when **every** gating ticket is Done.
 | **M1** | Bootstrap green | 101, 102, 103 | ⬜ Not started |
 | **M2** | Persistence + security base | 110, 111, 112, 113, 114, 115, 120, 121, 122, 125, 127 | ✅ Done (2026-06-07) |
 | **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | ✅ Done (9/9 — gating tickets complete; live E2E awaits engine accept/handshake-over-wire glue) |
-| **M4** | Actions + permissions on device | 125, 133, 173, 174, 175, 187, 188 | ⬜ Not started |
+| **M4** | Actions + permissions on device | 125, 133, 173, 174, 175, 187, 188 | 🟨 In progress (3/7 — 174, 175, 187, 188 left) |
 | **M5** | Resilience proven | 145, 146, 148, 149, 188 | ⬜ Not started |
 | **M6** | Author on desktop, watch live (headline) | 210, 211, 212, 181, 150, 214 | ✅ Done (6/6 gating; live over-the-wire E2E also needs the engine accept/handshake-over-wire glue) |
 | **M7** | All P1-ACs green — PHASE EXIT | 300, 301, 302, 303 (+ all P0) | ⬜ Not started |
@@ -220,6 +220,7 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 18 | 2026-06-08 | PROJ-132 | 2 | 70 | 35% | Plugin manifest validation + registry merge: Manifest{id,name,apiVersion,permissions,contributes} (reuses registry descriptor types); ParseManifest/LoadManifest, CheckAPIVersion (refuse incompatible major), MergeManifest→registry.Merge (collision/persist free), permissions returned for 133; plugin_manifest.schema.json. Tests: valid merge, apiVersion refusal, collision, malformed. **Plugin host cluster (130→131→132) complete — unblocks all five 1P plugins (171/173/174/175/176) + 133.** EPIC-5 37%. |
 | 19 | 2026-06-08 | PROJ-133 | 2 | 72 | 36% | Plugin→capability IPC permission gate: stateUpdate for an undeclared state rejected (never reaches the store) + audited via injected AuditDenier; AllowNetwork/AllowFilesystem level checks (none<localhost<outbound; none<own-dir) with audited denial. Added rogue test-plugin mode. Tests (`-race`): undeclared-state reject+audit, network/fs matrices. **Two-gate security model complete (125 device→action + 133 plugin→capability).** EPIC-5 44%. |
 | 5 | 2026-06-07 | PROJ-127 | 2 | 35 | 18% | Audit semantics: Auditor over injected AuditSink, full event taxonomy (action.executed/rejected, device.paired/revoked, session.opened/closed, flow.run/failed, permission.denied), redaction (sensitive keys + Secret values → [REDACTED]), AuditedAuthorize ties Authorize→action.rejected. **🏁 Milestone M2 (persistence + security base) COMPLETE.** EPIC-3 84% (only P1 124/126 left). |
+| 30 | 2026-06-09 | PROJ-173 | 3 | 105 | 53% | **First-party power-actions plugin (toward M4).** New `plugins/power` module (go.work + `replace`→engine, like 171): `provider.go` (six action ids, `destructive` map [shutdown/restart/hibernate/logoff], optional `delay` for shutdown/restart, a `runner` seam so commands are mockable — never power off CI, `execute`→per-OS `commandFor`), `power_{windows,darwin,linux}.go` (per-OS command tables; unsupported actions degrade cleanly), `main.go` (stdio IPC: register the six `registry.ActionDescriptor`s with destructive flags → handle `MsgInvokeAction` → run via provider → `MsgActionResult`; `CYBERDECK_POWER_DRYRUN` for tests). Added **`pluginhost.Plugin.Invoke`** (host→plugin action RPC: send `MsgInvokeAction` + await `MsgActionResult`) — the send side the host was built for. Tests: provider execute/unsupported/destructive-flags/descriptors, windows command table, **integration dispatch via `pluginhost.Host`** (`-race`: register has 6 actions + correct destructive flags, Invoke lock/shutdown→OK dry-run, bogus→failed result). golangci-lint 0; both modules `go test`+build green; engine pluginhost still green. **AC P1-AC-06** (destructive flag for 2-tap). M4 3/7 (174/175/187/188 left). EPIC-5 67%. |
 | 29 | 2026-06-09 | PROJ-214 | 3 | 102 | 51% | **Schema-driven inspector — 🏁 milestone M6 gating complete.** `client/lib/designer/inspector/`: `param_schema.dart` (`ParamSchema{name,type,min,max,choices,default}` + tolerant `parseParamType`), `editor_factory.dart` (the single generic `buildParamEditor` switch: int/number→slider or numeric field, **choice→dropdown**, bool→switch, text/color→field, entity→Phase-4 stub; each keyed `editor-<name>`), `inspector.dart` (renders editors from a widget's schema; each edit commits a `SetConfig` op via `OpBuilder` → broadcasts live via 212). The leverage payoff: a brand-new plugin action's `choice` param renders a working dropdown with **zero inspector code** (P1-AC-10). Tests (widget): per-type editor generation, **new-choice-action dropdown→SetConfig (no code change)**, bool edit→SetConfig op, empty-schema placeholder, type-synonym parsing. `dart analyze` clean; full client suite **84 green**. **🏁 M6 "author on desktop, watch live" gating complete** (210/211/212/181/150/214). EPIC-9 57%. Critical path 26/31 (only 302/303 acceptance left). |
 | 28 | 2026-06-09 | PROJ-212 | 3 | 99 | 50% | **Op-log broadcast + live device reflection (CRITICAL PATH; the headline "edit-on-desktop → live-on-device").** Engine `core/layout/broadcast.go`: `Broadcaster.ApplyAndBroadcast(docID, profileID, op)` → `OpLog.Apply` (211) then fan a Layout-channel envelope (`type:"layout.op"`, payload = op JSON stamped with `docVersion=newVersion`) via `transport.Fanout.BroadcastLayout` — only to edit/preview sessions on the edited profile (150). Apply stays transport-free; the broadcast is the one place they meet. Client `net/layout_apply.dart`: `LayoutApplier` applies ops in version order through `LayoutInterpreter` (181, targeted repaint), ignores duplicates, and on a **version gap** fires `onResyncNeeded` instead of replaying (engine = source of truth, PROJ-149). Tests — engine (`-race`): broadcast reaches the editor session with the right payload, **fan-out filters non-edit / other-profile sessions**, persist+version hold, apply-error propagates (no version bump); client: in-order apply, **gap→resync (not applied)**, duplicate ignored, sequential ops. `<200ms` is in-process/manual (live wire awaits the engine accept glue). Lint 0; engine `-race`+build green; client 79 green. **Critical path 26/31** (only 302/303 acceptance left on the spine). M6 5/6 (214 left). |
 | 27 | 2026-06-09 | PROJ-211 | 3 | 96 | 48% | **Op model + op-log apply/version (CRITICAL PATH; both halves).** Engine `core/layout/`: `doc.go` (authoritative `Profile{version,pages[]}` / `Page` / `Widget` / `Placement` + JSON round-trip) and `oplog.go` (`Op` pure data + `Profile.Apply(op)` → **inverse op** with **version increment**, for the 2C §4.1 granular set AddWidget/RemoveWidget/Move/Resize/SetStyle/SetBinding/SetInteraction/SetConfig/ChangeGrid/AddPage/RemovePage; `OpLog` with a per-document **single-writer edit lock** + `DocumentStore` load/apply/persist, atomic). Client `designer/op_model.dart`: `OpBuilder` emitting the SAME op JSON the engine + renderer consume. Tests — engine (`-race`): apply matrix, **version monotonic**, **inverse round-trip per kind**, unknown-target errors don't bump version, **single-writer lock**, persist-via-store, JSON round-trip; client: builder JSON per op + **parity** (built ops applied through `LayoutInterpreter`). Apply is transport-free (212 consumes applied ops). Lint 0; engine `go build`+`-race` green; client 75 green. Newly Ready: 212/213/214/215/216 (rest of EPIC-9). Critical path 23/31. |

@@ -1,0 +1,20 @@
+{
+  "id": "com.shishir.cyberdeck.power",
+  "name": "Power Actions",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["power"],
+    "network": "none",
+    "filesystem": "none"
+  },
+  "contributes": {
+    "actions": [
+      {"id": "system.shutdown", "label": "Shut Down", "category": "power", "destructive": true, "params": [{"name": "delay", "type": "int"}]},
+      {"id": "system.restart", "label": "Restart", "category": "power", "destructive": true, "params": [{"name": "delay", "type": "int"}]},
+      {"id": "system.sleep", "label": "Sleep", "category": "power"},
+      {"id": "system.hibernate", "label": "Hibernate", "category": "power", "destructive": true},
+      {"id": "system.lock", "label": "Lock", "category": "power"},
+      {"id": "system.logoff", "label": "Log Off", "category": "power", "destructive": true}
+    ]
+  }
+}
