@@ -26,6 +26,13 @@ type RunContext struct {
 	vars     VarWriter    // global var.* (write)
 }
 
+// NewRunContext builds a run context (the executor uses this internally; it is
+// exported so node implementations and embedding hosts can construct one — e.g. a
+// subflow runner seeding a child run's locals).
+func NewRunContext(ctx context.Context, trigger map[string]any, resolver expr.Context, vars VarWriter) *RunContext {
+	return newRunContext(ctx, trigger, resolver, vars)
+}
+
 func newRunContext(ctx context.Context, trigger map[string]any, resolver expr.Context, vars VarWriter) *RunContext {
 	if trigger == nil {
 		trigger = map[string]any{}

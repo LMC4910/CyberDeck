@@ -9,6 +9,9 @@ import (
 // DefaultMaxIterations caps the steps in a single run (anti-runaway, 2D §8).
 const DefaultMaxIterations = 1000
 
+// StopLabel is returned by a `stop` node to end the run regardless of edges.
+const StopLabel = "__stop__"
+
 // DefaultMaxConcurrent bounds concurrent async runs.
 const DefaultMaxConcurrent = 16
 
@@ -62,6 +65,10 @@ type ExecutorOption func(*Executor)
 func WithHandler(kind string, r NodeRunner) ExecutorOption {
 	return func(e *Executor) { e.handlers[kind] = r }
 }
+
+// Register adds (or replaces) a node-kind handler after construction. The core
+// node handlers (PROJ-203) are wired this way without the executor importing them.
+func (e *Executor) Register(kind string, r NodeRunner) { e.handlers[kind] = r }
 
 // WithEmitter wires flow lifecycle events.
 func WithEmitter(em Emitter) ExecutorOption {
@@ -140,6 +147,9 @@ func (e *Executor) Run(ctx context.Context, flow *Flow, resolver exprResolver, v
 			res.Err = fmt.Errorf("flow: node %q failed: %w", current.ID, err)
 			e.fire(TopicFlowFailed, flow, res.Err)
 			return res
+		}
+		if next == StopLabel { // a `stop` node ends the run regardless of edges
+			break
 		}
 		current = nextNode(flow, current.ID, next)
 	}
