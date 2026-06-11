@@ -25,9 +25,9 @@ type EventEmitter interface {
 // channel). Only changed states are enqueued — the delta-suppression that drives
 // the ~80% idle-traffic reduction (TB-ST-2).
 type Delta struct {
-	ID        string
-	Value     any
-	UpdatedAt int64
+	ID        string `json:"id"`
+	Value     any    `json:"value"`
+	UpdatedAt int64  `json:"updatedAt"`
 }
 
 // DeltaSink is the fan-out seam (PROJ-150). The store enqueues deltas for the
