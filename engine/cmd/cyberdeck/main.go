@@ -1,11 +1,14 @@
 // Command cyberdeck is the CyberDeck host-engine entrypoint. It selects run mode
 // (--service / --console), enforces a single running instance, loads config, runs
 // the staged boot sequence to READY wiring the real subsystems (SQLite, core,
-// plugin host), and shuts down gracefully on SIGINT/SIGTERM (TRD 2B §7.1/§7.2).
+// plugin host, transport listener), prints a pairing QR, and shuts down gracefully
+// on SIGINT/SIGTERM (TRD 2B §7.1/§7.2).
 package main
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -14,10 +17,20 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"syscall"
+	"time"
 
+	"github.com/mdp/qrterminal/v3"
+
+	"github.com/shishir/cyberdeck/engine/core/layout"
 	"github.com/shishir/cyberdeck/engine/core/persistence"
+	"github.com/shishir/cyberdeck/engine/core/registry"
+	"github.com/shishir/cyberdeck/engine/core/security"
+	"github.com/shishir/cyberdeck/engine/core/security/secretstore"
+	"github.com/shishir/cyberdeck/engine/core/session"
 	"github.com/shishir/cyberdeck/engine/core/state"
+	"github.com/shishir/cyberdeck/engine/core/transport"
 	"github.com/shishir/cyberdeck/engine/internal/config"
 	"github.com/shishir/cyberdeck/engine/internal/lifecycle"
 	"github.com/shishir/cyberdeck/engine/pluginhost"
@@ -25,6 +38,9 @@ import (
 
 // version is the engine build version, overridable via -ldflags "-X main.version=…".
 var version = "0.0.0-dev"
+
+// defaultPort is the LAN listener port (devices dial it).
+const defaultPort = 8765
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -36,18 +52,23 @@ func main() {
 }
 
 // engine holds the wired core subsystems so the boot stages can construct them and
-// later stages / shutdown can reference them. Only the subsystems with live
-// consumers today are wired (state store + plugin host); registries, event bus and
-// session manager are already-tested subsystems that get wired in here once the
-// transport/session-open tickets (PROJ-180/124) give them runtime consumers.
+// later stages / shutdown / the pairing printout can reference them.
 type engine struct {
-	store *state.Store
-	host  *pluginhost.Host
+	logger   *log.Logger
+	store    *state.Store
+	host     *pluginhost.Host
+	fanout   *transport.Fanout
+	identity *security.Identity
+	tokens   *security.TokenIssuer
+	server   *session.Server
+	listener *session.Listener
+	pump     *session.StatePump
+
+	port        int
+	pluginsDir  string
+	powerDryRun bool
 }
 
-// run parses flags, claims the single-instance lock, boots the real subsystems,
-// waits for ctx cancellation (a signal), then shuts down. ctx is injected so tests
-// can drive the lifecycle deterministically.
 func run(ctx context.Context, args []string, stdout io.Writer) error {
 	fs := flag.NewFlagSet("cyberdeck", flag.ContinueOnError)
 	fs.SetOutput(stdout)
@@ -57,11 +78,13 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 		showVersion = fs.Bool("version", false, "print version and exit")
 		configPath  = fs.String("config", "config.json", "path to config.json")
 		dataDir     = fs.String("data", defaultDataDir(), "directory for the engine database + state")
+		port        = fs.Int("port", defaultPort, "LAN listener port devices connect to")
+		pluginsDir  = fs.String("plugins", defaultPluginsDir(), "directory holding the bundled plugin binaries")
+		powerLive   = fs.Bool("power-live", false, "actually execute power actions (default: dry-run for safety)")
 	)
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-
 	if *showVersion {
 		_, err := fmt.Fprintf(stdout, "CyberDeck engine %s\n", version)
 		return err
@@ -71,10 +94,8 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 	if *service && !*console {
 		mode = "service"
 	}
-
 	logger := log.New(stdout, "", log.LstdFlags)
 
-	// Single-instance guard: a second launch signals the first to focus and exits.
 	lock, err := lifecycle.AcquireInstance(instanceName(*dataDir), func() {
 		logger.Printf("focus requested by another launch")
 	})
@@ -102,44 +123,84 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 		return fmt.Errorf("open database: %w", err)
 	}
 
-	eng := &engine{}
+	eng := &engine{
+		logger: logger, port: *port, pluginsDir: *pluginsDir, powerDryRun: !*powerLive,
+	}
 	subs := lifecycle.Subsystems{
-		DB:       db,
-		DBCloser: db,
-		InitCore: func(context.Context) error {
-			eng.store = state.New()
-			eng.host = pluginhost.NewHost(
-				pluginhost.WithStateSetter(eng.store),
-				pluginhost.WithLogger(logger),
-			)
-			return nil
-		},
+		DB:         db,
+		DBCloser:   db,
+		InitCore:   eng.initCore(db),
 		PluginHost: &hostService{eng: eng},
+		Transport:  &transportService{eng: eng},
 	}
 
-	// Boot runs to READY on its own context: the signal context (ctx) drives the
-	// post-boot shutdown wait, not boot itself, so an early signal shuts the engine
-	// down cleanly after boot rather than aborting a half-finished boot.
 	if err := lifecycle.Boot(context.Background(), logger, lifecycle.BuildStages(subs)); err != nil {
 		_ = db.Close()
 		return err
 	}
-	logger.Printf("engine running; waiting for shutdown signal")
+
+	eng.printPairing(stdout) // QR + payload for the first device
+	go eng.reissueLoop(stdout)
+	logger.Printf("engine running on port %d; waiting for shutdown signal", eng.port)
 
 	<-ctx.Done()
 	logger.Printf("shutdown signal received")
-
-	// Shutdown gets a fresh context so teardown isn't already-cancelled.
 	return lifecycle.Shutdown(context.Background(), logger, lifecycle.BuildShutdownSteps(subs))
 }
 
-// hostService adapts the plugin host to the lifecycle Service seam. The host is
-// constructed during core init; launching the bundled first-party plugins is wired
-// by the runtime/installer (PROJ-190+) once plugin binary paths are known, so Start
-// is currently a readiness no-op and Stop tears down any launched plugins.
+// initCore builds the core subsystems: state store, plugin host, fan-out, engine
+// identity, the pairing server (token issuer + trust store), the session server,
+// the LAN listener, and the state pump.
+func (e *engine) initCore(db *persistence.DB) func(context.Context) error {
+	return func(context.Context) error {
+		e.store = state.New()
+		e.fanout = transport.NewFanout()
+		e.host = pluginhost.NewHost(
+			pluginhost.WithStateSetter(e.store),
+			pluginhost.WithLogger(e.logger),
+		)
+		e.tokens = security.NewTokenIssuer(security.WithTokenTTL(15 * time.Minute))
+
+		// Engine identity (ephemeral per run in this slice → fingerprint stable for
+		// the run; persistent secure identity is a strengthening follow-up).
+		id, err := security.LoadOrCreate(secretstore.NewMemoryStore(), &memKV{m: map[string]string{}}, "engine")
+		if err != nil {
+			return fmt.Errorf("engine identity: %w", err)
+		}
+		e.identity = id
+
+		pairingSrv, err := security.NewPairingServer(
+			id, e.tokens, session.NewTrustAdapter(persistence.NewDeviceRepo(db)),
+			// First-slice default: grant the power category so the deck is usable
+			// (destructive actions still require the device's 2-tap confirm).
+			security.WithDefaultPermissions(`{"allowPowerActions":true,"allowedCategories":["power"],"deniedActions":[],"allowEditTrigger":true}`),
+		)
+		if err != nil {
+			return fmt.Errorf("pairing server: %w", err)
+		}
+
+		auditor := auditAdapter{repo: persistence.NewAuditRepo(db), logger: e.logger}
+		invoker := pluginInvoker{host: e.host, lookup: powerLookup}
+		e.server = session.NewServer(e.fanout, layout.DefaultProfile(), e.store, powerLookup, invoker, auditor, e.logger)
+		e.listener = session.NewListener(fmt.Sprintf(":%d", e.port), pairingSrv, e.server, e.logger)
+		e.pump = session.NewStatePump(e.store, e.fanout, 500*time.Millisecond, e.logger)
+		return nil
+	}
+}
+
+// hostService launches + tears down the bundled first-party plugins.
 type hostService struct{ eng *engine }
 
-func (h *hostService) Start(context.Context) error { return nil }
+func (h *hostService) Start(context.Context) error {
+	h.eng.launchPlugin("telemetry", nil)
+	var powerEnv []string
+	if h.eng.powerDryRun {
+		powerEnv = []string{"CYBERDECK_POWER_DRYRUN=1"}
+		h.eng.logger.Printf("power actions are in DRY-RUN (use --power-live to execute for real)")
+	}
+	h.eng.launchPlugin("power", powerEnv)
+	return nil
+}
 
 func (h *hostService) Stop(ctx context.Context) error {
 	if h.eng.host == nil {
@@ -148,12 +209,177 @@ func (h *hostService) Stop(ctx context.Context) error {
 	return h.eng.host.Shutdown(ctx)
 }
 
+// launchPlugin starts a bundled plugin if its binary exists; a missing binary is
+// logged and skipped so the engine still runs (telemetry missing → no live state;
+// power missing → power buttons fail) rather than failing to boot.
+func (e *engine) launchPlugin(name string, env []string) {
+	path := filepath.Join(e.pluginsDir, name, name+exeSuffix())
+	if _, err := os.Stat(path); err != nil {
+		e.logger.Printf("plugin %q not found at %s (skipping): %v", name, path, err)
+		return
+	}
+	if _, err := e.host.Launch(pluginhost.LaunchSpec{Name: name, Path: path, Env: env}); err != nil {
+		e.logger.Printf("launch plugin %q: %v", name, err)
+		return
+	}
+	e.logger.Printf("launched plugin %q", name)
+}
+
+// transportService starts the state pump + LAN listener and, on shutdown, closes
+// live sessions then stops accepting.
+type transportService struct{ eng *engine }
+
+func (t *transportService) Start(ctx context.Context) error {
+	if err := t.eng.pump.Start(ctx); err != nil {
+		return err
+	}
+	return t.eng.listener.Start(ctx)
+}
+
+func (t *transportService) Stop(ctx context.Context) error {
+	t.eng.server.CloseAll()
+	err := t.eng.listener.Stop(ctx)
+	if perr := t.eng.pump.Stop(ctx); perr != nil && err == nil {
+		err = perr
+	}
+	return err
+}
+
+// printPairing issues a fresh single-use token and prints the pairing QR + payload.
+func (e *engine) printPairing(w io.Writer) {
+	tok, err := e.tokens.Issue(true) // privileged: local console
+	if err != nil {
+		e.logger.Printf("issue pairing token: %v", err)
+		return
+	}
+	payload, err := security.BuildPairingPayload(e.port, tok, e.identity.Fingerprint())
+	if err != nil {
+		e.logger.Printf("build pairing payload: %v", err)
+		return
+	}
+	js, err := payload.JSON()
+	if err != nil {
+		e.logger.Printf("encode pairing payload: %v", err)
+		return
+	}
+	_, _ = fmt.Fprintln(w, "\n=== CyberDeck pairing — scan on Android, or paste on desktop ===")
+	qrterminal.GenerateHalfBlock(js, qrterminal.L, w)
+	_, _ = fmt.Fprintf(w, "\npayload: %s\n", js)
+	_, _ = fmt.Fprintf(w, "addresses=%v  port=%d  fingerprint=%s\n", payload.Addresses, payload.Port, payload.FP)
+	_, _ = fmt.Fprintln(w, "(press Enter in this console for a fresh pairing code)")
+}
+
+// reissueLoop prints a fresh pairing QR whenever the operator presses Enter (each
+// token is single-use; this lets you pair more than one device per run).
+func (e *engine) reissueLoop(w io.Writer) {
+	sc := bufio.NewScanner(os.Stdin)
+	for sc.Scan() {
+		e.printPairing(w)
+	}
+}
+
+// --- small adapters local to the entrypoint wiring ---
+
+// memKV is an in-memory PublicStore for the (per-run) engine identity.
+type memKV struct{ m map[string]string }
+
+func (s *memKV) GetString(k string) (string, bool, error) { v, ok := s.m[k]; return v, ok, nil }
+func (s *memKV) SetString(k, v string) error              { s.m[k] = v; return nil }
+
+// auditAdapter records audit events durably (PROJ-114/127) and to the log.
+type auditAdapter struct {
+	repo   *persistence.AuditRepo
+	logger *log.Logger
+}
+
+func (a auditAdapter) Audit(event string, fields map[string]any) {
+	actor, _ := fields["device"].(string)
+	resID, _ := fields["actionId"].(string)
+	payload, _ := json.Marshal(fields)
+	if a.repo != nil {
+		_, _ = a.repo.Append(context.Background(), persistence.AuditEntry{
+			TS: time.Now().UnixMilli(), Actor: actor, EventType: event,
+			ResourceType: "action", ResourceID: resID, PayloadJSON: string(payload),
+		})
+	}
+	a.logger.Printf("audit %s %v", event, fields)
+}
+
+// powerLookup is the static action catalogue for the bundled power plugin (the full
+// manifest→registry merge is a strengthening follow-up; this is enough to authorize
+// + route the default deck's buttons).
+var powerLookup = staticLookup{m: func() map[string]registry.ActionDescriptor {
+	mk := func(id, label string, destructive bool) registry.ActionDescriptor {
+		return registry.ActionDescriptor{ID: id, Label: label, Category: "power", Destructive: destructive, Source: "power"}
+	}
+	return map[string]registry.ActionDescriptor{
+		"system.shutdown":  mk("system.shutdown", "Shut Down", true),
+		"system.restart":   mk("system.restart", "Restart", true),
+		"system.sleep":     mk("system.sleep", "Sleep", false),
+		"system.hibernate": mk("system.hibernate", "Hibernate", true),
+		"system.lock":      mk("system.lock", "Lock", false),
+		"system.logoff":    mk("system.logoff", "Log Off", true),
+	}
+}()}
+
+type staticLookup struct{ m map[string]registry.ActionDescriptor }
+
+func (s staticLookup) Action(id string) (registry.ActionDescriptor, bool) {
+	d, ok := s.m[id]
+	return d, ok
+}
+
+// pluginInvoker routes an authorized action to the plugin that owns it (by the
+// descriptor's Source) and unwraps the plugin's result.
+type pluginInvoker struct {
+	host   *pluginhost.Host
+	lookup staticLookup
+}
+
+func (pi pluginInvoker) Invoke(ctx context.Context, actionID string, params json.RawMessage) error {
+	desc, ok := pi.lookup.Action(actionID)
+	if !ok {
+		return fmt.Errorf("unknown action %q", actionID)
+	}
+	plug, ok := pi.host.Plugin(desc.Source)
+	if !ok {
+		return fmt.Errorf("plugin %q not running", desc.Source)
+	}
+	res, err := plug.Invoke(ctx, actionID, params)
+	if err != nil {
+		return err
+	}
+	if !res.OK {
+		return errors.New(res.Error)
+	}
+	return nil
+}
+
+func exeSuffix() string {
+	if runtime.GOOS == "windows" {
+		return ".exe"
+	}
+	return ""
+}
+
 // defaultDataDir is the per-user location for the engine database.
 func defaultDataDir() string {
 	if d, err := os.UserConfigDir(); err == nil {
 		return filepath.Join(d, "CyberDeck")
 	}
 	return "."
+}
+
+// defaultPluginsDir resolves the bundled-plugins directory next to the executable,
+// falling back to ./plugins for `go run` / dev.
+func defaultPluginsDir() string {
+	if exe, err := os.Executable(); err == nil {
+		cand := filepath.Join(filepath.Dir(exe), "plugins")
+		if _, err := os.Stat(cand); err == nil {
+			return cand
+		}
+	}
+	return "plugins"
 }
 
 // instanceName scopes the single-instance lock to a data directory so distinct

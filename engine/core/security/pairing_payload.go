@@ -46,8 +46,8 @@ func LocalIPv4s() ([]string, error) {
 	var out []string
 	for _, a := range ifaces {
 		ipnet, ok := a.(*net.IPNet)
-		if !ok || ipnet.IP.IsLoopback() {
-			continue
+		if !ok || ipnet.IP.IsLoopback() || ipnet.IP.IsLinkLocalUnicast() {
+			continue // skip loopback + 169.254.x.x autoconfig addrs (not dialable)
 		}
 		if v4 := ipnet.IP.To4(); v4 != nil {
 			out = append(out, v4.String())
