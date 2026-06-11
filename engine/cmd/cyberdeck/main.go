@@ -18,6 +18,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -63,6 +64,7 @@ type engine struct {
 	server   *session.Server
 	listener *session.Listener
 	pump     *session.StatePump
+	devices  *persistence.DeviceRepo
 
 	port        int
 	pluginsDir  string
@@ -140,7 +142,7 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 	}
 
 	eng.printPairing(stdout) // QR + payload for the first device
-	go eng.reissueLoop(stdout)
+	go eng.consoleLoop(stdout)
 	logger.Printf("engine running on port %d; waiting for shutdown signal", eng.port)
 
 	<-ctx.Done()
@@ -160,6 +162,7 @@ func (e *engine) initCore(db *persistence.DB) func(context.Context) error {
 			pluginhost.WithLogger(e.logger),
 		)
 		e.tokens = security.NewTokenIssuer(security.WithTokenTTL(15 * time.Minute))
+		e.devices = persistence.NewDeviceRepo(db)
 
 		// Engine identity (ephemeral per run in this slice → fingerprint stable for
 		// the run; persistent secure identity is a strengthening follow-up).
@@ -170,7 +173,7 @@ func (e *engine) initCore(db *persistence.DB) func(context.Context) error {
 		e.identity = id
 
 		pairingSrv, err := security.NewPairingServer(
-			id, e.tokens, session.NewTrustAdapter(persistence.NewDeviceRepo(db)),
+			id, e.tokens, session.NewTrustAdapter(e.devices),
 			// First-slice default: grant the power category so the deck is usable
 			// (destructive actions still require the device's 2-tap confirm).
 			security.WithDefaultPermissions(`{"allowPowerActions":true,"allowedCategories":["power"],"deniedActions":[],"allowEditTrigger":true}`),
@@ -266,16 +269,76 @@ func (e *engine) printPairing(w io.Writer) {
 	qrterminal.GenerateHalfBlock(js, qrterminal.L, w)
 	_, _ = fmt.Fprintf(w, "\npayload: %s\n", js)
 	_, _ = fmt.Fprintf(w, "addresses=%v  port=%d  fingerprint=%s\n", payload.Addresses, payload.Port, payload.FP)
-	_, _ = fmt.Fprintln(w, "(press Enter in this console for a fresh pairing code)")
+	_, _ = fmt.Fprintln(w, "(console: <Enter> = new code · list · revoke <uuid> · help)")
 }
 
-// reissueLoop prints a fresh pairing QR whenever the operator presses Enter (each
-// token is single-use; this lets you pair more than one device per run).
-func (e *engine) reissueLoop(w io.Writer) {
+// consoleLoop is the privileged local console: Enter prints a fresh pairing code,
+// `list` shows paired + live devices, `revoke <uuid>` revokes a device and drops its
+// live session. (The local console is inherently the privileged channel, 2E §3.1.)
+func (e *engine) consoleLoop(w io.Writer) {
 	sc := bufio.NewScanner(os.Stdin)
 	for sc.Scan() {
-		e.printPairing(w)
+		line := strings.TrimSpace(sc.Text())
+		switch {
+		case line == "":
+			e.printPairing(w)
+		case line == "list":
+			e.listDevices(w)
+		case strings.HasPrefix(line, "revoke "):
+			e.revokeDevice(w, strings.TrimSpace(strings.TrimPrefix(line, "revoke ")))
+		case line == "help":
+			_, _ = fmt.Fprintln(w, "commands: <Enter> = new pairing code · list · revoke <uuid> · help")
+		default:
+			_, _ = fmt.Fprintf(w, "unknown command %q (try: help)\n", line)
+		}
 	}
+	if err := sc.Err(); err != nil {
+		e.logger.Printf("console: stdin error: %v", err)
+	}
+}
+
+// listDevices prints the paired devices and which are currently connected.
+func (e *engine) listDevices(w io.Writer) {
+	devs, err := e.devices.List(context.Background())
+	if err != nil {
+		_, _ = fmt.Fprintf(w, "list: %v\n", err)
+		return
+	}
+	live := map[string]bool{}
+	for _, u := range e.server.LiveDevices() {
+		live[u] = true
+	}
+	if len(devs) == 0 {
+		_, _ = fmt.Fprintln(w, "no paired devices")
+		return
+	}
+	_, _ = fmt.Fprintln(w, "paired devices:")
+	for _, d := range devs {
+		status := "offline"
+		if live[d.UUID] {
+			status = "LIVE"
+		}
+		if d.Revoked {
+			status = "revoked"
+		}
+		_, _ = fmt.Fprintf(w, "  %s  [%s]  paired=%s\n", d.UUID, status,
+			time.UnixMilli(d.PairedAt).Format(time.RFC3339))
+	}
+}
+
+// revokeDevice revokes a device and tears down its live session immediately.
+func (e *engine) revokeDevice(w io.Writer, uuid string) {
+	if uuid == "" {
+		_, _ = fmt.Fprintln(w, "usage: revoke <uuid>")
+		return
+	}
+	if err := e.devices.Revoke(context.Background(), uuid); err != nil {
+		_, _ = fmt.Fprintf(w, "revoke %s: %v\n", uuid, err)
+		return
+	}
+	closed := e.server.CloseDevice(uuid)
+	e.logger.Printf("revoked device %s (live session closed=%v)", uuid, closed)
+	_, _ = fmt.Fprintf(w, "revoked %s (live session closed=%v)\n", uuid, closed)
 }
 
 // --- small adapters local to the entrypoint wiring ---

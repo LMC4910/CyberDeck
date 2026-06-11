@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/shishir/cyberdeck/engine/core/layout"
@@ -17,6 +18,10 @@ import (
 // profileID is the single served profile in the first-testable slice (the built-in
 // default deck). Multi-profile activation is PROJ-163/216 territory.
 const profileID = "default"
+
+// DefaultHeartbeatTimeout closes a session that has gone silent (no ping / traffic)
+// for this long — frees a dead device's slot (PROJ-145). 0 disables the reaper.
+const DefaultHeartbeatTimeout = 20 * time.Second
 
 // --- collaborator seams (kept small + injected so the manager is unit-testable) ---
 
@@ -42,21 +47,31 @@ type StateReader interface {
 	Snapshot() []state.State
 }
 
+// liveSession bundles a device's session + mux + last-seen timestamp (unix nanos).
+type liveSession struct {
+	sess     *transport.EncryptedSession
+	mux      *transport.ChannelMux
+	lastSeen atomic.Int64
+}
+
 // Server serves paired devices: it pushes each the active layout + a filtered live
-// state stream, and dispatches their interactions through the permission gate and
-// audit. It implements Handler, so the listener hands it each new session. (Distinct
-// from Manager, which is the in-memory session/profile registry, PROJ-163.)
+// state stream, dispatches their interactions through the permission gate + audit,
+// answers heartbeats + resyncs, and reaps silent sessions. It implements Handler, so
+// the listener hands it each new session. (Distinct from Manager, the in-memory
+// session/profile registry, PROJ-163.)
 type Server struct {
-	fanout  *transport.Fanout
-	profile *layout.Profile
-	states  StateReader
-	lookup  ActionLookup
-	invoker ActionInvoker
-	audit   Auditor
-	logger  *log.Logger
+	fanout    *transport.Fanout
+	profile   *layout.Profile
+	states    StateReader
+	lookup    ActionLookup
+	invoker   ActionInvoker
+	audit     Auditor
+	logger    *log.Logger
+	heartbeat time.Duration
+	now       func() time.Time
 
 	mu   sync.Mutex
-	live map[string]*transport.EncryptedSession // device uuid → session
+	live map[string]*liveSession // device uuid → live session
 }
 
 // NewServer builds a session server.
@@ -68,14 +83,19 @@ func NewServer(fanout *transport.Fanout, profile *layout.Profile, states StateRe
 	return &Server{
 		fanout: fanout, profile: profile, states: states,
 		lookup: lookup, invoker: invoker, audit: audit, logger: logger,
-		live: map[string]*transport.EncryptedSession{},
+		heartbeat: DefaultHeartbeatTimeout,
+		now:       time.Now,
+		live:      map[string]*liveSession{},
 	}
 }
 
+// SetHeartbeatTimeout overrides the idle-session reaper timeout (≤0 disables it).
+func (m *Server) SetHeartbeatTimeout(d time.Duration) { m.heartbeat = d }
+
 // Serve sets up a freshly paired session — pushes the layout snapshot + initial
-// state, registers the device for fan-out, and consumes its interactions — then
-// returns immediately. A background goroutine cleans up when the session ends, so
-// the listener's accept loop is never held open by a live session.
+// state, registers the device for fan-out, consumes its control channel (interactions
+// / ping / resync), and reaps it if it goes silent — then returns immediately. A
+// background goroutine cleans up when the session ends.
 func (m *Server) Serve(sess *transport.EncryptedSession, hr *HandshakeResult) {
 	uuid := hr.DeviceUUID
 	perms, err := security.ParsePermissions(hr.PermissionsJSON)
@@ -85,8 +105,35 @@ func (m *Server) Serve(sess *transport.EncryptedSession, hr *HandshakeResult) {
 	authCtx := security.AuthContext{Authenticated: true, Revoked: false, Perms: perms}
 
 	mux := transport.NewChannelMux(sess, 0, 0)
+	ls := &liveSession{sess: sess, mux: mux}
+	ls.lastSeen.Store(m.now().UnixNano())
 
-	// Initial snapshot: the active page, then the current value of each bound state.
+	m.serveSnapshot(mux) // initial layout + state burst (serial, before fan-out)
+
+	m.fanout.Add(&transport.Subscriber{
+		DeviceUUID: uuid,
+		Subs:       state.NewSubscriptionSet(m.profile.StateBindings()...),
+		Mux:        mux,
+		ProfileID:  profileID,
+		EditMode:   false,
+	})
+	m.track(uuid, ls)
+	m.audit.Audit("session.opened", map[string]any{"device": uuid})
+
+	go m.consumeControl(ls, uuid, authCtx)
+	go m.reap(ls)
+	go func() {
+		<-sess.Done()
+		m.fanout.Remove(uuid)
+		mux.Close()
+		m.untrack(uuid)
+		m.audit.Audit("session.closed", map[string]any{"device": uuid})
+	}()
+}
+
+// serveSnapshot sends the active page + the current value of each bound state, then
+// flushes. Used for the initial burst and for resync (PROJ-149).
+func (m *Server) serveSnapshot(mux *transport.ChannelMux) {
 	bound := m.profile.StateBindings()
 	if page := m.profile.ActivePage(); page != nil {
 		if env, err := layoutSnapshotEnvelope(page, m.profile.Version); err == nil {
@@ -104,37 +151,43 @@ func (m *Server) Serve(sess *transport.EncryptedSession, hr *HandshakeResult) {
 			}
 		}
 	}
-	// Flush the burst before registering for fan-out so the initial send is serial.
 	if err := mux.Flush(); err != nil {
-		m.logger.Printf("session: %s initial flush: %v", uuid, err)
+		m.logger.Printf("session: snapshot flush: %v", err)
 	}
+}
 
-	m.fanout.Add(&transport.Subscriber{
-		DeviceUUID: uuid,
-		Subs:       state.NewSubscriptionSet(bound...),
-		Mux:        mux,
-		ProfileID:  profileID,
-		EditMode:   false,
-	})
-	m.track(uuid, sess)
-	m.audit.Audit("session.opened", map[string]any{"device": uuid})
+// CloseDevice tears down a device's live session immediately (used by revocation,
+// PROJ-126). Reports whether a session was present.
+func (m *Server) CloseDevice(uuid string) bool {
+	m.mu.Lock()
+	ls := m.live[uuid]
+	delete(m.live, uuid) // untrack synchronously so a repeat call is a no-op
+	m.mu.Unlock()
+	if ls == nil {
+		return false
+	}
+	_ = ls.sess.Close()
+	return true
+}
 
-	go m.consumeControl(sess, mux, uuid, authCtx)
-	go func() {
-		<-sess.Done()
-		m.fanout.Remove(uuid)
-		mux.Close()
-		m.untrack(uuid)
-		m.audit.Audit("session.closed", map[string]any{"device": uuid})
-	}()
+// LiveDevices returns the UUIDs of currently connected devices (for the console
+// `list` command).
+func (m *Server) LiveDevices() []string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]string, 0, len(m.live))
+	for uuid := range m.live {
+		out = append(out, uuid)
+	}
+	return out
 }
 
 // CloseAll tears down every live session (graceful shutdown).
 func (m *Server) CloseAll() {
 	m.mu.Lock()
 	sessions := make([]*transport.EncryptedSession, 0, len(m.live))
-	for _, s := range m.live {
-		sessions = append(sessions, s)
+	for _, ls := range m.live {
+		sessions = append(sessions, ls.sess)
 	}
 	m.mu.Unlock()
 	for _, s := range sessions {
@@ -142,9 +195,9 @@ func (m *Server) CloseAll() {
 	}
 }
 
-func (m *Server) track(uuid string, sess *transport.EncryptedSession) {
+func (m *Server) track(uuid string, ls *liveSession) {
 	m.mu.Lock()
-	m.live[uuid] = sess
+	m.live[uuid] = ls
 	m.mu.Unlock()
 }
 
@@ -154,19 +207,50 @@ func (m *Server) untrack(uuid string) {
 	m.mu.Unlock()
 }
 
-// consumeControl dispatches the device's control-channel interactions until the
-// session ends.
-func (m *Server) consumeControl(sess *transport.EncryptedSession, mux *transport.ChannelMux, uuid string, authCtx security.AuthContext) {
+// consumeControl dispatches the device's control-channel messages until the session
+// ends: interactions (authorized + audited), ping (→ pong), and resync (→ re-serve).
+func (m *Server) consumeControl(ls *liveSession, uuid string, authCtx security.AuthContext) {
 	for {
 		select {
-		case <-sess.Done():
+		case <-ls.sess.Done():
 			return
-		case env, ok := <-mux.ControlInbound():
+		case env, ok := <-ls.mux.ControlInbound():
 			if !ok {
 				return
 			}
-			if env.Type == "interaction" {
+			ls.lastSeen.Store(m.now().UnixNano())
+			switch env.Type {
+			case "interaction":
 				m.handleInteraction(env, uuid, authCtx)
+			case "ping":
+				_ = ls.sess.Send(transport.Envelope{
+					V: transport.ProtocolVersion, Ch: transport.ChannelControl,
+					Type: "pong", TS: m.now().UnixMilli(),
+				})
+			case "resync":
+				m.serveSnapshot(ls.mux)
+			}
+		}
+	}
+}
+
+// reap closes a session that has not been heard from within the heartbeat timeout.
+func (m *Server) reap(ls *liveSession) {
+	if m.heartbeat <= 0 {
+		return
+	}
+	tick := max(m.heartbeat/4, 50*time.Millisecond)
+	t := time.NewTicker(tick)
+	defer t.Stop()
+	for {
+		select {
+		case <-ls.sess.Done():
+			return
+		case <-t.C:
+			if m.now().UnixNano()-ls.lastSeen.Load() > m.heartbeat.Nanoseconds() {
+				m.logger.Printf("session: %s timed out (no heartbeat) — closing", ls.sess.DeviceUUID())
+				_ = ls.sess.Close()
+				return
 			}
 		}
 	}

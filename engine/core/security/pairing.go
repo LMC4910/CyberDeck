@@ -206,10 +206,16 @@ func (h *Handshake) OnClientHello(ctx context.Context, hello ClientHello) (Serve
 		return ServerHello{}, ErrRevokedDevice
 	}
 
-	// Authorize (single-use token / local PIN). Consumes the token on success.
-	if err := h.srv.authorizer.Authorize(ctx, hello); err != nil {
-		h.state = stateFailed
-		return ServerHello{}, fmt.Errorf("%w: %v", ErrUnauthorized, err)
+	// Authorize a NEW/unknown device with a single-use token / local PIN (consumed
+	// on success). A known, non-revoked device reconnects WITHOUT a token — it still
+	// proves possession of its private key via the signature in OnKeyConfirm, and the
+	// nonces bind the exchange against replay. Revocation (PROJ-126) is the kick
+	// switch that forces a known device back through token authorization.
+	if !exists || revoked {
+		if err := h.srv.authorizer.Authorize(ctx, hello); err != nil {
+			h.state = stateFailed
+			return ServerHello{}, fmt.Errorf("%w: %v", ErrUnauthorized, err)
+		}
 	}
 
 	nonceE := make([]byte, nonceSize)
