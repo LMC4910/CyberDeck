@@ -1,45 +1,25 @@
-/// CyberDeck client app entrypoint: load the device identity, pair with an engine
-/// (QR scan on Android, paste on desktop), then render its live deck.
+/// CyberDeck client app entrypoint. Routes: Landing → (Demo Mode | Connect →
+/// Pairing) → Deck list → Deck. Demo Mode is the offline, zero-setup path used to
+/// exercise the full experience on desktop and mobile.
 library;
 
 import 'package:flutter/material.dart';
 
 import 'app/deck.dart';
+import 'app/deck_list.dart';
+import 'app/landing.dart';
 import 'app/pairing.dart';
+import 'data/deck_source.dart';
+import 'data/engine_deck_source.dart';
+import 'data/mock_deck_source.dart';
 import 'net/connection_manager.dart';
 import 'net/discovery.dart';
 import 'net/pairing.dart';
 
 void main() => runApp(const CyberDeckApp());
 
-class CyberDeckApp extends StatefulWidget {
+class CyberDeckApp extends StatelessWidget {
   const CyberDeckApp({super.key});
-
-  @override
-  State<CyberDeckApp> createState() => _CyberDeckAppState();
-}
-
-class _CyberDeckAppState extends State<CyberDeckApp> {
-  DeviceIdentity? _identity;
-  EngineConnection? _conn;
-
-  @override
-  void initState() {
-    super.initState();
-    // In-memory identity for this slice (re-pair each launch); a secure persistent
-    // KeyStore (Android Keystore / Windows DPAPI) is a strengthening follow-up.
-    DeviceIdentity.loadOrCreate(InMemoryKeyStore()).then((id) {
-      if (mounted) setState(() => _identity = id);
-    });
-  }
-
-  void _onConnected(EngineConnection c) => setState(() => _conn = c);
-
-  Future<void> _disconnect() async {
-    final c = _conn;
-    setState(() => _conn = null);
-    if (c != null) await c.close();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,24 +33,108 @@ class _CyberDeckAppState extends State<CyberDeckApp> {
           brightness: Brightness.dark,
         ),
       ),
-      home: _home(),
+      home: const RootScreen(),
     );
   }
+}
 
-  Widget _home() {
-    final id = _identity;
-    if (id == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+class RootScreen extends StatefulWidget {
+  const RootScreen({super.key});
+
+  @override
+  State<RootScreen> createState() => _RootScreenState();
+}
+
+class _RootScreenState extends State<RootScreen> {
+  DeviceIdentity? _identity;
+  DeckSource? _source;
+  String? _deckId;
+  bool _pairing = false;
+  bool _connecting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    DeviceIdentity.loadOrCreate(InMemoryKeyStore())
+        .then((id) => mounted ? setState(() => _identity = id) : null);
+  }
+
+  void _enterDemo() => setState(() => _source = MockDeckSource());
+
+  void _connect() => setState(() => _pairing = true);
+
+  Future<void> _onConnected(EngineConnection conn) async {
+    setState(() {
+      _pairing = false;
+      _connecting = true;
+    });
+    final src = EngineDeckSource(conn);
+    try {
+      await src.ready.timeout(const Duration(seconds: 8));
+      if (!mounted) return;
+      setState(() {
+        _source = src;
+        _deckId = 'live';
+        _connecting = false;
+      });
+    } catch (e) {
+      await src.dispose();
+      if (!mounted) return;
+      setState(() => _connecting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Engine sent no deck: $e')));
     }
-    final conn = _conn;
-    if (conn != null) {
-      return DeckScreen(connection: conn, onDisconnect: _disconnect);
+  }
+
+  Future<void> _leaveSource() async {
+    final s = _source;
+    setState(() {
+      _source = null;
+      _deckId = null;
+    });
+    await s?.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_connecting) {
+      return const Scaffold(
+        body: Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Connecting…'),
+          ]),
+        ),
+      );
     }
-    return PairingScreen(
-      discovery: MdnsEngineDiscovery(),
-      connectionManager: ConnectionManager(identity: id),
-      scanner: defaultQrScanner(),
-      onConnected: _onConnected,
+    if (_pairing) {
+      final id = _identity;
+      if (id == null) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      return PairingScreen(
+        discovery: MdnsEngineDiscovery(),
+        connectionManager: ConnectionManager(identity: id),
+        scanner: defaultQrScanner(),
+        onConnected: _onConnected,
+      );
+    }
+    final source = _source;
+    if (source == null) {
+      return LandingScreen(onDemo: _enterDemo, onConnect: _connect);
+    }
+    if (_deckId == null) {
+      return DeckListScreen(
+        source: source,
+        onOpen: (id) => setState(() => _deckId = id),
+        onBack: _leaveSource,
+      );
+    }
+    return DeckScreen(
+      source: source,
+      deckId: _deckId!,
+      onBack: () => setState(() => _deckId = null),
     );
   }
 }

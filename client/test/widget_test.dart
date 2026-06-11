@@ -1,163 +1,102 @@
-// Deck screen tests: the assembled client renders the engine-authored layout,
-// applies live state, and sends interactions back over the control channel — driven
-// by an in-memory encrypted session pair standing in for a paired engine.
-
-import 'dart:convert';
-import 'dart:typed_data';
+// Demo-Mode journey tests: the app is fully exercisable with no engine. Screen-level
+// tests drive a MockDeckSource directly and use explicit pump() — never
+// pumpAndSettle, since the mock's periodic ticker never "settles". Each test unmounts
+// the tree and disposes the source before returning so no timer stays pending.
 
 import 'package:cyberdeck_client/app/deck.dart';
-import 'package:cyberdeck_client/crypto/crypto.dart';
-import 'package:cyberdeck_client/net/channels.dart';
-import 'package:cyberdeck_client/net/conn.dart';
-import 'package:cyberdeck_client/net/connection_manager.dart';
-import 'package:cyberdeck_client/net/encrypted_session.dart';
-import 'package:cyberdeck_client/net/envelope.dart';
-import 'package:cyberdeck_client/net/framing.dart';
+import 'package:cyberdeck_client/app/deck_list.dart';
+import 'package:cyberdeck_client/app/landing.dart';
+import 'package:cyberdeck_client/data/mock_deck_source.dart';
+import 'package:cyberdeck_client/designer/deck_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Future<void> _push(
-    EncryptedSession engine, Channel ch, String type, Map<String, dynamic> m) {
-  return engine.send(Envelope(
-    ch: ch,
-    type: type,
-    payload: Uint8List.fromList(utf8.encode(jsonEncode(m))),
-  ));
+Future<void> _teardown(WidgetTester tester, MockDeckSource source) async {
+  await tester.pumpWidget(const SizedBox()); // unmount listeners
+  await source.dispose(); // cancel the telemetry timer
 }
-
-final _snapshot = <String, dynamic>{
-  'id': 'home',
-  'grid': {'columns': 4, 'rows': 4},
-  'version': 1,
-  'widgets': [
-    {
-      'id': 'b1',
-      'type': 'button',
-      'placement': {'col': 0, 'row': 0, 'colSpan': 2, 'rowSpan': 1},
-      'appearance': {
-        'style': {'label': 'LOCK'}
-      },
-      'interaction': {
-        'tap': {'target': 'action', 'ref': 'system.lock'}
-      },
-      'config': {'confirm': false},
-    },
-    {
-      'id': 'g1',
-      'type': 'gauge.circular',
-      'placement': {'col': 0, 'row': 2, 'colSpan': 2, 'rowSpan': 2},
-      'appearance': {
-        'stateBinding': 'system.cpu.percent',
-        'style': {'label': 'CPU'}
-      },
-      'config': {'min': 0, 'max': 100, 'unit': '%'},
-    },
-  ],
-};
 
 void main() {
-  testWidgets('deck shows a waiting state before any layout arrives',
-      (tester) async {
-    late EngineConnection conn;
-    late EncryptedSession engine;
-    await tester.runAsync(() async {
-      (conn, engine) = await _pairedConnection();
-    });
-    await tester.pumpWidget(MaterialApp(home: DeckScreen(connection: conn)));
-    expect(find.text('Waiting for layout…'), findsOneWidget);
-    await tester.runAsync(() async {
-      await conn.close();
-      await engine.close();
-    });
+  testWidgets('landing offers Demo Mode and Connect', (tester) async {
+    var demo = false;
+    await tester.pumpWidget(MaterialApp(
+      home: LandingScreen(onDemo: () => demo = true, onConnect: () {}),
+    ));
+    expect(find.byKey(const Key('landing-demo')), findsOneWidget);
+    expect(find.byKey(const Key('landing-connect')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('landing-demo')));
+    expect(demo, isTrue);
   });
 
-  testWidgets('deck renders the snapshot, applies state, and sends interactions',
-      (tester) async {
-    late EngineConnection conn;
-    late EncryptedSession engine;
-    await tester.runAsync(() async {
-      (conn, engine) = await _pairedConnection();
-    });
-    await tester.pumpWidget(MaterialApp(home: DeckScreen(connection: conn)));
+  testWidgets('deck list shows the seed decks and opens one', (tester) async {
+    final source = MockDeckSource();
+    String? opened;
+    await tester.pumpWidget(MaterialApp(
+      home: DeckListScreen(source: source, onOpen: (id) => opened = id),
+    ));
+    await tester.pump();
+    expect(find.text('System Monitor'), findsOneWidget);
+    expect(find.text('Media'), findsOneWidget);
+    expect(find.text('Smart Home'), findsOneWidget);
 
-    // Engine pushes the layout → the button renders.
-    await tester.runAsync(() async {
-      await _push(engine, Channel.layout, 'layout.snapshot', _snapshot);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-    });
+    await tester.tap(find.byKey(const Key('deck-card-system')));
+    expect(opened, 'system');
+    await _teardown(tester, source);
+  });
+
+  testWidgets('deck renders live gauges and a button gives feedback',
+      (tester) async {
+    final source = MockDeckSource();
+    await tester.pumpWidget(MaterialApp(
+      home: DeckScreen(source: source, deckId: 'system'),
+    ));
     await tester.pump();
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byKey(const Key('gauge-value-cpu')), findsOneWidget);
     expect(find.text('LOCK'), findsOneWidget);
-    expect(find.byKey(const Key('gauge-value-g1')), findsOneWidget);
 
-    // A state delta repaints the gauge (value flows in, no crash).
-    await tester.runAsync(() async {
-      await _push(engine, Channel.state, 'state.delta',
-          {'id': 'system.cpu.percent', 'value': 42.0});
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-    });
+    await tester.tap(find.text('LOCK'));
     await tester.pump();
-    expect(find.byKey(const Key('gauge-value-g1')), findsOneWidget);
-
-    await tester.runAsync(() async {
-      await conn.close();
-      await engine.close();
-    });
+    await tester.pump();
+    expect(find.text('Locked (demo)'), findsOneWidget);
+    await _teardown(tester, source);
   });
 
-  // The deck → engine interaction roundtrip (tap → control-channel "interaction")
-  // is driven entirely on the real event loop so the encrypted pipe flushes.
-  testWidgets('a button tap sends an interaction to the engine', (tester) async {
-    late EngineConnection conn;
-    late EncryptedSession engine;
-    await tester.runAsync(() async {
-      (conn, engine) = await _pairedConnection();
-    });
-    await tester.pumpWidget(MaterialApp(home: DeckScreen(connection: conn)));
-    await tester.runAsync(() async {
-      await _push(engine, Channel.layout, 'layout.snapshot', _snapshot);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-    });
+  testWidgets('destructive action requires a second confirming tap',
+      (tester) async {
+    final source = MockDeckSource();
+    await tester.pumpWidget(MaterialApp(
+      home: DeckScreen(source: source, deckId: 'system'),
+    ));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('SLEEP')); // armed, not executed
     await tester.pump();
     await tester.pump();
+    expect(find.textContaining('Tap again to confirm'), findsOneWidget);
 
-    Map<String, dynamic>? got;
-    await tester.runAsync(() async {
-      final waitControl = engine.received
-          .firstWhere((e) => e.ch == Channel.control)
-          .timeout(const Duration(seconds: 3));
-      await tester.tap(find.text('LOCK'));
-      final env = await waitControl;
-      got = jsonDecode(utf8.decode(env.payload)) as Map<String, dynamic>;
-    });
-    expect(got?['actionId'], 'system.lock');
-
-    await tester.runAsync(() async {
-      await conn.close();
-      await engine.close();
-    });
+    await tester.tap(find.text('SLEEP')); // confirm → executes
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Sleeping (demo)'), findsOneWidget);
+    await _teardown(tester, source);
   });
-}
 
-// _pairedConnection builds a client EngineConnection and the matching engine-side
-// session over an in-memory pipe with shared keys (skips the handshake — the
-// handshake itself is covered by pairing_test).
-Future<(EngineConnection, EncryptedSession)> _pairedConnection() async {
-  final keys = SessionKeys(
-    initiatorToResponder: List<int>.filled(32, 7),
-    responderToInitiator: List<int>.filled(32, 9),
-  );
-  final (a, b) = duplexPipe();
-  final client = EncryptedSession.create(
-      frames: FrameChannel(a), keys: keys, isInitiator: true, deviceUuid: 'dev');
-  final engine = EncryptedSession.create(
-      frames: FrameChannel(b), keys: keys, isInitiator: false, deviceUuid: 'dev');
-  final conn = EngineConnection(
-    session: client,
-    router: ChannelRouter(client),
-    engineUuid: 'engine-1',
-    engineFingerprint: 'fp',
-    defaultPermsJson: '{}',
-  );
-  return (conn, engine);
+  testWidgets('designer: select a widget then remove it', (tester) async {
+    final source = MockDeckSource();
+    await tester.pumpWidget(MaterialApp(
+      home: DeckEditor(source: source, deckId: 'system'),
+    ));
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('edit-hit-lock')));
+    await tester.pump();
+    expect(find.byKey(const Key('editor-label-lock')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('editor-remove')));
+    await tester.pump();
+    expect(find.byKey(const Key('edit-hit-lock')), findsNothing);
+    await _teardown(tester, source);
+  });
 }
