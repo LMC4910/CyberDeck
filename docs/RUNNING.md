@@ -48,24 +48,36 @@ with touch and pointer input.
 ```sh
 task run:engine
 # equivalently:
-#   task dist:engine          # builds run/cyberdeck.exe + run/plugins/{telemetry,power}/*
+#   task dist:engine          # builds run/cyberdeck.exe + run/plugins/{telemetry,power,volume,launchers}/*
 #   cd run && ./cyberdeck.exe --console
 ```
 The engine prints a **pairing QR + payload** (addresses / port / token /
-fingerprint). Power actions are **dry-run** by default — add `--power-live` to make
-them real. Press **Enter** in the engine console for a fresh single-use pairing code.
+fingerprint) and launches the bundled plugins (telemetry, power, volume, launchers).
+Power/volume/launch actions are **dry-run** by default — add `--power-live` to make
+them real.
+
+Console commands (the local privileged channel):
+- **Enter** — print a fresh single-use pairing code.
+- **`list`** — paired devices and which are currently `LIVE`.
+- **`revoke <uuid>`** — revoke a device and drop its live session immediately.
 
 ### 2. Connect from the client
 In the app tap **Connect to Engine**, then **Scan QR** (Android camera) or paste the
 `payload:` JSON (desktop). On success the live deck appears with real CPU/RAM/disk
-telemetry; taps dispatch to the engine (logged as `audit interaction.executed …`).
+telemetry, a **volume slider + mute** (volume plugin) and an **Open GitHub** button
+(launchers plugin); taps dispatch to the engine (logged as `audit interaction.executed …`).
+
+The link self-heals: a heartbeat + watchdog detect a drop (wifi blip / sleep) and the
+client **auto-reconnects without re-scanning** (it's a known device — no token
+needed). Revoking it in the console (`revoke <uuid>`) is the kill switch.
 
 ### 3. Prove the live wire automatically
 ```sh
 task interop
 ```
-Spawns the engine and pairs with the real client networking stack, asserting the
-layout snapshot + live telemetry arrive and an interaction is accepted.
+Spawns the engine and, with the real client networking stack, pairs → asserts the
+layout snapshot + live telemetry + an interaction → **drops and reconnects
+tokenless** → **revokes** and confirms the session drops and re-entry is refused.
 
 ---
 

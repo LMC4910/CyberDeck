@@ -61,7 +61,7 @@ class _DeckScreenState extends State<DeckScreen> {
 
   Future<void> _invoke(String actionId, Object? value, String? param) async {
     final params = <String, dynamic>{
-      if (value != null) 'value': value,
+      'value': ?value,
       if (param != null && param.isNotEmpty) 'target': param,
     };
     final outcome = await widget.source
