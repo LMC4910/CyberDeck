@@ -42,20 +42,39 @@ task lint && task test && task build
 > be on `PATH` (this repo was developed with WinLibs gcc). Without a C compiler,
 > run `go test ./...` (no `-race`) locally; CI runs `-race` on Linux authoritatively.
 
-## Required follow-up to fully satisfy PROJ-102 (repo-owner actions)
+## Branch ruleset (default-branch protection)
 
-The workflow file is complete and the gates pass locally, but two AC need actions
-on the GitHub repo that can only be done by the repo owner:
+The default branch (`master`) is protected by a GitHub **ruleset** whose definition
+lives in `ci/branch-ruleset.json` (kept in-repo as IaC so it's reviewable +
+re-appliable). It enforces, for everyone except a repository **admin** (bypass):
 
-1. **Push** the branch so GitHub Actions runs the workflow at least once and the
-   checks register on the repo.
-2. **Branch protection** — in *Settings → Branches → Add rule* for `master`:
-   - Require status checks to pass before merging.
-   - Select `engine`, `engine-cross (windows-latest)`, `engine-cross (macos-latest)`,
-     and `client` as required checks.
-   This is what makes a red gate **block merge** (the AC).
-3. **Prove a red gate blocks** (one-time): open a PR that deliberately breaks a lint
-   or test, confirm the workflow fails and merge is blocked, then revert.
+- **Require a pull request** to merge (0 required approvals — solo-friendly; stale
+  reviews dismissed on push; review threads must be resolved).
+- **Require the CI checks to pass** and the branch to be **up to date**:
+  `engine (lint + test -race, linux)`, `engine (build + test) (windows-latest)`,
+  `engine (build + test) (macos-latest)`, `client (analyze + test + build)`.
+- **Linear history** (no merge commits), **no force-push** (`non_fast_forward`),
+  **no branch deletion**.
 
-Until these are done, PROJ-102 is "authored + locally validated; live-CI run and
-branch protection pending" (tracked on the Progress Dashboard).
+> Rulesets/branch-protection on a **private** repo need GitHub Pro; this repo is
+> **public**, so they're available on the free plan.
+
+### Apply / update / inspect
+
+```bash
+# create (first time)
+gh api --method POST repos/LMC4910/CyberDeck/rulesets --input ci/branch-ruleset.json
+
+# update after editing the JSON (RULESET_ID from the list below)
+gh api --method PUT repos/LMC4910/CyberDeck/rulesets/<RULESET_ID> --input ci/branch-ruleset.json
+
+# list / inspect
+gh api repos/LMC4910/CyberDeck/rulesets
+gh api repos/LMC4910/CyberDeck/rulesets/<RULESET_ID>
+```
+
+### Prove a red gate blocks (one-time, satisfies PROJ-102 AC)
+
+Open a PR that deliberately breaks a lint/test, confirm the CI fails and merge is
+blocked, then revert. (CI is currently red — fix it so PRs can merge; the admin
+bypass keeps the owner able to push in the meantime.)
