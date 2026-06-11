@@ -105,9 +105,12 @@ class PairingScreen extends StatefulWidget {
   final ConnectionManager connectionManager;
   final QrScanner scanner;
 
-  /// Called with the live connection once pairing succeeds (the app routes to the
-  /// deck). When null, the screen just reports status (the original behaviour).
-  final void Function(EngineConnection conn)? onConnected;
+  /// Called once pairing succeeds with the live connection and a tokenless
+  /// `reconnect` closure (the app routes to the deck; the deck uses reconnect to
+  /// recover from drops). When null, the screen just reports status.
+  final void Function(
+          EngineConnection conn, Future<EngineConnection> Function() reconnect)?
+      onConnected;
 
   @override
   State<PairingScreen> createState() => _PairingScreenState();
@@ -139,11 +142,23 @@ class _PairingScreenState extends State<PairingScreen> {
       _setStatus('Invalid pairing payload: ${e.message}');
       return;
     }
-    await _runPair(() =>
-        widget.connectionManager.connectWithPayload(payload));
+    // Reconnect reuses the payload's addresses + fingerprint but no token — the
+    // engine recognises the already-paired device and lets it back in (PROJ-146).
+    Future<EngineConnection> reconnect() =>
+        widget.connectionManager.connectWithPayload(PairingPayload(
+          addresses: payload.addresses,
+          port: payload.port,
+          token: '',
+          fingerprint: payload.fingerprint,
+        ));
+    await _runPair(
+        () => widget.connectionManager.connectWithPayload(payload), reconnect);
   }
 
-  Future<void> _runPair(Future<EngineConnection> Function() attempt) async {
+  Future<void> _runPair(
+    Future<EngineConnection> Function() attempt,
+    Future<EngineConnection> Function() reconnect,
+  ) async {
     setState(() {
       _busy = true;
       _status = 'Pairing…';
@@ -152,7 +167,7 @@ class _PairingScreenState extends State<PairingScreen> {
       final conn = await attempt();
       _setStatus('Paired with ${conn.engineUuid} '
           '(fingerprint ${_short(conn.engineFingerprint)})');
-      widget.onConnected?.call(conn);
+      widget.onConnected?.call(conn, reconnect);
     } on PairingException catch (e) {
       _setStatus(switch (e.failure) {
         PairingFailure.fingerprintMismatch =>

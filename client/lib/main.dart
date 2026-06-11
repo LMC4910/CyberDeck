@@ -63,12 +63,13 @@ class _RootScreenState extends State<RootScreen> {
 
   void _connect() => setState(() => _pairing = true);
 
-  Future<void> _onConnected(EngineConnection conn) async {
+  Future<void> _onConnected(
+      EngineConnection conn, Future<EngineConnection> Function() reconnect) async {
     setState(() {
       _pairing = false;
       _connecting = true;
     });
-    final src = EngineDeckSource(conn);
+    final src = EngineDeckSource(conn, reconnect: reconnect);
     try {
       await src.ready.timeout(const Duration(seconds: 8));
       if (!mounted) return;
