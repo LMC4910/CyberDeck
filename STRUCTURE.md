@@ -2,9 +2,9 @@
 
 Authoritative layout for the CyberDeck Phase-1 host engine + client, per
 **TRD Master §7.1** (`Documentation/CyberDeck_TRD_2_Master.md`). Created by
-**PROJ-101**. The pre-existing Touch Portal / Node.js artifacts (`ui/`,
-`scripts/`, `Touch Portal/`, `dist/`, `Reference Images/`, `ReferenceOutput/`)
-belong to the earlier product direction and are left untouched.
+**PROJ-101**. Design-reference material from the earlier product direction
+(`ui/` React preview, `Reference Images/`) is retained for reference but is not
+part of the build.
 
 ```
 CyberDeck/

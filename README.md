@@ -70,10 +70,6 @@ The authoritative product and architecture documentation lives in
 | `CyberDeck_Phase1_*` | The Phase-1 execution system: deep dive, dependency graph & execution plan, ticket batches 1–4, kanban board, **progress dashboard**, and the agent operating instructions. |
 | `CyberDeck_Phase2…8_DeepDive.md` | Forward-looking per-phase deep dives. |
 
-> **Note on `Touch Portal/`:** that folder holds the project's *original* Touch
-> Portal / Node.js product direction and its reference UI. It is retained for
-> history; the current architecture is the Go engine + Flutter client described above.
-
 ## Development
 
 ### Prerequisites
