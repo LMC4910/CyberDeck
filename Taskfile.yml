@@ -68,6 +68,38 @@ tasks:
     cmds:
       - go build ./...
 
+  # --- run / dev targets (the testable slice) ---
+
+  dist:engine:
+    desc: "Build the host engine + bundled plugins into run/ (engine exe + plugins/*)"
+    cmds:
+      - mkdir -p run/plugins/telemetry run/plugins/power
+      - cd engine && go build -o ../run/cyberdeck.exe ./cmd/cyberdeck
+      - cd plugins/telemetry && go build -o ../../run/plugins/telemetry/telemetry.exe .
+      - cd plugins/power && go build -o ../../run/plugins/power/power.exe .
+
+  run:engine:
+    desc: "Build + run the host engine in console mode (prints a pairing QR; power dry-run)"
+    deps: [dist:engine]
+    dir: run
+    cmds:
+      - ./cyberdeck.exe --console
+
+  run:client:
+    desc: "Run the Flutter client on Windows desktop (choose Demo Mode or Connect)"
+    dir: client
+    cmds:
+      - flutter run -d windows
+
+  interop:
+    desc: "Run the real Dart<->Go engine interop test against the built engine"
+    deps: [dist:engine]
+    dir: client
+    env:
+      CYBERDECK_ENGINE: "../run/cyberdeck.exe"
+    cmds:
+      - flutter test test/engine_interop_test.dart
+
   build:client:
     desc: "flutter build (host desktop) (skipped until client/ exists)"
     cmds:

@@ -1,93 +1,97 @@
-# Running CyberDeck (first testable slice — "Living Deck")
+# Running & testing CyberDeck
 
-This is the quickstart for the first usable end-to-end build: a Windows host engine
-that a Flutter client (Windows desktop **or** Android) pairs with over the LAN to
-show a live system deck (CPU / RAM / disk gauges + power buttons) and trigger power
-actions.
+CyberDeck is a **native** product: a Flutter **client app** (Windows desktop +
+Android; iOS is code-ready but needs a Mac to build) and a Go **desktop host
+engine**. You can exercise the entire client experience two ways:
 
-> Scope of this slice: a built-in default deck, QR pairing, in-memory identities
-> (you re-pair each launch). The live desktop **designer**, secure persistent
-> identity, and auto-reconnect are deliberate follow-ups.
+- **Demo Mode** — the client runs **standalone** with sample decks + live mock
+  telemetry. Zero setup, no engine, no network. **Start here.**
+- **Live Engine** — the client pairs with the running Go engine over the LAN.
 
 ## Prerequisites
 
-- **Go** (1.25+) and **Flutter** (stable) on PATH.
-- Windows desktop client also needs the **Visual Studio “Desktop development with
+- **Flutter** (stable) for the client; **Go** (1.25+) for the engine.
+- Windows desktop client also needs the Visual Studio **“Desktop development with
   C++”** workload (for `flutter build windows`).
-- The engine machine and the device must be on the **same LAN**.
 
-## 1. Build + run the engine (Windows)
+---
 
-From the repo root:
+## A. Demo Mode (fastest — the full experience, no backend)
 
-```sh
-# build the engine and the two bundled plugins into a run/ layout
-mkdir -p run/plugins/telemetry run/plugins/power
-( cd engine            && go build -o ../run/cyberdeck.exe ./cmd/cyberdeck )
-( cd plugins/telemetry && go build -o ../../run/plugins/telemetry/telemetry.exe . )
-( cd plugins/power     && go build -o ../../run/plugins/power/power.exe . )
-
-# run it (console mode). Power actions are DRY-RUN by default (safe to test).
-cd run
-./cyberdeck.exe --console
-```
-
-The engine boots and prints a **pairing QR + payload** to the console, e.g.:
-
-```
-=== CyberDeck pairing — scan on Android, or paste on desktop ===
-   <a QR code>
-payload: {"addresses":["192.168.1.6"],"port":8765,"token":"…","fp":"…"}
-```
-
-- The engine listens on **:8765** (override with `--port`).
-- The plugin binaries are auto-discovered next to the engine exe (or pass
-  `--plugins <dir>`). A missing plugin is skipped (telemetry missing → no live
-  values; power missing → buttons fail).
-- **Press Enter** in the engine console to print a fresh pairing code (each token is
-  single-use, so you need a new one per device / per re-pair).
-- **`--power-live`** makes power actions actually execute (default is dry-run). The
-  device still requires a 2-tap confirm for destructive actions regardless.
-
-## 2. Run the client
-
-### Windows desktop (fastest to iterate)
-
+### Desktop (Windows)
 ```sh
 cd client
-flutter run -d windows
+flutter run -d windows      # or:  task run:client
 ```
 
-On the **Pair with engine** screen, click **Scan QR** → paste the `payload:` JSON
-from the engine console → **Pair**. The deck appears.
-
-### Android (over the LAN)
-
+### Android
 ```sh
 cd client
-flutter run -d <device-id>      # or: flutter build apk  → install the APK
+flutter run -d <device-id>  # or:  flutter build apk  → install build/app/outputs/flutter-apk/app-debug.apk
 ```
 
-Tap **Scan QR** and point the camera at the QR in the engine console. (Grant the
-camera permission on first run.)
+In the app: tap **Enter Demo Mode** → pick a deck (System Monitor / Media / Smart
+Home) → watch the gauges update live, toggle switches, drag the volume slider, tap
+buttons (a destructive action like SLEEP asks for a confirming second tap). Tap the
+**✎ edit** icon to open the **Designer**: select a widget, drag it on the grid, edit
+its properties in the inspector, rename it, add (＋) or remove widgets, then **✓
+save**. Everything works offline.
 
-## 3. Use it
+The same build is responsive — it adapts to phone, tablet, and desktop window sizes,
+with touch and pointer input.
 
-- The deck shows **live CPU / RAM / disk** gauges (updating ~2×/sec) and an uptime
-  label.
-- Tap **LOCK** / **SLEEP** to trigger those actions; **RESTART** / **SHUTDOWN** are
-  destructive and require a **second confirming tap** within 3 seconds.
-- With the engine in dry-run (default) nothing actually happens to the machine — the
-  engine logs `audit interaction.executed …`. Run the engine with `--power-live` to
-  execute for real.
+---
+
+## B. Live Engine (pair the client with the real host)
+
+### 1. Build + run the engine
+```sh
+task run:engine
+# equivalently:
+#   task dist:engine          # builds run/cyberdeck.exe + run/plugins/{telemetry,power}/*
+#   cd run && ./cyberdeck.exe --console
+```
+The engine prints a **pairing QR + payload** (addresses / port / token /
+fingerprint). Power actions are **dry-run** by default — add `--power-live` to make
+them real. Press **Enter** in the engine console for a fresh single-use pairing code.
+
+### 2. Connect from the client
+In the app tap **Connect to Engine**, then **Scan QR** (Android camera) or paste the
+`payload:` JSON (desktop). On success the live deck appears with real CPU/RAM/disk
+telemetry; taps dispatch to the engine (logged as `audit interaction.executed …`).
+
+### 3. Prove the live wire automatically
+```sh
+task interop
+```
+Spawns the engine and pairs with the real client networking stack, asserting the
+layout snapshot + live telemetry arrive and an interaction is accepted.
+
+---
+
+## C. iOS
+
+The client is plain Flutter (no Android-only code), so iOS is supported in
+principle, but **iOS apps can only be built on macOS**. On this Windows host iOS is
+out of scope; build/run it from a Mac with `flutter run -d <ios-device>` (Demo Mode
+works the same; for Live Engine the device must share the LAN with the host).
+
+---
+
+## Tests
+
+```sh
+cd client && flutter analyze && flutter test     # 100+ tests, incl. the Demo journey
+cd engine && go test ./...                        # engine
+# live interop (needs the built engine):  task interop
+```
 
 ## Troubleshooting
 
-- **Device can’t connect:** confirm both are on the same network and the engine’s
-  printed address is reachable; check a host firewall isn’t blocking port 8765.
-- **“bad or expired token”:** tokens are single-use and short-lived — press Enter in
-  the engine console for a fresh QR and pair again.
-- **Fingerprint mismatch:** the engine identity is regenerated each run in this
-  slice, so always pair against the QR from the *current* engine process.
-- **mDNS list stays empty:** that’s fine — QR/paste pairing doesn’t need discovery
-  (the payload already carries the address).
+- **Android can’t reach the engine:** same Wi-Fi/LAN; check the host firewall isn’t
+  blocking the engine port (default 8765).
+- **“bad or expired token”:** tokens are single-use + short-lived — press Enter in
+  the engine console for a fresh QR.
+- **Fingerprint mismatch:** the engine identity is per-run in this build, so pair
+  against the QR from the *current* engine process.
+- Stuck? **Demo Mode** never needs the engine and always works.
