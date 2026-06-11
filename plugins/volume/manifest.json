@@ -1,0 +1,17 @@
+{
+  "id": "com.shishir.cyberdeck.volume",
+  "name": "System Volume",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["volume"],
+    "network": "none",
+    "filesystem": "none"
+  },
+  "contributes": {
+    "states": ["system.volume", "system.muted"],
+    "actions": [
+      {"id": "volume.set", "label": "Set Volume", "category": "volume", "params": [{"name": "value", "type": "int"}]},
+      {"id": "volume.mute", "label": "Toggle Mute", "category": "volume"}
+    ]
+  }
+}

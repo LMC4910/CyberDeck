@@ -70,6 +70,35 @@ func DefaultProfile() *Profile {
 				Placement{Col: 13, Row: 9, ColSpan: 5, RowSpan: 3}),
 			button("b-shutdown", "SHUTDOWN", "system.shutdown", true,
 				Placement{Col: 19, Row: 9, ColSpan: 5, RowSpan: 3}),
+			// Volume slider + mute (volume plugin, PROJ-174) — reflects system.volume.
+			{
+				ID:          "w-volume",
+				Type:        "slider",
+				Placement:   Placement{Col: 1, Row: 13, ColSpan: 12, RowSpan: 2},
+				Appearance:  map[string]any{"stateBinding": "system.volume"},
+				Interaction: map[string]any{"dragValue": map[string]any{"target": "action", "ref": "volume.set"}},
+				Config:      map[string]any{"min": 0.0, "max": 100.0},
+			},
+			{
+				ID:   "w-mute",
+				Type: "toggle",
+				Placement: Placement{Col: 14, Row: 13, ColSpan: 4, RowSpan: 2},
+				Appearance: map[string]any{
+					"stateBinding": "system.muted",
+					"style":        map[string]any{"label": "MUTE"},
+				},
+				Interaction: map[string]any{"tap": map[string]any{"target": "action", "ref": "volume.mute"}},
+			},
+			// Launch a URL (launchers plugin, PROJ-175). `param` carries the target.
+			{
+				ID:         "w-open",
+				Type:       "button",
+				Placement:  Placement{Col: 19, Row: 13, ColSpan: 5, RowSpan: 2},
+				Appearance: map[string]any{"style": map[string]any{"label": "OPEN GITHUB"}},
+				Interaction: map[string]any{"tap": map[string]any{
+					"target": "action", "ref": "launch.url", "param": "https://github.com"}},
+				Config: map[string]any{"confirm": false},
+			},
 		},
 	}
 

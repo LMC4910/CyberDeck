@@ -56,12 +56,16 @@ class _DeckScreenState extends State<DeckScreen> {
     final target = interactionFor(node, slot);
     if (target == null || target.isNone || target.kind != 'action') return;
     if (node.config['confirm'] == true && !_confirmed(node.id, target.ref)) return;
-    unawaited(_invoke(target.ref, value));
+    unawaited(_invoke(target.ref, value, target.param));
   }
 
-  Future<void> _invoke(String actionId, Object? value) async {
+  Future<void> _invoke(String actionId, Object? value, String? param) async {
+    final params = <String, dynamic>{
+      if (value != null) 'value': value,
+      if (param != null && param.isNotEmpty) 'target': param,
+    };
     final outcome = await widget.source
-        .invoke(actionId, params: value != null ? {'value': value} : null);
+        .invoke(actionId, params: params.isEmpty ? null : params);
     if (!mounted) return;
     final msg = outcome.message.isNotEmpty
         ? outcome.message

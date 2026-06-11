@@ -1,0 +1,16 @@
+{
+  "id": "com.shishir.cyberdeck.launchers",
+  "name": "Launchers & System Tools",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["launch"],
+    "network": "none",
+    "filesystem": "none"
+  },
+  "contributes": {
+    "actions": [
+      {"id": "launch.app", "label": "Launch App", "category": "launch", "params": [{"name": "path", "type": "text"}]},
+      {"id": "launch.url", "label": "Open URL", "category": "launch", "params": [{"name": "url", "type": "text"}]}
+    ]
+  }
+}

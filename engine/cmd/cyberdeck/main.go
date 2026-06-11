@@ -174,17 +174,17 @@ func (e *engine) initCore(db *persistence.DB) func(context.Context) error {
 
 		pairingSrv, err := security.NewPairingServer(
 			id, e.tokens, session.NewTrustAdapter(e.devices),
-			// First-slice default: grant the power category so the deck is usable
+			// First-slice default: grant the bundled categories so the deck is usable
 			// (destructive actions still require the device's 2-tap confirm).
-			security.WithDefaultPermissions(`{"allowPowerActions":true,"allowedCategories":["power"],"deniedActions":[],"allowEditTrigger":true}`),
+			security.WithDefaultPermissions(`{"allowPowerActions":true,"allowedCategories":["power","volume","launch"],"deniedActions":[],"allowEditTrigger":true}`),
 		)
 		if err != nil {
 			return fmt.Errorf("pairing server: %w", err)
 		}
 
 		auditor := auditAdapter{repo: persistence.NewAuditRepo(db), logger: e.logger}
-		invoker := pluginInvoker{host: e.host, lookup: powerLookup}
-		e.server = session.NewServer(e.fanout, layout.DefaultProfile(), e.store, powerLookup, invoker, auditor, e.logger)
+		invoker := pluginInvoker{host: e.host, lookup: builtinLookup}
+		e.server = session.NewServer(e.fanout, layout.DefaultProfile(), e.store, builtinLookup, invoker, auditor, e.logger)
 		e.listener = session.NewListener(fmt.Sprintf(":%d", e.port), pairingSrv, e.server, e.logger)
 		e.pump = session.NewStatePump(e.store, e.fanout, 500*time.Millisecond, e.logger)
 		return nil
@@ -196,12 +196,21 @@ type hostService struct{ eng *engine }
 
 func (h *hostService) Start(context.Context) error {
 	h.eng.launchPlugin("telemetry", nil)
-	var powerEnv []string
-	if h.eng.powerDryRun {
-		powerEnv = []string{"CYBERDECK_POWER_DRYRUN=1"}
-		h.eng.logger.Printf("power actions are in DRY-RUN (use --power-live to execute for real)")
+	dryRun := h.eng.powerDryRun
+	if dryRun {
+		h.eng.logger.Printf("actions are DRY-RUN (use --power-live to execute power/volume/launch for real)")
 	}
-	h.eng.launchPlugin("power", powerEnv)
+	h.eng.launchPlugin("power", envIf(dryRun, "CYBERDECK_POWER_DRYRUN=1"))
+	h.eng.launchPlugin("volume", envIf(dryRun, "CYBERDECK_VOLUME_DRYRUN=1"))
+	h.eng.launchPlugin("launchers", envIf(dryRun, "CYBERDECK_LAUNCH_DRYRUN=1"))
+	return nil
+}
+
+// envIf returns [kv] when on, else nil (a plugin's dry-run env switch).
+func envIf(on bool, kv string) []string {
+	if on {
+		return []string{kv}
+	}
 	return nil
 }
 
@@ -368,20 +377,27 @@ func (a auditAdapter) Audit(event string, fields map[string]any) {
 	a.logger.Printf("audit %s %v", event, fields)
 }
 
-// powerLookup is the static action catalogue for the bundled power plugin (the full
-// manifest→registry merge is a strengthening follow-up; this is enough to authorize
-// + route the default deck's buttons).
-var powerLookup = staticLookup{m: func() map[string]registry.ActionDescriptor {
-	mk := func(id, label string, destructive bool) registry.ActionDescriptor {
-		return registry.ActionDescriptor{ID: id, Label: label, Category: "power", Destructive: destructive, Source: "power"}
+// builtinLookup is the static action catalogue for the bundled first-party plugins
+// (the full manifest→registry merge is a strengthening follow-up; this is enough to
+// authorize + route the default deck's controls). Source routes to the owning plugin.
+var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor {
+	d := func(id, label, category, source string, destructive bool) registry.ActionDescriptor {
+		return registry.ActionDescriptor{ID: id, Label: label, Category: category, Source: source, Destructive: destructive}
 	}
 	return map[string]registry.ActionDescriptor{
-		"system.shutdown":  mk("system.shutdown", "Shut Down", true),
-		"system.restart":   mk("system.restart", "Restart", true),
-		"system.sleep":     mk("system.sleep", "Sleep", false),
-		"system.hibernate": mk("system.hibernate", "Hibernate", true),
-		"system.lock":      mk("system.lock", "Lock", false),
-		"system.logoff":    mk("system.logoff", "Log Off", true),
+		// power (plugins/power)
+		"system.shutdown":  d("system.shutdown", "Shut Down", "power", "power", true),
+		"system.restart":   d("system.restart", "Restart", "power", "power", true),
+		"system.sleep":     d("system.sleep", "Sleep", "power", "power", false),
+		"system.hibernate": d("system.hibernate", "Hibernate", "power", "power", true),
+		"system.lock":      d("system.lock", "Lock", "power", "power", false),
+		"system.logoff":    d("system.logoff", "Log Off", "power", "power", true),
+		// volume (plugins/volume)
+		"volume.set":  d("volume.set", "Set Volume", "volume", "volume", false),
+		"volume.mute": d("volume.mute", "Toggle Mute", "volume", "volume", false),
+		// launchers (plugins/launchers)
+		"launch.app": d("launch.app", "Launch App", "launch", "launchers", false),
+		"launch.url": d("launch.url", "Open URL", "launch", "launchers", false),
 	}
 }()}
 

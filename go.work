@@ -7,4 +7,6 @@ use (
 	./engine
 	./plugins/telemetry
 	./plugins/power
+	./plugins/launchers
+	./plugins/volume
 )
