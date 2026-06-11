@@ -98,11 +98,16 @@ class PairingScreen extends StatefulWidget {
     required this.discovery,
     required this.connectionManager,
     required this.scanner,
+    this.onConnected,
   });
 
   final EngineDiscovery discovery;
   final ConnectionManager connectionManager;
   final QrScanner scanner;
+
+  /// Called with the live connection once pairing succeeds (the app routes to the
+  /// deck). When null, the screen just reports status (the original behaviour).
+  final void Function(EngineConnection conn)? onConnected;
 
   @override
   State<PairingScreen> createState() => _PairingScreenState();
@@ -147,6 +152,7 @@ class _PairingScreenState extends State<PairingScreen> {
       final conn = await attempt();
       _setStatus('Paired with ${conn.engineUuid} '
           '(fingerprint ${_short(conn.engineFingerprint)})');
+      widget.onConnected?.call(conn);
     } on PairingException catch (e) {
       _setStatus(switch (e.failure) {
         PairingFailure.fingerprintMismatch =>
