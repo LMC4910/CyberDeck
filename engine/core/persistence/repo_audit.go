@@ -58,6 +58,16 @@ func (r *AuditRepo) ByEventType(ctx context.Context, eventType string) ([]AuditR
 	return r.query(ctx, `WHERE event_type=? ORDER BY ts DESC, id DESC`, eventType)
 }
 
+// Recent returns the most recent audit records, newest first, bounded by limit
+// (a non-positive limit returns no rows). The control channel (PROJ-144) reads
+// back the tail of the log through this.
+func (r *AuditRepo) Recent(ctx context.Context, limit int) ([]AuditRecord, error) {
+	if limit <= 0 {
+		return nil, nil
+	}
+	return r.query(ctx, `ORDER BY ts DESC, id DESC LIMIT ?`, limit)
+}
+
 // ByTimeRange returns audit records with from <= ts <= to, oldest first.
 func (r *AuditRepo) ByTimeRange(ctx context.Context, from, to int64) ([]AuditRecord, error) {
 	return r.query(ctx, `WHERE ts BETWEEN ? AND ? ORDER BY ts ASC, id ASC`, from, to)

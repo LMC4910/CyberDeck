@@ -1,0 +1,23 @@
+#!/bin/bash
+# CyberDeck .pkg postinstall — register the engine as a launchd LaunchAgent so it
+# stays running after the UI closes (P1-AC-01).
+#
+# .pkg postinstall runs as root, but the engine's launchd manager installs a
+# *per-user* LaunchAgent (~/Library/LaunchAgents). $USER/$HOME under the installer
+# point at the console user when "install for all users" is chosen, so we resolve
+# the logged-in user and run the engine's own `--service install` as them.
+set -euo pipefail
+
+ENGINE="/usr/local/cyberdeck/cyberdeck"
+
+# The user the installer GUI is running for (the console/login user).
+TARGET_USER="${USER:-$(/usr/bin/stat -f%Su /dev/console)}"
+
+if [[ -x "$ENGINE" && -n "$TARGET_USER" && "$TARGET_USER" != "root" ]]; then
+  # Run the engine's launchd registration as the target user so the LaunchAgent
+  # lands in their ~/Library/LaunchAgents and loads in their GUI session.
+  /usr/bin/sudo -u "$TARGET_USER" "$ENGINE" --service install || \
+    echo "warning: launchd registration failed; run '$ENGINE --service install' manually." >&2
+fi
+
+exit 0

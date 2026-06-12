@@ -48,11 +48,12 @@ with touch and pointer input.
 ```sh
 task run:engine
 # equivalently:
-#   task dist:engine          # builds run/cyberdeck.exe + run/plugins/{telemetry,power,volume,launchers}/*
+#   task dist:engine          # builds run/cyberdeck.exe + run/plugins/{telemetry,power,volume,launchers,notifications}/*
 #   cd run && ./cyberdeck.exe --console
 ```
 The engine prints a **pairing QR + payload** (addresses / port / token /
-fingerprint) and launches the bundled plugins (telemetry, power, volume, launchers).
+fingerprint) and launches the bundled plugins (telemetry, power, volume, launchers,
+notifications).
 Power/volume/launch actions are **dry-run** by default — add `--power-live` to make
 them real.
 
@@ -89,6 +90,49 @@ out of scope; build/run it from a Mac with `flutter run -d <ios-device>` (Demo M
 works the same; for Live Engine the device must share the LAN with the host).
 
 ---
+
+## D. Background service (engine survives the UI closing)
+
+The engine can register with the OS service manager so it keeps the deck reachable
+after the desktop UI is closed (**P1-AC-01**): **Windows SCM**, **macOS launchd**,
+**Linux systemd**. Same binary, one flag.
+
+```sh
+cyberdeck --service install     # register + start the engine as a managed service
+cyberdeck --service uninstall   # stop + remove the registration
+cyberdeck --service             # run as the supervised process (the manager calls this)
+```
+
+- **Windows** — installs an auto-start SCM service (`CyberDeck`); the supervised
+  process runs under the SCM and shuts down gracefully on Stop/Shutdown. Run the
+  install from an elevated shell.
+- **macOS** — writes a per-user LaunchAgent
+  (`~/Library/LaunchAgents/io.cyberdeck.cyberdeck.plist`, `RunAtLoad` + `KeepAlive`)
+  and `launchctl load`s it. *Runtime is manual on this Windows host — build the
+  engine on a Mac (`task dist:macos` cross-compiles the binaries) and run the
+  install there.*
+- **Linux** — writes `/etc/systemd/system/cyberdeck.service`
+  (`Restart=on-failure`, `WantedBy=multi-user.target`), then `daemon-reload` +
+  `enable --now`. Run the install with the privileges needed to write the unit.
+  *Runtime is manual on this Windows host — build via `task dist:linux` and install
+  on the target.*
+
+## E. Release bundles (cross-compiled)
+
+`task dist:<os>` cross-compiles the Go engine + **all five** bundled plugins for the
+target into `dist/<os>/` (pure-Go SQLite → no C toolchain needed), and bundles the
+Flutter client where it can be built natively:
+
+```sh
+task dist:windows   # dist/windows/cyberdeck.exe + plugins/* + Flutter Windows client
+task dist:macos     # dist/macos/cyberdeck      + plugins/*   (darwin/arm64)
+task dist:linux     # dist/linux/cyberdeck      + plugins/*   (linux/amd64)
+task dist:all       # all three
+```
+
+Flutter desktop is built **on** the target OS, so the client is bundled on Windows
+here; on macOS/Linux build it natively (`cd client && flutter build macos|linux`)
+after scaffolding that desktop target, then drop it beside the engine bundle.
 
 ## Tests
 

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CyberDeck macOS distribution definition consumed by productbuild. References
+     the component package produced by pkgbuild (build/cyberdeck-component.pkg). -->
+<installer-gui-script minSpecVersion="2">
+    <title>CyberDeck</title>
+    <organization>io.cyberdeck</organization>
+    <welcome file="welcome.html"/>
+    <license file="license.html"/>
+    <!-- Apple Silicon + Intel (the engine is cross-compiled arm64; rebuild GOARCH
+         for Intel-only hosts). -->
+    <options customize="never" require-scripts="true" hostArchitectures="arm64,x86_64"/>
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="12.0"/>
+        </allowed-os-versions>
+    </volume-check>
+    <choices-outline>
+        <line choice="default">
+            <line choice="io.cyberdeck.engine"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="io.cyberdeck.engine" visible="false">
+        <pkg-ref id="io.cyberdeck.engine"/>
+    </choice>
+    <pkg-ref id="io.cyberdeck.engine">cyberdeck-component.pkg</pkg-ref>
+</installer-gui-script>

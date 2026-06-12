@@ -18,19 +18,30 @@ const (
 	stateNet    = "system.net.throughput"
 	stateDisk   = "system.disk.percent"
 	stateUptime = "system.uptime"
+
+	// GPU states (PROJ-172). Published only when the GPU provider chain binds a
+	// source; on machines without a supported GPU they stay unbound ("--").
+	stateGPULoad      = "system.gpu.load"
+	stateGPUTemp      = "system.gpu.temp"
+	stateGPUVRAMUsed  = "system.gpu.vram.used"
+	stateGPUVRAMTotal = "system.gpu.vram.total"
 )
 
 // Threshold-crossing event topics (under→over transitions only, no spam).
 const (
 	topicCPUHigh = "system.cpu.high"
 	topicRAMHigh = "system.ram.high"
+	topicGPUHigh = "system.gpu.high"
 )
 
 // systemStates is the exact set the plugin declares in its register message; the
 // host's IPC gate (PROJ-133) only admits stateUpdates for declared IDs, so this
 // must match every ID publish() ever emits.
 func systemStates() []string {
-	return []string{stateCPU, stateRAM, stateNet, stateDisk, stateUptime}
+	return []string{
+		stateCPU, stateRAM, stateNet, stateDisk, stateUptime,
+		stateGPULoad, stateGPUTemp, stateGPUVRAMUsed, stateGPUVRAMTotal,
+	}
 }
 
 // Cadences is how often each metric is polled/published.
@@ -40,9 +51,11 @@ type Cadences struct {
 	Net    time.Duration
 	Disk   time.Duration
 	Uptime time.Duration
+	GPU    time.Duration
 }
 
-// DefaultCadences match 2G: fast gauges at 1s, storage at 10s, uptime at 60s.
+// DefaultCadences match 2G: fast gauges at 1s, storage at 10s, uptime at 60s. GPU
+// gauges share the fast 1s cadence.
 func DefaultCadences() Cadences {
 	return Cadences{
 		CPU:    time.Second,
@@ -50,6 +63,7 @@ func DefaultCadences() Cadences {
 		Net:    time.Second,
 		Disk:   10 * time.Second,
 		Uptime: 60 * time.Second,
+		GPU:    time.Second,
 	}
 }
 
@@ -93,9 +107,10 @@ type Publisher struct {
 	metrics []metric
 }
 
-// NewPublisher builds a Publisher over the given provider and cadences. cpuWarn and
-// ramWarn are the high-usage thresholds (e.g. 85 and 90).
-func NewPublisher(t pal.Telemetry, w *msgWriter, c Cadences, cpuWarn, ramWarn float64) *Publisher {
+// NewPublisher builds a Publisher over the given providers and cadences. cpuWarn,
+// ramWarn and gpuWarn are the high-usage / over-temperature thresholds (e.g. 85, 90
+// and 88). The GPU metrics degrade to "--" (skipped) when the GPU chain is unbound.
+func NewPublisher(t pal.Telemetry, gpu pal.GPU, w *msgWriter, c Cadences, cpuWarn, ramWarn, gpuWarn float64) *Publisher {
 	return &Publisher{
 		w: w,
 		metrics: []metric{
@@ -104,6 +119,10 @@ func NewPublisher(t pal.Telemetry, w *msgWriter, c Cadences, cpuWarn, ramWarn fl
 			{id: stateNet, cadence: c.Net, read: t.NetThroughput},
 			{id: stateDisk, cadence: c.Disk, read: t.DiskUsedPercent},
 			{id: stateUptime, cadence: c.Uptime, read: t.UptimeSeconds},
+			{id: stateGPULoad, cadence: c.GPU, read: gpu.Load},
+			{id: stateGPUTemp, cadence: c.GPU, read: gpu.Temp, warnTopic: topicGPUHigh, warnLimit: gpuWarn},
+			{id: stateGPUVRAMUsed, cadence: c.GPU, read: gpu.VRAMUsed},
+			{id: stateGPUVRAMTotal, cadence: c.GPU, read: gpu.VRAMTotal},
 		},
 	}
 }

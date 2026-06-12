@@ -18,16 +18,18 @@ type TrustAdapter struct {
 // NewTrustAdapter wraps a device repo as a TrustStore.
 func NewTrustAdapter(repo *persistence.DeviceRepo) *TrustAdapter { return &TrustAdapter{repo: repo} }
 
-// Status reports whether a device record exists and whether it is revoked.
-func (a *TrustAdapter) Status(ctx context.Context, uuid string) (exists, revoked bool, err error) {
+// Status reports whether a device record exists, whether it is revoked, and (for a
+// known device) its stored permissions JSON — so reconnect honours an
+// operator-tightened grant rather than resetting to the pairing defaults.
+func (a *TrustAdapter) Status(ctx context.Context, uuid string) (exists, revoked bool, permsJSON string, err error) {
 	d, err := a.repo.Get(ctx, uuid)
 	if errors.Is(err, persistence.ErrNotFound) {
-		return false, false, nil
+		return false, false, "", nil
 	}
 	if err != nil {
-		return false, false, err
+		return false, false, "", err
 	}
-	return true, d.Revoked, nil
+	return true, d.Revoked, d.PermissionsJSON, nil
 }
 
 // Save upserts a trust record for a successfully paired device.

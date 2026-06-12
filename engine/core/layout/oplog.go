@@ -52,6 +52,8 @@ var (
 	ErrWidgetNotFound = errors.New("layout: widget not found")
 	ErrBadOp          = errors.New("layout: malformed operation")
 	ErrEditLocked     = errors.New("layout: document is locked for editing")
+	ErrNothingToUndo  = errors.New("layout: nothing to undo")
+	ErrNothingToRedo  = errors.New("layout: nothing to redo")
 )
 
 // Apply mutates the profile per op, increments the version, and returns the inverse

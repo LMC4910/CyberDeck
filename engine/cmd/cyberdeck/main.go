@@ -34,6 +34,7 @@ import (
 	"github.com/shishir/cyberdeck/engine/core/transport"
 	"github.com/shishir/cyberdeck/engine/internal/config"
 	"github.com/shishir/cyberdeck/engine/internal/lifecycle"
+	"github.com/shishir/cyberdeck/engine/internal/service"
 	"github.com/shishir/cyberdeck/engine/pluginhost"
 )
 
@@ -65,6 +66,15 @@ type engine struct {
 	listener *session.Listener
 	pump     *session.StatePump
 	devices  *persistence.DeviceRepo
+	audit    *persistence.AuditRepo
+	control  *transport.ControlChannel
+
+	// quit triggers a graceful shutdown (invoked by the loopback control channel's
+	// service.quit op); nil until run() installs it.
+	quit func()
+	// paused reflects whether the loopback control channel has paused session
+	// serving (drops live sessions; new sessions still refused while paused).
+	paused bool
 
 	port        int
 	pluginsDir  string
@@ -92,13 +102,95 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 		return err
 	}
 
-	mode := "console"
-	if *service && !*console {
-		mode = "service"
+	opts := serveOptions{
+		configPath: *configPath,
+		dataDir:    *dataDir,
+		port:       *port,
+		pluginsDir: *pluginsDir,
+		powerLive:  *powerLive,
 	}
-	logger := log.New(stdout, "", log.LstdFlags)
 
-	lock, err := lifecycle.AcquireInstance(instanceName(*dataDir), func() {
+	// Service mode (P1-AC-01): run under / register with the OS service manager so
+	// the engine survives the UI closing. `--service [run]` is the supervised
+	// process; `--service install|uninstall` manages registration.
+	if *service && !*console {
+		return runService(ctx, fs.Arg(0), opts, stdout)
+	}
+
+	logger := log.New(stdout, "", log.LstdFlags)
+	return serve(ctx, "console", opts, logger, stdout)
+}
+
+// serveOptions are the parsed run options threaded into serve() and the service
+// manager's run callback.
+type serveOptions struct {
+	configPath string
+	dataDir    string
+	port       int
+	pluginsDir string
+	powerLive  bool
+}
+
+// runService dispatches the --service sub-command: install/uninstall register or
+// remove the OS service; run (the default) executes the engine under the manager,
+// mapping a manager Stop into a context cancel so shutdown stays graceful.
+func runService(ctx context.Context, actionArg string, opts serveOptions, stdout io.Writer) error {
+	action, err := service.ParseAction(actionArg)
+	if err != nil {
+		return err
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("resolve executable: %w", err)
+	}
+	def := service.Definition{
+		Exec: exe,
+		// The supervised process must re-enter service run mode (not re-install).
+		Args: []string{"--service", string(service.ActionRun),
+			"--data", opts.dataDir, "--plugins", opts.pluginsDir,
+			"--config", opts.configPath, "--port", fmt.Sprintf("%d", opts.port)},
+	}
+	mgr, err := service.New(def, func(stop <-chan struct{}) error {
+		svcCtx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		go func() {
+			select {
+			case <-stop:
+				cancel()
+			case <-svcCtx.Done():
+			}
+		}()
+		logger := log.New(stdout, "", log.LstdFlags)
+		return serve(svcCtx, "service", opts, logger, stdout)
+	})
+	if err != nil {
+		return err
+	}
+	switch action {
+	case service.ActionInstall:
+		if err := mgr.Install(); err != nil {
+			return err
+		}
+		_, _ = fmt.Fprintf(stdout, "cyberdeck: service %q installed\n", service.Name)
+		return nil
+	case service.ActionUninstall:
+		if err := mgr.Uninstall(); err != nil {
+			return err
+		}
+		_, _ = fmt.Fprintf(stdout, "cyberdeck: service %q uninstalled\n", service.Name)
+		return nil
+	default:
+		return mgr.Run()
+	}
+}
+
+// serve boots the wired engine subsystems to READY, prints the pairing QR, and
+// serves until ctx is cancelled (OS signal, loopback control quit, or service
+// manager stop), then shuts down gracefully. mode is "console" or "service".
+func serve(ctx context.Context, mode string, opts serveOptions, logger *log.Logger, stdout io.Writer) error {
+	configPath, dataDir, port, pluginsDir, powerLive := opts.configPath, opts.dataDir, opts.port, opts.pluginsDir, opts.powerLive
+
+	lock, err := lifecycle.AcquireInstance(instanceName(dataDir), func() {
 		logger.Printf("focus requested by another launch")
 	})
 	if errors.Is(err, lifecycle.ErrAlreadyRunning) {
@@ -110,23 +202,29 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 	}
 	defer func() { _ = lock.Release() }()
 
-	cfg, cfgErr := config.Load(*configPath)
+	cfg, cfgErr := config.Load(configPath)
 	if cfgErr != nil {
 		logger.Printf("config: %v (continuing with defaults)", cfgErr)
 	}
 	logger.Printf("cyberdeck %s starting in %s mode (telemetry cpu interval %dms)",
 		version, mode, cfg.Telemetry.CPUIntervalMS)
 
-	if err := os.MkdirAll(*dataDir, 0o755); err != nil {
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		return fmt.Errorf("create data dir: %w", err)
 	}
-	db, err := persistence.Open(filepath.Join(*dataDir, "cyberdeck.db"))
+	db, err := persistence.Open(filepath.Join(dataDir, "cyberdeck.db"))
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
 
+	// runCtx is cancelled either by an OS signal (parent ctx) or by the loopback
+	// control channel's service.quit op (eng.quit) — both drive graceful shutdown.
+	runCtx, cancelRun := context.WithCancel(ctx)
+	defer cancelRun()
+
 	eng := &engine{
-		logger: logger, port: *port, pluginsDir: *pluginsDir, powerDryRun: !*powerLive,
+		logger: logger, port: port, pluginsDir: pluginsDir, powerDryRun: !powerLive,
+		quit: cancelRun,
 	}
 	subs := lifecycle.Subsystems{
 		DB:         db,
@@ -145,7 +243,7 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 	go eng.consoleLoop(stdout)
 	logger.Printf("engine running on port %d; waiting for shutdown signal", eng.port)
 
-	<-ctx.Done()
+	<-runCtx.Done()
 	logger.Printf("shutdown signal received")
 	return lifecycle.Shutdown(context.Background(), logger, lifecycle.BuildShutdownSteps(subs))
 }
@@ -182,11 +280,23 @@ func (e *engine) initCore(db *persistence.DB) func(context.Context) error {
 			return fmt.Errorf("pairing server: %w", err)
 		}
 
-		auditor := auditAdapter{repo: persistence.NewAuditRepo(db), logger: e.logger}
+		e.audit = persistence.NewAuditRepo(db)
+		auditor := auditAdapter{repo: e.audit, logger: e.logger}
 		invoker := pluginInvoker{host: e.host, lookup: builtinLookup}
 		e.server = session.NewServer(e.fanout, layout.DefaultProfile(), e.store, builtinLookup, invoker, auditor, e.logger)
 		e.listener = session.NewListener(fmt.Sprintf(":%d", e.port), pairingSrv, e.server, e.logger)
 		e.pump = session.NewStatePump(e.store, e.fanout, 500*time.Millisecond, e.logger)
+
+		// Loopback control channel (PROJ-144): a privileged, 127.0.0.1-only listener
+		// the local Desktop UI / console dials to drive status/pause/resume/quit, mint
+		// pairing tokens, and read the audit tail. It is deliberately NOT wired into
+		// the LAN ChannelMux/session path — that boundary stays unwired.
+		handler := transport.NewControlHandler(
+			lifeController{eng: e},
+			e.tokens, // *security.TokenIssuer satisfies TokenMinter.Issue(privileged)
+			auditReader{repo: e.audit},
+		)
+		e.control = transport.NewControlChannel(transport.DefaultControlAddr, handler, e.logger)
 		return nil
 	}
 }
@@ -203,6 +313,8 @@ func (h *hostService) Start(context.Context) error {
 	h.eng.launchPlugin("power", envIf(dryRun, "CYBERDECK_POWER_DRYRUN=1"))
 	h.eng.launchPlugin("volume", envIf(dryRun, "CYBERDECK_VOLUME_DRYRUN=1"))
 	h.eng.launchPlugin("launchers", envIf(dryRun, "CYBERDECK_LAUNCH_DRYRUN=1"))
+	// notifications is read-only (publishes notification.count; no actions).
+	h.eng.launchPlugin("notifications", nil)
 	return nil
 }
 
@@ -245,12 +357,25 @@ func (t *transportService) Start(ctx context.Context) error {
 	if err := t.eng.pump.Start(ctx); err != nil {
 		return err
 	}
-	return t.eng.listener.Start(ctx)
+	// The loopback control channel starts in the same boot stage as the LAN
+	// listener ("start transport (LAN listener + loopback control)") so the local
+	// UI/console can drive the engine from boot; it binds 127.0.0.1 only.
+	if err := t.eng.control.Start(ctx); err != nil {
+		return err
+	}
+	if err := t.eng.listener.Start(ctx); err != nil {
+		return err
+	}
+	t.eng.logger.Printf("loopback control channel on %s", t.eng.control.Addr())
+	return nil
 }
 
 func (t *transportService) Stop(ctx context.Context) error {
 	t.eng.server.CloseAll()
 	err := t.eng.listener.Stop(ctx)
+	if cerr := t.eng.control.Stop(ctx); cerr != nil && err == nil {
+		err = cerr
+	}
 	if perr := t.eng.pump.Stop(ctx); perr != nil && err == nil {
 		err = perr
 	}
@@ -295,8 +420,10 @@ func (e *engine) consoleLoop(w io.Writer) {
 			e.listDevices(w)
 		case strings.HasPrefix(line, "revoke "):
 			e.revokeDevice(w, strings.TrimSpace(strings.TrimPrefix(line, "revoke ")))
+		case strings.HasPrefix(line, "restrict "):
+			e.restrictDevice(w, strings.TrimSpace(strings.TrimPrefix(line, "restrict ")))
 		case line == "help":
-			_, _ = fmt.Fprintln(w, "commands: <Enter> = new pairing code · list · revoke <uuid> · help")
+			_, _ = fmt.Fprintln(w, "commands: <Enter> = new pairing code · list · revoke <uuid> · restrict <uuid> · help")
 		default:
 			_, _ = fmt.Fprintf(w, "unknown command %q (try: help)\n", line)
 		}
@@ -350,6 +477,36 @@ func (e *engine) revokeDevice(w io.Writer, uuid string) {
 	_, _ = fmt.Fprintf(w, "revoked %s (live session closed=%v)\n", uuid, closed)
 }
 
+// restrictedPermsJSON is the grant the console `restrict` command applies: power
+// actions denied (no power category, allowPowerActions=false) while volume + launch
+// stay usable. The session honours this on the device's next (re)connect — the
+// pairing handshake keeps a known device's stored grant (see security.Handshake).
+const restrictedPermsJSON = `{"allowPowerActions":false,"allowedCategories":["volume","launch"],"deniedActions":[],"allowEditTrigger":false}`
+
+// restrictDevice tightens a paired device's permissions to the restricted grant
+// (power denied) and drops any live session so the new grant takes effect on
+// reconnect. This is the operator control behind the permissioned-2nd-device journey
+// (J6 / P1-AC-07): a restricted device's power action is denied engine-side + audited.
+func (e *engine) restrictDevice(w io.Writer, uuid string) {
+	if uuid == "" {
+		_, _ = fmt.Fprintln(w, "usage: restrict <uuid>")
+		return
+	}
+	d, err := e.devices.Get(context.Background(), uuid)
+	if err != nil {
+		_, _ = fmt.Fprintf(w, "restrict %s: %v\n", uuid, err)
+		return
+	}
+	d.PermissionsJSON = restrictedPermsJSON
+	if err := e.devices.Update(context.Background(), d); err != nil {
+		_, _ = fmt.Fprintf(w, "restrict %s: %v\n", uuid, err)
+		return
+	}
+	closed := e.server.CloseDevice(uuid) // force a reconnect that re-reads the grant
+	e.logger.Printf("restricted device %s (power denied; live session closed=%v)", uuid, closed)
+	_, _ = fmt.Fprintf(w, "restricted %s (power denied; live session closed=%v)\n", uuid, closed)
+}
+
 // --- small adapters local to the entrypoint wiring ---
 
 // memKV is an in-memory PublicStore for the (per-run) engine identity.
@@ -357,6 +514,60 @@ type memKV struct{ m map[string]string }
 
 func (s *memKV) GetString(k string) (string, bool, error) { v, ok := s.m[k]; return v, ok, nil }
 func (s *memKV) SetString(k, v string) error              { s.m[k] = v; return nil }
+
+// lifeController adapts the engine to transport.LifecycleController so the loopback
+// control channel can drive run-state (PROJ-144). Pause drops live sessions (and
+// flags the engine paused); Resume clears the flag (the LAN listener keeps
+// accepting); Quit cancels the run context to start a graceful shutdown.
+type lifeController struct{ eng *engine }
+
+func (c lifeController) Status(context.Context) (string, error) {
+	if c.eng.paused {
+		return "paused", nil
+	}
+	return "running", nil
+}
+
+func (c lifeController) Pause(context.Context) error {
+	c.eng.paused = true
+	c.eng.server.CloseAll()
+	c.eng.logger.Printf("control: paused (live sessions dropped)")
+	return nil
+}
+
+func (c lifeController) Resume(context.Context) error {
+	c.eng.paused = false
+	c.eng.logger.Printf("control: resumed")
+	return nil
+}
+
+func (c lifeController) Quit(context.Context) error {
+	c.eng.logger.Printf("control: quit requested")
+	if c.eng.quit != nil {
+		c.eng.quit()
+	}
+	return nil
+}
+
+// auditReader adapts persistence.AuditRepo to transport.AuditReader: it reads the
+// audit tail and maps records into the transport-level AuditRow (which avoids a
+// persistence import inside the transport package).
+type auditReader struct{ repo *persistence.AuditRepo }
+
+func (r auditReader) Recent(ctx context.Context, limit int) ([]transport.AuditRow, error) {
+	recs, err := r.repo.Recent(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+	rows := make([]transport.AuditRow, 0, len(recs))
+	for _, a := range recs {
+		rows = append(rows, transport.AuditRow{
+			ID: a.ID, TS: a.TS, Actor: a.Actor, EventType: a.EventType,
+			ResourceType: a.ResourceType, ResourceID: a.ResourceID, PayloadJSON: a.PayloadJSON,
+		})
+	}
+	return rows, nil
+}
 
 // auditAdapter records audit events durably (PROJ-114/127) and to the log.
 type auditAdapter struct {

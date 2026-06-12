@@ -49,6 +49,9 @@ run/
 *.bin
 pkg/
 *.dmg
+
+# Perf-soak report artifacts (PROJ-301) — regenerated each run
+engine/test/soak/soak-*.json
 *.zip
 *.tar.gz
 

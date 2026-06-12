@@ -12,7 +12,11 @@
     "system.ram.percent",
     "system.net.throughput",
     "system.disk.percent",
-    "system.uptime"
+    "system.uptime",
+    "system.gpu.load",
+    "system.gpu.temp",
+    "system.gpu.vram.used",
+    "system.gpu.vram.total"
   ],
   "contributes": {}
 }

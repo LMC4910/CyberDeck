@@ -35,8 +35,8 @@ type fakeTrust struct {
 func newFakeTrust() *fakeTrust {
 	return &fakeTrust{records: map[string]TrustRecord{}, exists: map[string]bool{}, revoked: map[string]bool{}}
 }
-func (t *fakeTrust) Status(_ context.Context, uuid string) (bool, bool, error) {
-	return t.exists[uuid], t.revoked[uuid], nil
+func (t *fakeTrust) Status(_ context.Context, uuid string) (bool, bool, string, error) {
+	return t.exists[uuid], t.revoked[uuid], t.records[uuid].PermissionsJSON, nil
 }
 func (t *fakeTrust) Save(_ context.Context, rec TrustRecord) error {
 	if t.saveErr != nil {

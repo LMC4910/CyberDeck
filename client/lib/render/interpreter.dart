@@ -16,6 +16,7 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'degradation.dart';
 import 'model.dart';
 import 'ops.dart';
 import 'registry.dart';
@@ -37,6 +38,13 @@ class LayoutInterpreter {
 
   /// Bumped on structural changes (add/remove/grid); the view rebuilds its list.
   final ValueNotifier<int> structure = ValueNotifier<int>(0);
+
+  /// True while the live link is down (PROJ-188). The deck surface keeps rendering
+  /// each widget's LAST value but DIMMED, with a stale-link banner — it never
+  /// freezes and never fabricates data (a never-received capability stays null →
+  /// "--"). The deck screen drives this from the connection status; on reconnect it
+  /// is cleared and live updates resume.
+  final ValueNotifier<bool> degraded = ValueNotifier<bool>(false);
 
   /// The current set of bound state ids; updated when bindings change. The
   /// connection layer mirrors this to the engine's subscription set.
@@ -77,6 +85,11 @@ class LayoutInterpreter {
 
   /// Applies a state delta (repaints only widgets bound to [id]).
   void applyState(String id, Object? value) => stateStore.set(id, value);
+
+  /// Enters/leaves degraded (offline) rendering (PROJ-188). Entering dims the deck
+  /// over its last known values; leaving restores full brightness. Idempotent — it
+  /// never touches state values, so it cannot freeze or fabricate live data.
+  void setDegraded(bool value) => degraded.value = value;
 
   /// Applies a layout op to the local tree, repainting only affected nodes.
   void applyOp(LayoutOp op) {
@@ -160,8 +173,10 @@ class LayoutInterpreter {
 
   void _refreshSubscriptions() => subscriptions.value = subscriptionSet;
 
-  /// Builds the page view.
-  Widget build() => _LayoutView(this);
+  /// Builds the page view, wrapped in the degradation overlay (PROJ-188): when
+  /// [degraded] is true the deck dims over its last values; otherwise it renders
+  /// live and untouched.
+  Widget build() => DegradationOverlay(degraded: degraded, child: _LayoutView(this));
 
   void dispose() {
     for (final n in _nodes.values) {
@@ -170,6 +185,7 @@ class LayoutInterpreter {
     _nodes.clear();
     structure.dispose();
     subscriptions.dispose();
+    degraded.dispose();
     stateStore.dispose();
   }
 }

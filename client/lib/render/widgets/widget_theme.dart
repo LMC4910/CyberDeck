@@ -1,27 +1,44 @@
-/// Interim theme tokens for the built-in widgets (PROJ-184). The full theme/token
-/// system + accessibility is PROJ-189; this small helper maps the handful of theme
-/// names the gauges use to colors so they render with the neon look today, and is
-/// superseded by 189's design tokens.
+/// Theme adapter for the built-in widgets (PROJ-184, refactored for PROJ-189).
+///
+/// The CyberDeck design tokens now live in `lib/theme/tokens.dart` (the single
+/// source of truth). This file keeps its small, STABLE public API —
+/// [themeColor], [resolveAccent], [kDefaultAccent] — that existing widgets call,
+/// but delegates every colour to the tokens so the palette stays consistent and
+/// accessible (WCAG-AA neon-on-dark) in one place.
 library;
 
 import 'package:flutter/material.dart';
 
-/// The default accent (neon cyan) when no theme/color is specified.
-const Color kDefaultAccent = Color(0xFF22D3EE);
+import '../../theme/tokens.dart';
 
-/// Maps a theme token to a color. Unknown tokens fall back to [fallback].
+/// The default accent (neon cyan) when no theme/color is specified.
+const Color kDefaultAccent = DeckColors.accent;
+
+/// Maps a theme token name to a color. Unknown tokens fall back to [fallback].
+///
+/// Token names are the layout/profile vocabulary; they resolve to the
+/// [DeckColors]/[DeckStatus] tokens so widgets and the app theme agree.
 Color themeColor(String? theme, {Color fallback = kDefaultAccent}) {
   switch (theme) {
     case 'neon-cyan':
-      return kDefaultAccent;
+    case 'accent-cyan':
+      return DeckColors.accentCyan;
     case 'neon-magenta':
-      return const Color(0xFFE879F9);
+    case 'accent-purple':
+      return DeckColors.accentPurple;
     case 'status-error':
-      return const Color(0xFFFB7185);
+    case 'error':
+      return DeckStatus.error.color;
     case 'status-warn':
-      return const Color(0xFFFBBF24);
+    case 'warn':
+      return DeckStatus.warn.color;
     case 'status-ok':
-      return const Color(0xFF34D399);
+    case 'status-success':
+    case 'success':
+      return DeckStatus.success.color;
+    case 'status-info':
+    case 'info':
+      return DeckStatus.info.color;
     default:
       return fallback;
   }

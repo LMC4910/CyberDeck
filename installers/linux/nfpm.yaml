@@ -1,0 +1,59 @@
+# CyberDeck — nfpm config for Linux .deb + .rpm packages.
+# https://nfpm.goreleaser.com
+#
+# Packages the release bundle from `task dist:linux`:
+#   dist/linux/cyberdeck
+#   dist/linux/plugins/<name>/<name>   (telemetry, power, volume, launchers, notifications)
+# into /opt/cyberdeck and registers the engine as a system-wide systemd service
+# (P1-AC-01) via the postinstall script. The preremove/postremove scripts stop +
+# remove the unit on uninstall (P1-AC-15).
+#
+# Build (from repo root, after `task dist:linux`):
+#   VERSION=1.0.0 nfpm package -f installers/linux/nfpm.yaml -p deb -t installers/linux/Output/
+#   VERSION=1.0.0 nfpm package -f installers/linux/nfpm.yaml -p rpm -t installers/linux/Output/
+# (build-packages.sh wraps both.)
+name: cyberdeck
+arch: amd64
+platform: linux
+version: ${VERSION}
+version_schema: none
+section: utils
+priority: optional
+maintainer: CyberDeck <noreply@cyberdeck.local>
+description: |
+  CyberDeck host engine — a cyberpunk command center for your desk.
+  Bundles the engine plus the telemetry, power, volume, launchers and
+  notifications plugins, and runs as a systemd service so the deck stays
+  reachable after the UI is closed.
+vendor: CyberDeck
+homepage: https://github.com/shishir/cyberdeck
+license: see /opt/cyberdeck/LICENSE
+
+contents:
+  - src: ../../dist/linux/cyberdeck
+    dst: /opt/cyberdeck/cyberdeck
+    file_info:
+      mode: 0755
+  - src: ../../dist/linux/plugins
+    dst: /opt/cyberdeck/plugins
+  - src: ../../LICENSE
+    dst: /opt/cyberdeck/LICENSE
+  # A stable launcher on PATH (symlink: src is the link target).
+  - src: /opt/cyberdeck/cyberdeck
+    dst: /usr/bin/cyberdeck
+    type: symlink
+
+# Maintainer scripts: register/unregister the systemd service via the engine's own
+# `--service install|uninstall` so the unit definition stays single-sourced in the
+# engine (engine/internal/service/linux.go + render.go).
+scripts:
+  postinstall: ./scripts/postinstall.sh
+  preremove: ./scripts/preremove.sh
+  postremove: ./scripts/postremove.sh
+
+overrides:
+  rpm:
+    file_info:
+      # systemd present on all supported RPM distros.
+  deb:
+    depends: []

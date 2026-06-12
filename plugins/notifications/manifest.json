@@ -1,0 +1,14 @@
+{
+  "id": "com.shishir.cyberdeck.notifications",
+  "name": "Notification Count",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["notifications"],
+    "network": "none",
+    "filesystem": "none"
+  },
+  "contributes": {
+    "states": ["notification.count"],
+    "actions": []
+  }
+}

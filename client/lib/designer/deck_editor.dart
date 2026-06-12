@@ -10,9 +10,12 @@ import 'package:flutter/material.dart';
 import '../data/deck_source.dart';
 import '../render/render.dart';
 import 'canvas.dart';
+import 'device_class.dart';
+import 'grid_editor.dart';
 import 'inspector/inspector.dart';
 import 'inspector/param_schema.dart';
 import 'op_model.dart';
+import 'undo.dart';
 
 class DeckEditor extends StatefulWidget {
   const DeckEditor({super.key, required this.source, required this.deckId});
@@ -28,7 +31,15 @@ class _DeckEditorState extends State<DeckEditor> {
   late LayoutInterpreter _interp;
   late DesignerController _controller;
   late OpBuilder _ops;
+  late UndoStack _undo;
   String? _selectedId;
+
+  // The explicit target device class the deck is authored for (PROJ-216 invariant:
+  // the Designer ALWAYS shows the target device). Inferred from the loaded grid.
+  late DeviceClass _target;
+
+  // Right-panel mode: edit the selected widget, or edit the page grid (PROJ-217).
+  bool _gridMode = false;
 
   // drag bookkeeping (cell-delta from the drag start, so we never need canvas-local
   // coordinates — robust on touch + pointer).
@@ -43,10 +54,42 @@ class _DeckEditorState extends State<DeckEditor> {
       ..load(widget.source.layout(widget.deckId));
     _controller = DesignerController(_interp);
     _ops = OpBuilder(pageId: widget.deckId);
+    _undo = UndoStack(interpreter: _interp, sink: _apply);
+    _target = _classForGrid(_interp.grid);
   }
 
+  // The explicit target device for the loaded grid: match by id, else by dimensions,
+  // else the default class — so a target is ALWAYS displayable.
+  DeviceClass _classForGrid(GridConfig g) {
+    for (final dc in DeviceClass.presets) {
+      if (dc.id == g.deviceClass) return dc;
+    }
+    for (final dc in DeviceClass.presets) {
+      if (dc.columns == g.columns && dc.rows == g.rows) return dc;
+    }
+    return DeviceClass.defaultClass;
+  }
+
+  // The raw apply+broadcast path (also the UndoStack's sink, so undo/redo flow
+  // through exactly the same code as a normal edit).
   void _apply(Map<String, dynamic> op) {
     _interp.applyOp(LayoutOp.fromJson(op));
+    setState(() {});
+  }
+
+  // Records an edit so it can be undone, applying it via _apply.
+  void _record(Map<String, dynamic> op) {
+    _undo.record(op);
+    setState(() {});
+  }
+
+  void _doUndo() {
+    _undo.undo();
+    setState(() {});
+  }
+
+  void _doRedo() {
+    _undo.redo();
     setState(() {});
   }
 
@@ -67,7 +110,7 @@ class _DeckEditorState extends State<DeckEditor> {
   void _removeSelected() {
     final id = _selectedId;
     if (id == null) return;
-    _interp.applyOp(LayoutOp.fromJson(_ops.removeWidget(id)));
+    _record(_ops.removeWidget(id));
     setState(() => _selectedId = null);
   }
 
@@ -126,6 +169,11 @@ class _DeckEditorState extends State<DeckEditor> {
       for (var c = 0; c < _interp.grid.columns - 1; c++) {
         final placed = node.copyWith(placement: node.placement.copyWith(col: c, row: r));
         if (_controller.tryAdd(placed)) {
+          // tryAdd applied it live; record as an undoable step.
+          _undo.recordApplied(
+            _ops.addWidget(placed),
+            {'op': 'RemoveWidget', 'widgetId': id},
+          );
           setState(() => _selectedId = id);
           return;
         }
@@ -153,8 +201,38 @@ class _DeckEditorState extends State<DeckEditor> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E14),
       appBar: AppBar(
-        title: const Text('Edit deck'),
+        // The Designer ALWAYS shows the explicit target device (PROJ-216 invariant).
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Edit deck'),
+            Text(
+              'Target: ${_target.label}',
+              key: const Key('editor-target-device'),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF9FB3C8)),
+            ),
+          ],
+        ),
         actions: [
+          IconButton(
+            key: const Key('editor-undo'),
+            icon: const Icon(Icons.undo),
+            tooltip: 'Undo',
+            onPressed: _undo.canUndo ? _doUndo : null,
+          ),
+          IconButton(
+            key: const Key('editor-redo'),
+            icon: const Icon(Icons.redo),
+            tooltip: 'Redo',
+            onPressed: _undo.canRedo ? _doRedo : null,
+          ),
+          IconButton(
+            key: const Key('editor-grid'),
+            icon: const Icon(Icons.grid_4x4),
+            tooltip: 'Edit grid',
+            onPressed: () => setState(() => _gridMode = !_gridMode),
+          ),
           IconButton(
             key: const Key('editor-add'),
             icon: const Icon(Icons.add),
@@ -238,6 +316,20 @@ class _DeckEditorState extends State<DeckEditor> {
           _controller.tryMove(id, _startCol + dc, _startRow + dr);
           setState(() {});
         },
+        onPanEnd: (_) {
+          // The drag mutated the tree live for feedback; record the NET move as one
+          // undoable step (op = move to final, inverse = move back to start).
+          final endP = _interp.nodeListenable(id).value.placement;
+          if (endP.col == _startCol && endP.row == _startRow) return;
+          _undo.recordApplied(
+            _ops.moveWidget(id, col: endP.col, row: endP.row),
+            {
+              'op': 'MoveWidget',
+              'widgetId': id,
+              'to': {'col': _startCol, 'row': _startRow},
+            },
+          );
+        },
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border.all(
@@ -251,6 +343,18 @@ class _DeckEditorState extends State<DeckEditor> {
   }
 
   Widget _buildPanel() {
+    if (_gridMode) {
+      return DecoratedBox(
+        decoration: const BoxDecoration(color: Color(0xFF0E1722)),
+        child: GridEditor(
+          key: ValueKey('grid-editor-${_interp.grid.columns}x${_interp.grid.rows}'),
+          grid: _interp.grid,
+          opBuilder: _ops,
+          aspectRatio: _target.aspectRatio,
+          onCommit: _record,
+        ),
+      );
+    }
     final id = _selectedId;
     if (id == null || !_interp.widgetIds.contains(id)) {
       return Container(
@@ -288,7 +392,7 @@ class _DeckEditorState extends State<DeckEditor> {
               initialValue: node.appearance.style['label'] as String? ?? '',
               decoration: const InputDecoration(labelText: 'Label'),
               onFieldSubmitted: (v) =>
-                  _apply(_ops.setStyle(id, {...node.appearance.style, 'label': v})),
+                  _record(_ops.setStyle(id, {...node.appearance.style, 'label': v})),
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -296,7 +400,7 @@ class _DeckEditorState extends State<DeckEditor> {
                 widget: node,
                 schema: _schemaFor(node),
                 opBuilder: _ops,
-                onCommit: _apply,
+                onCommit: _record,
               ),
             ),
           ],

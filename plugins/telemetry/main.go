@@ -17,10 +17,12 @@ import (
 	"github.com/shishir/cyberdeck/plugins/telemetry/providers"
 )
 
-// High-usage thresholds (percent).
+// High-usage thresholds. CPU/RAM are percent; GPU is degrees Celsius — a GPU
+// temp strictly above gpuWarnTempC emits a system.gpu.high event (PROJ-172).
 const (
 	cpuWarnPercent = 85.0
 	ramWarnPercent = 90.0
+	gpuWarnTempC   = 88.0
 )
 
 func main() {
@@ -32,12 +34,14 @@ func main() {
 		cad = Cadences{CPU: fast, RAM: fast, Net: fast, Disk: fast, Uptime: fast}
 		tick = 10 * time.Millisecond
 	}
-	run(os.Stdin, os.Stdout, providers.New(), cad, tick)
+	run(os.Stdin, os.Stdout, providers.New(), providers.NewGPU(), cad, tick)
 }
 
-// run executes the plugin lifecycle against the given streams and provider. It
-// returns when stdin closes (host shutdown).
-func run(in *os.File, out *os.File, prov pal.Telemetry, cad Cadences, tick time.Duration) {
+// run executes the plugin lifecycle against the given streams and providers. The
+// gpu provider is the PAL-chain-selected GPU capability (unavailable on machines
+// without a supported GPU — its gauges simply stay "--"). It returns when stdin
+// closes (host shutdown).
+func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadences, tick time.Duration) {
 	w := newMsgWriter(out)
 
 	sc := bufio.NewScanner(in)
@@ -56,7 +60,7 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, cad Cadences, tick time.
 		return
 	}
 
-	pub := NewPublisher(prov, w, cad, cpuWarnPercent, ramWarnPercent)
+	pub := NewPublisher(prov, gpu, w, cad, cpuWarnPercent, ramWarnPercent, gpuWarnTempC)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -45,6 +45,7 @@ dependencies:
   # Camera QR scanning for pairing (PROJ-180, Android). Dart API is cross-platform;
   # the camera is only opened on supported platforms (desktop uses manual entry).
   mobile_scanner: ^5.2.3
+  tray_manager: ^0.5.3
 
 dev_dependencies:
   flutter_test:

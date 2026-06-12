@@ -56,6 +56,23 @@ tasks:
             echo "client/ not present yet - skipping flutter test"
           fi
 
+  soak:
+    desc: "Perf soak: compressed run (~1 min, 8 sessions) — leak/CPU/throughput budgets (PROJ-301). Writes engine/test/soak/soak-short.json"
+    dir: engine
+    env:
+      CYBERDECK_SOAK_REPORT: "test/soak/soak-short.json"
+    cmds:
+      - go test ./test/soak/ -run 'TestSoakShort|TestIdleCPUBudget' -v -timeout 5m
+
+  soak:full:
+    desc: "Perf soak: literal 8h idle run (PROJ-301). NOT for CI. Writes engine/test/soak/soak-full.json"
+    dir: engine
+    env:
+      CYBERDECK_SOAK: "full"
+      CYBERDECK_SOAK_REPORT: "test/soak/soak-full.json"
+    cmds:
+      - go test ./test/soak/ -run 'TestSoakFull' -v -timeout 9h
+
   build:
     desc: "Build engine and client"
     cmds:
@@ -71,14 +88,85 @@ tasks:
   # --- run / dev targets (the testable slice) ---
 
   dist:engine:
-    desc: "Build the host engine + all four bundled plugins into run/ (engine exe + plugins/*)"
+    desc: "Build the host engine + all five bundled plugins into run/ (engine exe + plugins/*)"
     cmds:
-      - mkdir -p run/plugins/telemetry run/plugins/power run/plugins/volume run/plugins/launchers
+      - mkdir -p run/plugins/telemetry run/plugins/power run/plugins/volume run/plugins/launchers run/plugins/notifications
       - cd engine && go build -o ../run/cyberdeck.exe ./cmd/cyberdeck
       - cd plugins/telemetry && go build -o ../../run/plugins/telemetry/telemetry.exe .
       - cd plugins/power && go build -o ../../run/plugins/power/power.exe .
       - cd plugins/volume && go build -o ../../run/plugins/volume/volume.exe .
       - cd plugins/launchers && go build -o ../../run/plugins/launchers/launchers.exe .
+      - cd plugins/notifications && go build -o ../../run/plugins/notifications/notifications.exe .
+
+  # --- distribution: per-OS release bundles ---
+  # Each dist:<os> cross-compiles the Go engine + ALL five bundled plugins for that
+  # target (pure-Go SQLite → CGO_ENABLED=0 cross-compiles cleanly) into
+  # dist/<os>/, then bundles the client where it can be built natively. Flutter
+  # desktop is built on the target OS, so the client is bundled on Windows here and
+  # documented as a manual native build for macOS/Linux (see docs/RUNNING.md §D).
+
+  dist:windows:
+    desc: "Release bundle for Windows (engine + 5 plugins + Flutter Windows client)"
+    cmds:
+      - task: dist:bundle
+        vars: { OS: windows, GOOS: windows, GOARCH: amd64, EXT: ".exe" }
+      - task: dist:client:windows
+
+  dist:macos:
+    desc: "Release bundle for macOS arm64 (engine + 5 plugins; client built manually on a Mac — see docs/RUNNING.md)"
+    cmds:
+      - task: dist:bundle
+        vars: { OS: macos, GOOS: darwin, GOARCH: arm64, EXT: "" }
+
+  dist:linux:
+    desc: "Release bundle for Linux amd64 (engine + 5 plugins; client built manually on Linux — see docs/RUNNING.md)"
+    cmds:
+      - task: dist:bundle
+        vars: { OS: linux, GOOS: linux, GOARCH: amd64, EXT: "" }
+
+  dist:all:
+    desc: "Build the Windows, macOS and Linux release bundles"
+    cmds:
+      - task: dist:windows
+      - task: dist:macos
+      - task: dist:linux
+
+  # dist:bundle cross-compiles the engine + every bundled plugin for OS/GOOS/GOARCH.
+  # Internal helper — invoke a dist:<os> target instead. CGO is disabled so the
+  # pure-Go SQLite driver cross-compiles without a C toolchain.
+  dist:bundle:
+    internal: true
+    requires:
+      vars: [OS, GOOS, GOARCH, EXT]
+    env:
+      CGO_ENABLED: "0"
+      GOOS: "{{.GOOS}}"
+      GOARCH: "{{.GOARCH}}"
+    cmds:
+      - mkdir -p dist/{{.OS}}/plugins/telemetry dist/{{.OS}}/plugins/power dist/{{.OS}}/plugins/volume dist/{{.OS}}/plugins/launchers dist/{{.OS}}/plugins/notifications
+      - cd engine && go build -o ../dist/{{.OS}}/cyberdeck{{.EXT}} ./cmd/cyberdeck
+      - cd plugins/telemetry && go build -o ../../dist/{{.OS}}/plugins/telemetry/telemetry{{.EXT}} .
+      - cd plugins/power && go build -o ../../dist/{{.OS}}/plugins/power/power{{.EXT}} .
+      - cd plugins/volume && go build -o ../../dist/{{.OS}}/plugins/volume/volume{{.EXT}} .
+      - cd plugins/launchers && go build -o ../../dist/{{.OS}}/plugins/launchers/launchers{{.EXT}} .
+      - cd plugins/notifications && go build -o ../../dist/{{.OS}}/plugins/notifications/notifications{{.EXT}} .
+
+  # dist:client:windows builds the Flutter Windows desktop client (native, on
+  # Windows) and copies the runner bundle into the release dir. It no-ops gracefully
+  # when the client scaffold or Flutter toolchain is absent so the engine bundle
+  # still succeeds.
+  dist:client:windows:
+    internal: true
+    cmds:
+      - cmd: |
+          if [ -d client/windows ]; then
+            ( cd client && flutter build windows --release )
+            mkdir -p dist/windows/client
+            cp -r client/build/windows/x64/runner/Release/. dist/windows/client/
+            echo "bundled Flutter Windows client into dist/windows/client"
+          else
+            echo "client/windows not present - skipping client bundle (build it natively per docs/RUNNING.md)"
+          fi
 
   run:engine:
     desc: "Build + run the host engine in console mode (prints a pairing QR; power dry-run)"
@@ -94,7 +182,7 @@ tasks:
       - flutter run -d windows
 
   interop:
-    desc: "Run the real Dart<->Go engine interop test against the built engine"
+    desc: "Run the real Dart<->Go engine interop + E2E journeys (J0/J1/J2/J6) against the built engine"
     deps: [dist:engine]
     dir: client
     env:

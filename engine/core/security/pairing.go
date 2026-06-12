@@ -81,8 +81,11 @@ type TrustRecord struct {
 // A small adapter bridges it to persistence.DeviceRepo at wiring time (PROJ-105),
 // keeping this package independent of persistence.
 type TrustStore interface {
-	// Status reports whether a device record exists and whether it is revoked.
-	Status(ctx context.Context, uuid string) (exists, revoked bool, err error)
+	// Status reports whether a device record exists, whether it is revoked, and (for
+	// a known device) its currently-stored permissions JSON. The permissions are
+	// honoured on reconnect so an operator-tightened grant (e.g. power denied via the
+	// console) sticks across re-pairs rather than being reset to the defaults.
+	Status(ctx context.Context, uuid string) (exists, revoked bool, permsJSON string, err error)
 	// Save writes (or refreshes) a trust record for a successfully paired device.
 	Save(ctx context.Context, rec TrustRecord) error
 }
@@ -172,6 +175,10 @@ type Handshake struct {
 	hello  ClientHello
 	nonceE []byte
 	engEph *ecdh.PrivateKey
+	// perms is the permission grant this exchange will persist + report: the device's
+	// existing stored grant when it is a known (already-paired) device, otherwise the
+	// server's default grant for a first-time pairing. Resolved in OnClientHello.
+	perms string
 }
 
 // NewHandshake starts a fresh engine-side handshake.
@@ -196,7 +203,7 @@ func (h *Handshake) OnClientHello(ctx context.Context, hello ClientHello) (Serve
 	}
 
 	// Reject a known-revoked device before doing any work.
-	exists, revoked, err := h.srv.trust.Status(ctx, hello.DeviceUUID)
+	exists, revoked, permsJSON, err := h.srv.trust.Status(ctx, hello.DeviceUUID)
 	if err != nil {
 		h.state = stateFailed
 		return ServerHello{}, fmt.Errorf("pairing: trust status: %w", err)
@@ -204,6 +211,15 @@ func (h *Handshake) OnClientHello(ctx context.Context, hello ClientHello) (Serve
 	if exists && revoked {
 		h.state = stateFailed
 		return ServerHello{}, ErrRevokedDevice
+	}
+
+	// Resolve the grant to persist + report: a known device keeps its stored grant
+	// (so an operator tightening, e.g. denying power, survives reconnect); a new
+	// device gets the server default. An existing record with an empty perms string
+	// (never set) also falls back to the default.
+	h.perms = h.srv.defaultPerms
+	if exists && permsJSON != "" {
+		h.perms = permsJSON
 	}
 
 	// Authorize a NEW/unknown device with a single-use token / local PIN (consumed
@@ -287,12 +303,14 @@ func (h *Handshake) OnKeyConfirm(ctx context.Context, kc KeyConfirm) (PairResult
 		return PairResult{}, nil, fmt.Errorf("pairing: derive session keys: %w", err)
 	}
 
-	// Persist the trust record (2E §2.3).
+	// Persist the trust record (2E §2.3). Use the grant resolved in OnClientHello: a
+	// known device keeps its stored (possibly operator-tightened) permissions; a new
+	// device gets the server default.
 	rec := TrustRecord{
 		UUID:            h.hello.DeviceUUID,
 		PublicKey:       h.hello.DevicePublicKey,
 		DeviceClass:     "",
-		PermissionsJSON: h.srv.defaultPerms,
+		PermissionsJSON: h.perms,
 		PairedAt:        h.srv.now(),
 	}
 	if err := h.srv.trust.Save(ctx, rec); err != nil {
@@ -307,6 +325,6 @@ func (h *Handshake) OnKeyConfirm(ctx context.Context, kc KeyConfirm) (PairResult
 	return PairResult{
 		SigE:             sigE,
 		AssignedClass:    "",
-		DefaultPermsJSON: h.srv.defaultPerms,
+		DefaultPermsJSON: h.perms,
 	}, keys, nil
 }

@@ -28,10 +28,10 @@ func TestTrustAdapterStatusAndSave(t *testing.T) {
 	ctx := context.Background()
 	adapter, repo := newTrust(t)
 
-	// Unknown device → not exists, not revoked, no error.
-	exists, revoked, err := adapter.Status(ctx, "dev-1")
-	if err != nil || exists || revoked {
-		t.Fatalf("Status(unknown) = (%v,%v,%v)", exists, revoked, err)
+	// Unknown device → not exists, not revoked, no perms, no error.
+	exists, revoked, perms, err := adapter.Status(ctx, "dev-1")
+	if err != nil || exists || revoked || perms != "" {
+		t.Fatalf("Status(unknown) = (%v,%v,%q,%v)", exists, revoked, perms, err)
 	}
 
 	// Save inserts.
@@ -39,9 +39,9 @@ func TestTrustAdapterStatusAndSave(t *testing.T) {
 	if err := adapter.Save(ctx, rec); err != nil {
 		t.Fatalf("Save insert: %v", err)
 	}
-	exists, revoked, _ = adapter.Status(ctx, "dev-1")
-	if !exists || revoked {
-		t.Errorf("after insert Status = exists %v revoked %v", exists, revoked)
+	exists, revoked, perms, _ = adapter.Status(ctx, "dev-1")
+	if !exists || revoked || perms != `{"a":1}` {
+		t.Errorf("after insert Status = exists %v revoked %v perms %q", exists, revoked, perms)
 	}
 
 	// Save again upserts (re-pair) without error and refreshes perms.
@@ -58,7 +58,7 @@ func TestTrustAdapterStatusAndSave(t *testing.T) {
 	if err := repo.Revoke(ctx, "dev-1"); err != nil {
 		t.Fatalf("revoke: %v", err)
 	}
-	_, revoked, _ = adapter.Status(ctx, "dev-1")
+	_, revoked, _, _ = adapter.Status(ctx, "dev-1")
 	if !revoked {
 		t.Error("revoked device should report revoked=true")
 	}

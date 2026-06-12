@@ -27,6 +27,34 @@ func allAvailable() *fakeProvider {
 	}
 }
 
+// fakeGPU is a pal.GPU whose values and availability are set by the test.
+type fakeGPU struct {
+	load, temp, vu, vt         float64
+	loadOK, tempOK, vuOK, vtOK bool
+}
+
+func (g *fakeGPU) Load() (float64, bool)      { return g.load, g.loadOK }
+func (g *fakeGPU) Temp() (float64, bool)      { return g.temp, g.tempOK }
+func (g *fakeGPU) VRAMUsed() (float64, bool)  { return g.vu, g.vuOK }
+func (g *fakeGPU) VRAMTotal() (float64, bool) { return g.vt, g.vtOK }
+
+// allGPU is a fully available GPU well under the over-temp threshold.
+func allGPU() *fakeGPU {
+	return &fakeGPU{
+		load: 30, temp: 60, vu: 2 << 30, vt: 8 << 30,
+		loadOK: true, tempOK: true, vuOK: true, vtOK: true,
+	}
+}
+
+// unavailableGPU is a GPU chain that bound nothing (no supported GPU): every read
+// is ok=false, mirroring the real degraded capability.
+type unavailableGPU struct{}
+
+func (unavailableGPU) Load() (float64, bool)      { return 0, false }
+func (unavailableGPU) Temp() (float64, bool)      { return 0, false }
+func (unavailableGPU) VRAMUsed() (float64, bool)  { return 0, false }
+func (unavailableGPU) VRAMTotal() (float64, bool) { return 0, false }
+
 // decodeMessages parses every newline-delimited message written to buf.
 func decodeMessages(t *testing.T, buf *bytes.Buffer) []ipcproto.Message {
 	t.Helper()
@@ -66,7 +94,7 @@ func eventTopics(msgs []ipcproto.Message) []string {
 
 func TestPublishDueEmitsAllMetricsFirstTick(t *testing.T) {
 	var buf bytes.Buffer
-	pub := NewPublisher(allAvailable(), newMsgWriter(&buf), DefaultCadences(), 85, 90)
+	pub := NewPublisher(allAvailable(), allGPU(), newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
 
 	if err := pub.PublishDue(time.Unix(0, 0)); err != nil {
 		t.Fatalf("PublishDue: %v", err)
@@ -88,7 +116,7 @@ func TestPublishDueEmitsAllMetricsFirstTick(t *testing.T) {
 func TestPublishDueRespectsCadence(t *testing.T) {
 	var buf bytes.Buffer
 	prov := allAvailable()
-	pub := NewPublisher(prov, newMsgWriter(&buf), DefaultCadences(), 85, 90)
+	pub := NewPublisher(prov, allGPU(), newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
 
 	t0 := time.Unix(100, 0)
 	if err := pub.PublishDue(t0); err != nil { // all five due
@@ -116,7 +144,7 @@ func TestPublishDueRespectsCadence(t *testing.T) {
 func TestThresholdEventOnUnderToOverTransitionOnly(t *testing.T) {
 	var buf bytes.Buffer
 	prov := allAvailable()
-	pub := NewPublisher(prov, newMsgWriter(&buf), DefaultCadences(), 85, 90)
+	pub := NewPublisher(prov, allGPU(), newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
 	t0 := time.Unix(0, 0)
 
 	// Over the CPU limit → one event.
@@ -156,7 +184,7 @@ func TestUnavailableMetricSkipped(t *testing.T) {
 	var buf bytes.Buffer
 	prov := allAvailable()
 	prov.cpuOK = false // CPU unavailable this host
-	pub := NewPublisher(prov, newMsgWriter(&buf), DefaultCadences(), 85, 90)
+	pub := NewPublisher(prov, allGPU(), newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
 
 	if err := pub.PublishDue(time.Unix(0, 0)); err != nil {
 		t.Fatal(err)
@@ -168,4 +196,92 @@ func TestUnavailableMetricSkipped(t *testing.T) {
 	if _, ok := st[stateRAM]; !ok {
 		t.Error("available RAM metric should still publish")
 	}
+}
+
+// TestGPUMetricsPublishWhenAvailable proves the four GPU states flow as typed
+// scalars when the GPU chain is bound (PROJ-172).
+func TestGPUMetricsPublishWhenAvailable(t *testing.T) {
+	var buf bytes.Buffer
+	gpu := allGPU()
+	pub := NewPublisher(allAvailable(), gpu, newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
+
+	if err := pub.PublishDue(time.Unix(0, 0)); err != nil {
+		t.Fatal(err)
+	}
+	st := states(decodeMessages(t, &buf))
+	for _, id := range []string{stateGPULoad, stateGPUTemp, stateGPUVRAMUsed, stateGPUVRAMTotal} {
+		if _, ok := st[id]; !ok {
+			t.Errorf("missing GPU state %q", id)
+		}
+	}
+	if got := st[stateGPULoad]; got != 30.0 {
+		t.Errorf("gpu load = %v, want 30", got)
+	}
+}
+
+// TestGPUUnavailableDegradesToDashes proves that on a machine with no supported
+// GPU (unbound chain → every read ok=false) the GPU states are simply skipped
+// ("--") with no crash, while non-GPU metrics still publish.
+func TestGPUUnavailableDegradesToDashes(t *testing.T) {
+	var buf bytes.Buffer
+	pub := NewPublisher(allAvailable(), unavailableGPU{}, newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
+
+	if err := pub.PublishDue(time.Unix(0, 0)); err != nil {
+		t.Fatal(err)
+	}
+	st := states(decodeMessages(t, &buf))
+	for _, id := range []string{stateGPULoad, stateGPUTemp, stateGPUVRAMUsed, stateGPUVRAMTotal} {
+		if _, ok := st[id]; ok {
+			t.Errorf("unavailable GPU metric %q must not publish", id)
+		}
+	}
+	if _, ok := st[stateCPU]; !ok {
+		t.Error("non-GPU metric should still publish when GPU is unavailable")
+	}
+}
+
+// TestGPUOverTempEmitsThresholdEvent proves a GPU temp strictly above the limit
+// fires system.gpu.high exactly once per under→over crossing (PROJ-172).
+func TestGPUOverTempEmitsThresholdEvent(t *testing.T) {
+	var buf bytes.Buffer
+	gpu := allGPU()
+	pub := NewPublisher(allAvailable(), gpu, newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
+	t0 := time.Unix(0, 0)
+
+	// Below the 88C limit → no event.
+	gpu.temp = 70
+	if err := pub.PublishDue(t0); err != nil {
+		t.Fatal(err)
+	}
+	if topics := eventTopics(decodeMessages(t, &buf)); contains(topics, topicGPUHigh) {
+		t.Fatalf("GPU event fired below limit: %v", topics)
+	}
+	buf.Reset()
+
+	// Cross above 88C → exactly one gpu.high event.
+	gpu.temp = 91
+	if err := pub.PublishDue(t0.Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if topics := eventTopics(decodeMessages(t, &buf)); len(topics) != 1 || topics[0] != topicGPUHigh {
+		t.Fatalf("over-temp topics = %v, want [%s]", topics, topicGPUHigh)
+	}
+	buf.Reset()
+
+	// Still over → no repeat (under→over only).
+	if err := pub.PublishDue(t0.Add(2 * time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if topics := eventTopics(decodeMessages(t, &buf)); contains(topics, topicGPUHigh) {
+		t.Fatalf("sustained over-temp re-emitted: %v", topics)
+	}
+}
+
+func contains(ss []string, want string) bool {
+	for _, s := range ss {
+		if s == want {
+			return true
+		}
+	}
+	return false
 }

@@ -62,6 +62,35 @@ func DefaultProfile() *Profile {
 				},
 				Config: map[string]any{"unit": "s"},
 			},
+			// Notification-count badge (notifications plugin, PROJ-176). Degrades to
+			// "--" when the OS exposes no count. Sits in the free band below the gauges.
+			{
+				ID:        "w-notif",
+				Type:      "label",
+				Placement: Placement{Col: 1, Row: 7, ColSpan: 6, RowSpan: 2},
+				Appearance: map[string]any{
+					"stateBinding": "notification.count",
+					"style":        map[string]any{"label": "NOTIFS"},
+				},
+			},
+			// GPU gauges (telemetry plugin, PROJ-172). load is a percent gauge; temp is
+			// the source of the system.gpu.high threshold event. Both degrade to "--"
+			// when no supported GPU is present.
+			gauge("w-gpu-load", "gauge.circular", "system.gpu.load", "GPU", "%",
+				Placement{Col: 8, Row: 7, ColSpan: 6, RowSpan: 2}),
+			{
+				ID:        "w-gpu-temp",
+				Type:      "label",
+				Placement: Placement{Col: 15, Row: 7, ColSpan: 8, RowSpan: 2},
+				Appearance: map[string]any{
+					"stateBinding": "system.gpu.temp",
+					"style":        map[string]any{"label": "GPU TEMP"},
+					"valueRules": []any{
+						map[string]any{"op": ">=", "value": 85.0, "accent": "#ff3b3b"},
+					},
+				},
+				Config: map[string]any{"unit": "C"},
+			},
 			button("b-lock", "LOCK", "system.lock", false,
 				Placement{Col: 1, Row: 9, ColSpan: 5, RowSpan: 3}),
 			button("b-sleep", "SLEEP", "system.sleep", false,
@@ -98,6 +127,28 @@ func DefaultProfile() *Profile {
 				Interaction: map[string]any{"tap": map[string]any{
 					"target": "action", "ref": "launch.url", "param": "https://github.com"}},
 				Config: map[string]any{"confirm": false},
+			},
+			// GPU VRAM (telemetry plugin, PROJ-172) — used/total in bytes. Degrades to
+			// "--" with no supported GPU. Sits in the free band below the volume row.
+			{
+				ID:        "w-gpu-vram-used",
+				Type:      "label",
+				Placement: Placement{Col: 1, Row: 16, ColSpan: 11, RowSpan: 2},
+				Appearance: map[string]any{
+					"stateBinding": "system.gpu.vram.used",
+					"style":        map[string]any{"label": "VRAM USED"},
+				},
+				Config: map[string]any{"unit": "B"},
+			},
+			{
+				ID:        "w-gpu-vram-total",
+				Type:      "label",
+				Placement: Placement{Col: 13, Row: 16, ColSpan: 11, RowSpan: 2},
+				Appearance: map[string]any{
+					"stateBinding": "system.gpu.vram.total",
+					"style":        map[string]any{"label": "VRAM TOTAL"},
+				},
+				Config: map[string]any{"unit": "B"},
 			},
 		},
 	}

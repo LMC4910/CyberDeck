@@ -46,7 +46,10 @@ func (a tokenAuth) Authorize(_ context.Context, h security.ClientHello) error {
 
 type memTrust struct{ saved map[string]security.TrustRecord }
 
-func (t *memTrust) Status(context.Context, string) (bool, bool, error) { return false, false, nil }
+func (t *memTrust) Status(_ context.Context, uuid string) (bool, bool, string, error) {
+	rec, ok := t.saved[uuid]
+	return ok, false, rec.PermissionsJSON, nil
+}
 func (t *memTrust) Save(_ context.Context, rec security.TrustRecord) error {
 	t.saved[rec.UUID] = rec
 	return nil

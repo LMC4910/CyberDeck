@@ -9,4 +9,5 @@ use (
 	./plugins/power
 	./plugins/launchers
 	./plugins/volume
+	./plugins/notifications
 )

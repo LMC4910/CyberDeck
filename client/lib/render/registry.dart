@@ -15,7 +15,10 @@ import 'widgets/button.dart';
 import 'widgets/gauge_linear.dart';
 import 'widgets/image.dart';
 import 'widgets/label.dart';
+import 'widgets/media_card.dart';
+import 'widgets/page_nav.dart';
 import 'widgets/slider.dart';
+import 'widgets/sparkline.dart';
 import 'widgets/toggle.dart';
 
 /// Receives an interaction from a widget: the widget node and the gesture slot
@@ -83,6 +86,9 @@ class RendererRegistry {
     r.register('gauge.circular', buildCircularGauge);
     r.register('gauge.linear', buildLinearGauge);
     r.register('gauge.bar', buildLinearGauge); // alias (2C §7.1 "linear gauge/bar")
+    r.register('sparkline', buildSparkline); // PROJ-185
+    r.register('media.card', buildMediaCard); // PROJ-186
+    r.register('page.nav', buildPageNav); // PROJ-186
     return r;
   }
 }

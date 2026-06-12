@@ -19,8 +19,8 @@ import (
 func TestMain(m *testing.M) {
 	if os.Getenv("CYBERDECK_TELEMETRY_PLUGIN") != "" {
 		fast := 20 * time.Millisecond
-		run(os.Stdin, os.Stdout, providers.New(),
-			Cadences{CPU: fast, RAM: fast, Net: fast, Disk: fast, Uptime: fast},
+		run(os.Stdin, os.Stdout, providers.New(), providers.NewGPU(),
+			Cadences{CPU: fast, RAM: fast, Net: fast, Disk: fast, Uptime: fast, GPU: fast},
 			10*time.Millisecond)
 		return
 	}

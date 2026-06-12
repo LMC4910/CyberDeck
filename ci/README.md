@@ -13,17 +13,39 @@ branch green; the per-ticket local validation below mirrors it.
 | `engine-cross` | windows, macos | `go build ./...` · `go test ./...` (proves the engine compiles + passes on all three desktop OSes) |
 | `client` | ubuntu | `dart analyze` · `flutter test` · `flutter build bundle` |
 
+### Go: every workspace module, not just the engine
+
+The Go side is a `go.work` workspace — the `engine` module plus one module per
+first-party plugin (`telemetry`, `power`, `volume`, `launchers`, **`notifications`**),
+each its own module + process binary. So the `engine` and `engine-cross` jobs do
+**not** run from a single `engine/` dir; they loop over **every** workspace module and
+run the gates inside each one:
+
+```
+for mod in engine plugins/telemetry plugins/power plugins/volume plugins/launchers plugins/notifications; do
+  ( cd "$mod" && go vet ./... && golangci-lint run && go test -race ./... && go build ./... )
+done
+```
+
+This guarantees a plugin (including `plugins/notifications`) can never go un-vetted,
+un-linted, un-tested, or un-built. When a new plugin is added to `go.work`, add it to
+the `mod` list in both Go jobs and to the `cache-dependency-path` go.sum globs.
+
 Pinned versions: Go is read from `engine/go.mod` (`go-version-file`); golangci-lint
-`v2.12.2`; Flutter `3.44.1` (stable). Module/pub caches are enabled for speed.
+`v2.12.2`; Flutter `3.44.1` (stable). Module caches key off every module's `go.sum`;
+the Flutter pub cache is enabled for speed.
 
 ## Run the gates locally (mirror CI)
 
-Engine (from `engine/`):
+Go — run inside **each** workspace module (CI loops over all of them):
 ```bash
-go vet ./...
-golangci-lint run
-go test -race ./...      # -race needs cgo: a C compiler (gcc/clang) must be present
-go build ./...
+for mod in engine plugins/telemetry plugins/power plugins/volume plugins/launchers plugins/notifications; do
+  ( cd "$mod" \
+    && go vet ./... \
+    && golangci-lint run \
+    && go test -race ./... \   # -race needs cgo: a C compiler (gcc/clang) must be present
+    && go build ./... )
+done
 ```
 
 Client (from `client/`):
@@ -75,6 +97,41 @@ gh api repos/LMC4910/CyberDeck/rulesets/<RULESET_ID>
 
 ### Prove a red gate blocks (one-time, satisfies PROJ-102 AC)
 
-Open a PR that deliberately breaks a lint/test, confirm the CI fails and merge is
-blocked, then revert. (CI is currently red — fix it so PRs can merge; the admin
-bypass keeps the owner able to push in the meantime.)
+The point of the ruleset is that a red required check **blocks merge**. Prove it once
+without ever breaking `master` — do it all on a throwaway branch behind a PR:
+
+```bash
+git switch -c ci/redgate-proof
+
+# Break exactly one gate. Pick one — e.g. a guaranteed-failing engine test in a
+# plugin (covers the "plugins are gated too" claim):
+cat >> plugins/notifications/redgate_test.go <<'EOF'
+package main
+import "testing"
+func TestRedGateProof(t *testing.T) { t.Fatal("intentional red-gate proof") }
+EOF
+
+git add plugins/notifications/redgate_test.go
+git commit -m "test: deliberate red gate (PROJ-102 proof, will revert)"
+git push -u origin ci/redgate-proof
+gh pr create --fill
+```
+
+Then confirm, on the PR:
+
+1. The `engine (lint + test -race, linux)` check goes **red** (the plugin loop fails
+   on `notifications`).
+2. The **Merge** button is disabled — "Required statuses must pass before merging".
+3. Admin **bypass** still lets the owner merge if forced (that's the `bypass_actors`
+   entry) — but don't; the goal is to observe the block.
+
+Revert cleanly (nothing lands on `master`):
+
+```bash
+git switch master
+git branch -D ci/redgate-proof
+gh pr close ci/redgate-proof --delete-branch
+```
+
+> Do **not** push the break to `master`. The whole procedure lives on a side branch
+> behind a PR; closing the PR + deleting the branch removes every trace.

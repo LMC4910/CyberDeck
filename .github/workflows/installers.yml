@@ -1,0 +1,124 @@
+# CyberDeck — native installers (PROJ-190/191/192, EPIC-1).
+#
+# Builds the per-OS release bundle (engine + all five bundled plugins, cross-compiled
+# pure-Go → CGO_ENABLED=0) and packages it into the native installer for each target,
+# uploading the result as a build artifact. Separate from ci.yml (the four merge
+# gates) — this is the release-packaging pipeline and runs on demand / on tags.
+#
+# Each job mirrors the `task dist:<os>` layout and the per-OS installers/<os>/ build
+# scripts. Service registration is single-sourced in the engine (cyberdeck --service
+# install/uninstall), so the installers just invoke it.
+name: installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version stamped into the bundles + installers"
+        required: false
+        default: "0.0.0-dev"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  # On a tag push use the tag (minus the leading v); otherwise the dispatch input.
+  CYBERDECK_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+
+jobs:
+  # --- Windows: dist bundle + Inno Setup .exe ------------------------------------
+  windows:
+    name: windows installer (Inno Setup)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: engine/go.mod
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.1
+          channel: stable
+          cache: true
+      - name: install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: build release bundle (engine + plugins + Flutter client)
+        shell: bash
+        run: task dist:windows
+      - name: install Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: build installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & "$iscc" "/DMyAppVersion=$env:CYBERDECK_VERSION" installers\windows\cyberdeck.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberdeck-windows-setup
+          path: installers/windows/Output/*.exe
+          if-no-files-found: error
+
+  # --- macOS: dist bundle + .pkg (signing/notarization are documented-manual) ----
+  macos:
+    name: macos installer (.pkg)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: engine/go.mod
+      - name: install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: build release bundle (engine + plugins, darwin/arm64)
+        run: task dist:macos
+      - name: build .pkg (unsigned — set SIGN_IDENTITY + run notarize.sh for release)
+        run: installers/macos/build-pkg.sh "$CYBERDECK_VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberdeck-macos-pkg
+          path: installers/macos/Output/*.pkg
+          if-no-files-found: error
+
+  # --- Linux: dist bundle + .deb/.rpm + AppImage ---------------------------------
+  linux:
+    name: linux installers (.deb/.rpm/AppImage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: engine/go.mod
+      - name: install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: build release bundle (engine + plugins, linux/amd64)
+        run: task dist:linux
+      - name: install nfpm + appimagetool
+        run: |
+          set -euo pipefail
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          curl -fsSL -o /usr/local/bin/appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x /usr/local/bin/appimagetool
+      - name: build .deb + .rpm
+        run: installers/linux/build-packages.sh "$CYBERDECK_VERSION"
+      - name: build AppImage
+        # appimagetool needs FUSE; --appimage-extract-and-run avoids it on CI runners.
+        run: APPIMAGE_EXTRACT_AND_RUN=1 installers/linux/appimage/build-appimage.sh "$CYBERDECK_VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberdeck-linux-packages
+          path: installers/linux/Output/*
+          if-no-files-found: error

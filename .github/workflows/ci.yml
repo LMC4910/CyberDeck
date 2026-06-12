@@ -1,6 +1,11 @@
 # CyberDeck CI — the four gates (lint / typecheck / test / build) for engine + client.
 # Runs on every push and PR; configure these jobs as required status checks on the
 # default branch so a red gate blocks merge (see ci/README.md, PROJ-102).
+#
+# The Go side is a go.work workspace: the engine module plus one module per
+# first-party plugin (telemetry, power, volume, launchers, notifications). Each is
+# its own module + binary, so the gates iterate over every workspace module — a new
+# plugin is covered the moment it's added to go.work (kept in sync via the matrix).
 name: CI
 
 on:
@@ -11,32 +16,42 @@ permissions:
   contents: read
 
 jobs:
-  # Lint + race-tested build of the Go engine on Linux (gcc present → -race works).
+  # Lint + race-tested build of the Go workspace on Linux (gcc present → -race works).
+  # Iterates over EVERY workspace module (engine + all plugins) so the engine and
+  # each plugin (incl. plugins/notifications) get vet + golangci-lint + test -race +
+  # build. golangci-lint is installed once; the loop runs it per-module.
   engine:
     name: engine (lint + test -race, linux)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: engine
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: engine/go.mod
-          cache-dependency-path: engine/go.sum
-      - name: go vet
-        run: go vet ./...
-      - name: golangci-lint
+          cache-dependency-path: |
+            engine/go.sum
+            plugins/telemetry/go.sum
+            plugins/power/go.sum
+            plugins/volume/go.sum
+            plugins/launchers/go.sum
+            plugins/notifications/go.sum
+      - name: install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+      - name: vet · lint · test -race · build (every workspace module)
         run: |
-          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
-          golangci-lint run
-      - name: go test -race
-        run: go test -race ./...
-      - name: go build
-        run: go build ./...
+          set -euo pipefail
+          for mod in engine plugins/telemetry plugins/power plugins/volume plugins/launchers plugins/notifications; do
+            echo "::group::$mod"
+            ( cd "$mod" \
+              && go vet ./... \
+              && golangci-lint run \
+              && go test -race ./... \
+              && go build ./... )
+            echo "::endgroup::"
+          done
 
-  # Cross-OS compile + test of the engine (no -race, to avoid per-runner C toolchain
-  # variance) so the engine is proven green on all three desktop OSes.
+  # Cross-OS compile + test of the Go workspace (no -race, to avoid per-runner C
+  # toolchain variance) so engine + every plugin are proven green on Windows + macOS.
   engine-cross:
     name: engine (build + test)
     strategy:
@@ -44,17 +59,27 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: engine
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: engine/go.mod
-          cache-dependency-path: engine/go.sum
-      - run: go build ./...
-      - run: go test ./...
+          cache-dependency-path: |
+            engine/go.sum
+            plugins/telemetry/go.sum
+            plugins/power/go.sum
+            plugins/volume/go.sum
+            plugins/launchers/go.sum
+            plugins/notifications/go.sum
+      - name: build + test (every workspace module)
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mod in engine plugins/telemetry plugins/power plugins/volume plugins/launchers plugins/notifications; do
+            echo "::group::$mod"
+            ( cd "$mod" && go build ./... && go test ./... )
+            echo "::endgroup::"
+          done
 
   # Flutter client: analyze + test + a toolchain-free build (asset bundle). Per-OS
   # desktop/mobile installers are built by the EPIC-1 matrix tickets (PROJ-190/191/192).

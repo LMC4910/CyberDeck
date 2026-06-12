@@ -1,0 +1,17 @@
+#!/bin/sh
+# CyberDeck AppImage entrypoint. The AppImage is a portable, no-install bundle, so
+# by default it launches the engine in console/foreground mode (prints the pairing
+# QR). To register the systemd background service from the AppImage instead, run it
+# with the --service argument(s), e.g.:
+#   ./CyberDeck-x86_64.AppImage --service install   (needs sudo to write the unit)
+#
+# HERE resolves to the mounted AppDir root at runtime.
+HERE="$(dirname "$(readlink -f "${0}")")"
+ENGINE="${HERE}/usr/bin/cyberdeck"
+
+# Point the engine at the bundled plugins (defaultPluginsDir looks next to the exe,
+# but the AppImage mount path is read-only/ephemeral, so pass it explicitly).
+if [ "$#" -eq 0 ]; then
+  exec "${ENGINE}" --console --plugins "${HERE}/usr/bin/plugins"
+fi
+exec "${ENGINE}" --plugins "${HERE}/usr/bin/plugins" "$@"
