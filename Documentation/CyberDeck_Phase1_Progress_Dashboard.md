@@ -1,8 +1,8 @@
 # CyberDeck — Phase 1 · Progress Dashboard
 
-**Execution-system Document 7 of N** · Version 0.1 (Baseline — all tickets at 0%) · June 2026 · `com.shishir.cyberdeck`
+**Execution-system Document 7 of N** · Version 1.0 (current — Phase 1 ~71%, usable end-to-end) · updated 2026-06-12 · `com.shishir.cyberdeck`
 
-> The single live tracking surface for Phase 1 execution. The agent (Claude) updates this document as it works — moving tickets through statuses, recomputing rollups, and advancing the milestone tracker. This baseline shows every ticket at `⬜ Backlog / 0%`. **80 tickets · 199 points · default assignee Claude.**
+> The single live tracking surface for Phase 1 execution. This document is updated as work proceeds — moving tickets through statuses, recomputing rollups, and advancing the milestone tracker. **80 tickets · 199 points.** The app is now usable end-to-end (Demo Mode + a live, encrypted engine link + the Designer + four plugins + link resilience), proven by `task interop`.
 
 ---
 
@@ -22,25 +22,25 @@
 
 ---
 
-## 1 · Snapshot (baseline)
+## 1 · Snapshot (current — 2026-06-12)
 
 | Metric | Value |
 |--------|-------|
 | **Total tickets** | 80 |
 | **Total story points** | 199 |
-| **Done** | 50 tickets / 125 pts (…202, 203, 204) — **EPIC-2, EPIC-6 & EPIC-7 complete; M2 + M3 reached** |
-| **In flight** (Ready→Testing) | 1 (PROJ-102 — workflows authored + locally green; live-CI run + branch protection pending repo-owner push) |
-| **Blocked** | 11 |
-| **Ready now** | 20 (106, 107, 108, 109, 124, 126, 144, 145, 148, 149, 172, 174, 175, 176, 185, 186, 213, 215, 216, 217) |
-| **Completion** | **63%** (125 / 199 pts) |
-| **Critical-path progress** | 26 / 31 pts (121 ✓, 120 ✓, 122 ✓, 123 ✓, 180 ✓, 181 ✓, 210 ✓, 211 ✓, 212 ✓) |
-| **Current wave** | 1 of 10 |
+| **Done** | **57 tickets / 142 pts** — **EPIC-2, EPIC-3, EPIC-6 & EPIC-7 complete; M2/M3/M6 reached; live wire proven by `task interop`** |
+| **In flight** | 2 (PROJ-102 — workflows live + branch ruleset applied, one red-gate proof PR outstanding; PROJ-188 — degradation UI: status badge shipped, dimming pending) |
+| **Blocked** | 4 (190, 191, 192 — need OS build artifacts 106/107/108; 303 — needs the EPIC-10 suite) |
+| **Ready now** | 17 (106, 107, 108, 109, 144, 148, 172, 176, 185, 186, 189, 215, 216, 217, 300, 301, 302) |
+| **Completion** | **71%** (142 / 199 pts) |
+| **Critical-path progress** | 26 / 31 pts (spine complete except 302/303 acceptance) |
+| **Current wave** | ~7 of 10 |
 
 > **[†] Numbering reconciliation (2026-06-07):** the original dashboard labeled PROJ-121="Identity" and PROJ-120="Trust store", but the authoritative Batch-1 *tickets* define **PROJ-121 = per-OS SecretStore** (root) and **PROJ-120 = engine identity** (→121). The dependency shape is identical; titles corrected here to match the tickets (the ticket wins for scope per Agent Instructions §1).
 
 **By priority:** P0 = 47 tickets / 124 pts · P1 = 33 tickets / 75 pts. (P0 must all be Done for phase exit; P2 — none in Phase 1; deferred features live in later phases.)
 
-**Progress bar:** `░░░░░░░░░░░░░░░░░░░░` 0%
+**Progress bar:** `██████████████░░░░░░` 71%
 
 ---
 
@@ -50,41 +50,47 @@
 |------|---------|--------|------------|------------|------------|
 | EPIC-1 Lifecycle & Packaging | 12 | 32 | 4 | 9 | 28% |
 | EPIC-2 Persistence | 6 | 12 | 6 | 12 | 100% |
-| EPIC-3 Security & Identity | 8 | 19 | 6 | 16 | 84% |
-| EPIC-4 Transport & Connectivity | 11 | 27 | 6 | 16 | 59% |
-| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 7 | 18 | 67% |
+| EPIC-3 Security & Identity | 8 | 19 | 8 | 19 | 100% |
+| EPIC-4 Transport & Connectivity | 11 | 27 | 9 | 23 | 85% |
+| EPIC-5 Plugin Host & 1P Capabilities | 11 | 27 | 9 | 22 | 81% |
 | EPIC-6 State, Registries & Event Bus | 5 | 13 | 5 | 13 | 100% |
 | EPIC-7 Flow Engine Core | 5 | 13 | 5 | 13 | 100% |
 | EPIC-8 Client Runtime & Widgets | 10 | 24 | 6 | 16 | 67% |
-| EPIC-9 Designer | 8 | 21 | 4 | 12 | 57% |
+| EPIC-9 Designer | 8 | 21 | 5 | 15 | 71% |
 | EPIC-10 Hardening & Acceptance | 4 | 11 | 0 | 0 | 0% |
-| **TOTAL** | **80** | **199** | **0** | **0** | **0%** |
+| **TOTAL** | **80** | **199** | **57** | **142** | **71%** |
 
 ---
 
 ## 3 · The "what can I pull right now" board
 
-At baseline the Ready column holds the six root tickets. As tickets complete, this board is the agent's pull-queue. **Order within Ready: P0 before P1; then higher fan-out first (the parenthetical "unblocks N").**
+The spine is complete; what remains is breadth (packaging, more plugins/widgets, Designer
+extras) plus the hardening/acceptance suite. **Order within Ready: P0 before P1.**
 
 ### 🟦 READY (pull these now)
-| ID | Title | Pri | Pts | Unblocks |
-|----|-------|-----|-----|----------|
-| PROJ-160 | Typed state model + state store core | P0 | 3 | **9** ← pull early |
-| PROJ-121 | Identity (Ed25519 keypair + UUID) | P0 | 3 | 44 transitive |
-| PROJ-110 | Persistence baseline (SQLite + schema v1) | P0 | 2 | 55 transitive |
-| PROJ-140 | Endpoint abstraction + ConnectionManager | P0 | 2 | 41 transitive |
-| PROJ-101 | Monorepo bootstrap (Go + Flutter) | P0 | 2 | gates lifecycle |
-| PROJ-102 | CI baseline (lint/test/build gates) | P0 | 2 | gates all CI |
+| ID | Title | Pri | Pts |
+|----|-------|-----|-----|
+| PROJ-300 | Security test suite (sniff/MITM/rogue/leak) | P0 | 3 |
+| PROJ-301 | Performance soak (8h, ≥8 sessions) | P0 | 3 |
+| PROJ-302 | E2E journeys (J0/J1/J2/J6) | P0 | 3 |
+| PROJ-106/107/108 | Build artifacts — Windows / macOS / Linux | P1 | 3 each |
+| PROJ-109 | Tray/menubar control app | P1 | 3 |
+| PROJ-148 | Discovery: manual + active scan | P1 | 2 |
+| PROJ-144 | Loopback privileged control channel | P1 | 2 |
+| PROJ-172 | GPU telemetry provider chain | P1 | 3 |
+| PROJ-176 | Notification-count plugin | P1 | 2 |
+| PROJ-185/186 | Sparkline / media-card widgets | P1 | 2 each |
+| PROJ-189 | Theme tokens + accessibility | P1 | 2 |
+| PROJ-215/216/217 | Designer: undo-redo / profiles / grid editor | P1 | 2 each |
 
-### ⛔ BLOCKED (74) — released wave by wave
-The next tickets to unlock once the Ready set clears:
-- **After PROJ-160:** 161*, 162, 163*, 164, 170, 185, 201, 130*, 150* (*also need other deps)
-- **After PROJ-110:** 111 → then 112/113/114
-- **After PROJ-121:** 120 → 122 → 123 (the security spine)
-- **After PROJ-140:** 141 → 142 (needs 122 too)
-- **After PROJ-101:** 103 → 104
+### 🟨 IN PROGRESS (2)
+- **PROJ-102** — CI workflows live + the default-branch ruleset applied; outstanding: one
+  red-gate proof PR (and getting the currently-red CI green).
+- **PROJ-188** — degradation UI: the connection status badge ships; widget dimming pending.
 
-(Full per-ticket dependency lists are in the register below and in the Dependency Graph doc.)
+### ⛔ BLOCKED (4)
+- **190 / 191 / 192** (installers) — need the OS build artifacts **106 / 107 / 108**.
+- **303** (Phase-1 acceptance) — needs the EPIC-10 suite **300 / 301 / 302**.
 
 ---
 
@@ -95,7 +101,7 @@ The next tickets to unlock once the Ready set clears:
 | ID | Title | Epic | Pri | Pts | Deps | Status | Owner | Ready? | % |
 |----|-------|------|-----|-----|------|--------|-------|--------|---|
 | PROJ-101 | Monorepo bootstrap (Go + Flutter) | EPIC-1 | P0 | 2 | — | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-102 | CI baseline (lint/test/build gates) | EPIC-1 | P0 | 2 | — | 🟨 In Progress | Claude | ✅ Ready | 70% |
+| PROJ-102 | CI baseline (lint/test/build gates) | EPIC-1 | P0 | 2 | — | 🟨 In Progress | Claude | ✅ Ready | 90% |
 | PROJ-103 | Config loader + schema | EPIC-1 | P0 | 2 | 101 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-104 | Engine service skeleton (daemon lifecycle) | EPIC-1 | P0 | 2 | 101,103 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-105 | Service orchestration (wire subsystems) | EPIC-1 | P0 | 3 | 104,110,150 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -113,9 +119,9 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-121 | Per-OS SecretStore abstraction + impls [†] | EPIC-3 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-122 | Crypto suite (AEAD + KDF) | EPIC-3 | P0 | 3 | 120 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-123 | Pairing handshake (key exchange) | EPIC-3 | P0 | 3 | 122,113 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-124 | Pairing token issuance + QR payload | EPIC-3 | P1 | 2 | 123,150 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-124 | Pairing token issuance + QR payload | EPIC-3 | P1 | 2 | 123,150 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-125 | Permission model + authorize() | EPIC-3 | P0 | 3 | 113 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-126 | Trust revocation + session teardown | EPIC-3 | P1 | 1 | 123,125 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-126 | Trust revocation + session teardown | EPIC-3 | P1 | 1 | 123,125 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-127 | Audit log writer + redaction | EPIC-3 | P1 | 2 | 114,125 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-130 | Plugin host: launch/supervise/IPC | EPIC-5 | P0 | 3 | 160,103 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-131 | Plugin host: restart/fault policy | EPIC-5 | P0 | 2 | 130 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -126,11 +132,11 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-142 | Encrypted session (reader/writer/demux) | EPIC-4 | P0 | 3 | 141,122 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-143 | Three channels + backpressure | EPIC-4 | P0 | 3 | 142 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-144 | Loopback privileged control channel | EPIC-4 | P1 | 2 | 142 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-145 | Heartbeat / keepalive (sleep-tolerant) | EPIC-4 | P1 | 2 | 142 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-146 | Reconnect (backoff→mDNS→scan) | EPIC-4 | P1 | 3 | 145,147 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-145 | Heartbeat / keepalive (sleep-tolerant) | EPIC-4 | P1 | 2 | 142 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-146 | Reconnect (backoff→mDNS→scan) | EPIC-4 | P1 | 3 | 145,147 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-147 | Discovery: mDNS advertise/browse | EPIC-4 | P0 | 3 | 141,120 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-148 | Discovery: manual + active scan | EPIC-4 | P1 | 2 | 147 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-149 | Versioned resync on gap | EPIC-4 | P1 | 2 | 143 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-149 | Versioned resync on gap | EPIC-4 | P1 | 2 | 143 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-150 | Multi-session fan-out + subscription filter | EPIC-4 | P0 | 3 | 143,160 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-160 | Typed state model + state store core | EPIC-6 | P0 | 3 | — | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-161 | Registries (action/widget/flow-node) | EPIC-6 | P0 | 3 | 160,112 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -141,8 +147,8 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-171 | 1P plugin: telemetry (CPU/RAM/net/disk) | EPIC-5 | P0 | 3 | 170,132 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-172 | 1P plugin: GPU telemetry provider chain | EPIC-5 | P1 | 3 | 171 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-173 | 1P plugin: power actions | EPIC-5 | P0 | 3 | 170,132 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-174 | 1P plugin: volume (system master) | EPIC-5 | P1 | 2 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
-| PROJ-175 | 1P plugin: launchers + system tools | EPIC-5 | P1 | 2 | 132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-174 | 1P plugin: volume (system master) | EPIC-5 | P1 | 2 | 170,132 | ✅ Done | Claude | ✅ Ready | 100% |
+| PROJ-175 | 1P plugin: launchers + system tools | EPIC-5 | P1 | 2 | 132 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-176 | 1P plugin: notification count | EPIC-5 | P1 | 2 | 170,132 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-180 | Client connection mgr + pairing UI (QR) | EPIC-8 | P0 | 3 | 147,123 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-181 | Renderer registry + layout interpreter | EPIC-8 | P0 | 3 | 180,161 | ✅ Done | Claude | ✅ Ready | 100% |
@@ -152,7 +158,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-185 | Widget: sparkline (series state) | EPIC-8 | P1 | 2 | 181,160 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-186 | Widget: media card (basic) + page-nav | EPIC-8 | P1 | 2 | 181 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-187 | Gesture capture (all slots) + 2-tap confirm | EPIC-8 | P0 | 3 | 181 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-188 | Degradation UI (dimmed + badge) | EPIC-8 | P0 | 2 | 180,181 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
+| PROJ-188 | Degradation UI (dimmed + badge) | EPIC-8 | P0 | 2 | 180,181 | 🟨 In Progress | Claude | ✅ Ready | 50% |
 | PROJ-189 | Theme tokens + accessibility | EPIC-8 | P1 | 2 | 181 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-190 | Installer — Windows | EPIC-1 | P1 | 3 | 106,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
 | PROJ-191 | Installer — macOS | EPIC-1 | P1 | 3 | 107,180 | ⬜ Backlog | Claude | ⛔ Blocked | 0% |
@@ -165,7 +171,7 @@ The next tickets to unlock once the Ready set clears:
 | PROJ-210 | Designer canvas (renders as target device) | EPIC-9 | P0 | 3 | 181,163 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-211 | Op model + op-log apply/version | EPIC-9 | P0 | 3 | 210,112 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-212 | Op-log broadcast + live device reflection | EPIC-9 | P0 | 3 | 211,150 | ✅ Done | Claude | ✅ Ready | 100% |
-| PROJ-213 | Drag-drop placement + move/resize ghosts | EPIC-9 | P1 | 3 | 211,143 | ⬜ Backlog | Claude | ✅ Ready | 0% |
+| PROJ-213 | Drag-drop placement + move/resize ghosts | EPIC-9 | P1 | 3 | 211,143 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-214 | Schema-driven inspector | EPIC-9 | P0 | 3 | 211,161 | ✅ Done | Claude | ✅ Ready | 100% |
 | PROJ-215 | Undo/redo (op inverses) | EPIC-9 | P1 | 2 | 211 | ⬜ Backlog | Claude | ✅ Ready | 0% |
 | PROJ-216 | Profile mgmt + explicit device targeting | EPIC-9 | P1 | 2 | 211,163 | ⬜ Backlog | Claude | ✅ Ready | 0% |
@@ -183,13 +189,13 @@ Advance a milestone to ✅ only when **every** gating ticket is Done.
 
 | Gate | Milestone | Gating tickets (all must be Done) | Status |
 |------|-----------|-----------------------------------|--------|
-| **M1** | Bootstrap green | 101, 102, 103 | ⬜ Not started |
+| **M1** | Bootstrap green | 101, 102, 103 | 🟨 In progress (2/3 — 102: CI live + branch ruleset applied, red-gate proof PR outstanding) |
 | **M2** | Persistence + security base | 110, 111, 112, 113, 114, 115, 120, 121, 122, 125, 127 | ✅ Done (2026-06-07) |
-| **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | ✅ Done (9/9 — gating tickets complete; live E2E awaits engine accept/handshake-over-wire glue) |
-| **M4** | Actions + permissions on device | 125, 133, 173, 174, 175, 187, 188 | 🟨 In progress (4/7 — 174, 175, 188 left) |
-| **M5** | Resilience proven | 145, 146, 148, 149, 188 | ⬜ Not started |
-| **M6** | Author on desktop, watch live (headline) | 210, 211, 212, 181, 150, 214 | ✅ Done (6/6 gating; live over-the-wire E2E also needs the engine accept/handshake-over-wire glue) |
-| **M7** | All P1-ACs green — PHASE EXIT | 300, 301, 302, 303 (+ all P0) | ⬜ Not started |
+| **M3** | Live telemetry on a phone | 160, 150, 170, 171, 180, 181, 184, 130, 132 | ✅ Done — live E2E proven over the encrypted wire by `task interop` (2026-06-11) |
+| **M4** | Actions + permissions on device | 125, 133, 173, 174, 175, 187, 188 | 🟨 In progress (6/7 — only 188 degradation UI dimming left; status badge shipped) |
+| **M5** | Resilience proven | 145, 146, 148, 149, 188 | 🟨 In progress (3/5 — 145/146/149 done; 148 manual/active scan + 188 left) |
+| **M6** | Author on desktop, watch live (headline) | 210, 211, 212, 181, 150, 214 | ✅ Done — live op reflection proven over the wire (2026-06-11) |
+| **M7** | All P1-ACs green — PHASE EXIT | 300, 301, 302, 303 (+ all P0) | ⬜ Not started (EPIC-10 suite) |
 
 ---
 
@@ -239,6 +245,9 @@ Append one row per work session. `Pts closed` = points moved to Done this sessio
 | 22 | 2026-06-08 | PROJ-147 | 3 | 81 | 41% | **mDNS / DNS-SD discovery (engine + client).** Engine: `Identity.Fingerprint()` (lowercase hex SHA-256 of the Ed25519 pubkey — the anti-MITM id reused by pairing/QR). `core/transport/discovery_mdns.go` advertises `_cyberdeck._tcp.local` with TXT `{name,uuid,ver,fp}` and browses, via maintained `github.com/libp2p/zeroconf/v2`; pure `encodeTXT`/`parseTXT` codec (uuid+fp required, unknown keys tolerated); `DiscoveredEngine.Endpoint()` maps onto the `SourceMDNS` candidate (kind stays below the manager); `MDNSService` Start/Stop adapter (structurally satisfies the lifecycle Service seam — no import coupling) ready to wire into the boot mDNS stage once identity is constructed in main. Client: `net/discovery.dart` — `DiscoveredEngine` model + pure `fromTxt`/`parseTxtEntries` + `MdnsEngineDiscovery` (official `multicast_dns`, PTR→SRV→TXT→A). Tests: engine (`-race`) codec round-trip, required-field rejection, unknown-key tolerance, endpoint mapping, in-memory advertise→browse through the seams, fingerprint determinism, + best-effort real-multicast round-trip (skips cleanly when multicast blocked); client (9 tests) fromTxt/equality/TXT parsing. `dart analyze` + `flutter test` green. Discovery is the happy path, not a hard pairing dep (148 manual is the fallback). Newly Ready: 148. EPIC-4 59%. |
 | 21 | 2026-06-08 | PROJ-105 | 3 | 78 | 39% | **Real boot wiring + graceful shutdown + single-instance guard.** `lifecycle.Subsystems` (injected interfaces: Migrator/Closer/Service + InitCore/FlushCore funcs; any nil = logged+skipped so not-yet-built stages — LAN listener/mDNS, 147 — hold their documented place) drives `BuildStages` (config→SQLite→core→plugin host→transport→mDNS→READY, 2B §7.1) and `BuildShutdownSteps` (stop sessions→flush→stop plugins→close SQLite, 2B §7.2). Single-instance guard: portable `AcquireInstance(name, onFocus)` over an OS lock listener with per-OS endpoints — `singleinstance_{linux(abstract socket),darwin(TMPDIR socket+unlink),windows(loopback TCP)}.go`; second launch dials + signals focus then returns `ErrAlreadyRunning`. Added `Host.Shutdown` (close all plugins). Entrypoint now opens+migrates real SQLite, builds core (state store + plugin host), claims the instance lock, boots on its own context (signal drives only the post-boot shutdown wait), `--data` dir flag. Tests (`-race`): boot/shutdown order with fakes, stage-error abort, nil-skip, single-instance refusal+focus + re-acquire, **integration boot with real SQLite→READY→clean close**; cross-compiles linux/darwin. Newly Ready: 106/107/108. EPIC-1 28%. |
 | 20 | 2026-06-08 | PROJ-171 | 3 | 75 | 38% | **First real out-of-process 1P plugin (M3 engine-side).** Factored the IPC wire protocol into a stdlib-only `engine/pluginhost/ipcproto` pkg (Message/payloads/MsgType + Encode/Decode); pluginhost re-exports via type aliases so host + all tests stay green. Added root `go.work` (engine + plugins/telemetry) and the **`plugins/telemetry` module** (gopsutil v4, `replace` → ../../engine): `providers.Gopsutil` implements `pal.Telemetry` ((value,ok) per metric — cpu/ram/net-delta/disk/uptime); `Publisher` emits typed `system.*` stateUpdates on per-metric cadences (cpu/ram/net 1s, disk 10s, uptime 60s) + under→over threshold events (cpu>85, ram>90); `main.go` stdio IPC loop (init→register→publish→heartbeat→exit on stdin close); manifest.json (telemetry.read). Tests (`-race`, both modules): deterministic Publisher (clock-driven cadence + threshold-transition + unavailable-skip), gopsutil smoke (contract), **end-to-end via `pluginhost.Host` launching the plugin as a real subprocess → `system.uptime` reaches the state setter** (P1-AC-04 pipeline + IPC declared-state gate). Newly Ready: 172 (GPU chain). EPIC-5 56%. |
+| 39 | 2026-06-11 | PROJ-124 | 2 | 127 | 64% | **"Living Deck" — the live wire goes end-to-end.** Built the engine **front door**: handshake-over-wire codec matching the client `pairing.dart`, a TCP listener (accept→handshake→session), the session **Server** (serve layout snapshot + filtered state, dispatch interactions via authorize()+audit), a 500ms state pump, the **default deck** (`layout.DefaultProfile`), and **PROJ-124** (single-use token issuer + QR payload). Assembled the client app (identity→pair via QR→deck→interact). Added a **real Dart↔Go interop test** (spawns the engine, real `ConnectionManager` over a socket → snapshot + telemetry + interaction) — **it passes**, so M3 + M6 live-E2E caveats clear. `docs/RUNNING.md` quickstart. EPIC-3 → 100%. |
+| 40 | 2026-06-11 | PROJ-213 | 3 | 130 | 65% | **Demo-Mode pivot + Designer edit mode.** Reframed the client around a **DeckSource seam** (`MockDeckSource` Demo Mode with 3 seed decks + live mock telemetry / `EngineDeckSource` live), so the app is **standalone-testable** (no engine) on Windows + Android. **PROJ-213**: the desktop **deck editor** — select / **drag-move** (DesignerController) / schema inspector / rename / add / remove, saved to the deck. App shell: landing → deck list → deck/editor. Tests: Demo journey (widget) + the real interop test; `flutter test` green, windows + apk build. EPIC-9 → 71%. |
+| 41 | 2026-06-11 | PROJ-126, 145, 146, 149, 174, 175 | 12 | 142 | 71% | **Live-engine robustness + two more plugins.** **145** heartbeat (engine ping→pong + lastSeen reaper) + client watchdog; **146** bounded auto-reconnect via a **tokenless known-device handshake** (sig still proven) — survives wifi/sleep blips with no re-scan; **149** versioned **resync** on gap; **126** trust **revocation** kill-switch + immediate session teardown + engine console `list`/`revoke <uuid>`. **174** volume plugin (`system.volume`/`muted` + `volume.set`/`mute`) and **175** launchers plugin (`launch.app`/`launch.url`), both wired into the default deck. Extended `task interop` proves **pair→telemetry→drop→tokenless-reconnect→revoke→refused** against the real engine. EPIC-3 100%, EPIC-4 85%, EPIC-5 81%. **71% of Phase 1.** |
 
 **Burndown target line** (for reference; assumes ~10 pts/session sustained):
 
@@ -275,4 +284,4 @@ Pts remaining
 
 ---
 
-*End of Progress Dashboard (baseline). Final document next: Claude Agent Instructions — the operating rules that drive this dashboard.*
+*Progress Dashboard — current as of 2026-06-12 (Phase 1 ~71%, usable end-to-end). The operating rules that drive this dashboard are in the Claude Agent Instructions doc.*

@@ -71,12 +71,14 @@ tasks:
   # --- run / dev targets (the testable slice) ---
 
   dist:engine:
-    desc: "Build the host engine + bundled plugins into run/ (engine exe + plugins/*)"
+    desc: "Build the host engine + all four bundled plugins into run/ (engine exe + plugins/*)"
     cmds:
-      - mkdir -p run/plugins/telemetry run/plugins/power
+      - mkdir -p run/plugins/telemetry run/plugins/power run/plugins/volume run/plugins/launchers
       - cd engine && go build -o ../run/cyberdeck.exe ./cmd/cyberdeck
       - cd plugins/telemetry && go build -o ../../run/plugins/telemetry/telemetry.exe .
       - cd plugins/power && go build -o ../../run/plugins/power/power.exe .
+      - cd plugins/volume && go build -o ../../run/plugins/volume/volume.exe .
+      - cd plugins/launchers && go build -o ../../run/plugins/launchers/launchers.exe .
 
   run:engine:
     desc: "Build + run the host engine in console mode (prints a pairing QR; power dry-run)"
