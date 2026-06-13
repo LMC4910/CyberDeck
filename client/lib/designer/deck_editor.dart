@@ -14,6 +14,7 @@ import 'device_class.dart';
 import 'grid_editor.dart';
 import 'inspector/inspector.dart';
 import 'inspector/param_schema.dart';
+import 'inspector/widget_schemas.dart';
 import 'op_model.dart';
 import 'undo.dart';
 
@@ -409,12 +410,37 @@ class _DeckEditorState extends State<DeckEditor> {
     );
   }
 
-  // Synthesize an inspector schema from the widget's current config (Demo Mode has
-  // no registry; types are inferred from the values).
-  List<ParamSchema> _schemaFor(WidgetNode n) => [
+  // Synthesize an inspector schema for the selected widget. First-party rich
+  // widgets (Wave 1 / C2) carry a static, labelled schema so they are editable the
+  // moment they are dropped; merged with any extra config keys the node already
+  // has. Other types (Demo Mode has no registry) infer types from their values.
+  List<ParamSchema> _schemaFor(WidgetNode n) {
+    final builtin = builtinWidgetSchema(n.type);
+    if (builtin.isNotEmpty) {
+      final named = {for (final p in builtin) p.name};
+      return [
+        for (final p in builtin)
+          ParamSchema(
+            name: p.name,
+            type: p.type,
+            label: p.label,
+            min: p.min,
+            max: p.max,
+            choices: p.choices,
+            defaultValue: n.config[p.name] ?? p.defaultValue,
+          ),
+        // Surface any extra config keys the widget already carries.
         for (final e in n.config.entries)
-          ParamSchema(name: e.key, type: _inferType(e.value), defaultValue: e.value),
+          if (!named.contains(e.key))
+            ParamSchema(
+                name: e.key, type: _inferType(e.value), defaultValue: e.value),
       ];
+    }
+    return [
+      for (final e in n.config.entries)
+        ParamSchema(name: e.key, type: _inferType(e.value), defaultValue: e.value),
+    ];
+  }
 
   ParamType _inferType(Object? v) => switch (v) {
         bool _ => ParamType.boolean,

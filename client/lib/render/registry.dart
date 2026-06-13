@@ -15,10 +15,15 @@ import 'widgets/button.dart';
 import 'widgets/gauge_linear.dart';
 import 'widgets/image.dart';
 import 'widgets/label.dart';
+import 'widgets/launcher.dart';
 import 'widgets/media_card.dart';
+import 'widgets/media_player.dart';
+import 'widgets/metric_tile.dart';
 import 'widgets/page_nav.dart';
+import 'widgets/section_header.dart';
 import 'widgets/slider.dart';
 import 'widgets/sparkline.dart';
+import 'widgets/status_list.dart';
 import 'widgets/toggle.dart';
 
 /// Receives an interaction from a widget: the widget node and the gesture slot
@@ -89,6 +94,12 @@ class RendererRegistry {
     r.register('sparkline', buildSparkline); // PROJ-185
     r.register('media.card', buildMediaCard); // PROJ-186
     r.register('page.nav', buildPageNav); // PROJ-186
+    // Wave 1 rich widgets (C2): card-chrome tiles + a full media player.
+    r.register('launcher', buildLauncher);
+    r.register('media.player', buildMediaPlayer);
+    r.register('status.list', buildStatusList);
+    r.register('metric.tile', buildMetricTile);
+    r.register('section.header', buildSectionHeader);
     return r;
   }
 }
