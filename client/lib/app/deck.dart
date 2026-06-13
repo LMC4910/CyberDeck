@@ -6,13 +6,15 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data/deck_source.dart';
 import '../designer/deck_editor.dart';
 import '../gestures/slots.dart';
 import '../render/render.dart';
+import '../theme/surfaces.dart';
+import '../theme/tokens.dart';
+import 'connection_badge.dart';
 
 /// How long a destructive action stays "armed" awaiting the confirming second tap.
 const Duration _confirmWindow = Duration(seconds: 3);
@@ -23,17 +25,24 @@ class DeckScreen extends StatefulWidget {
     required this.source,
     required this.deckId,
     this.onBack,
+    this.embedded = false,
   });
 
   final DeckSource source;
   final String deckId;
   final VoidCallback? onBack;
 
+  /// When true the deck renders only its canvas (no [Scaffold]/[AppBar]) so it can
+  /// be hosted inside the [AppShell]'s content area; the shell supplies the chrome
+  /// (nav rail, top bar, Edit button). Interaction routing + 2-tap confirm are
+  /// preserved in both modes. Defaults to false (standalone, used by screen tests).
+  final bool embedded;
+
   @override
-  State<DeckScreen> createState() => _DeckScreenState();
+  State<DeckScreen> createState() => DeckScreenState();
 }
 
-class _DeckScreenState extends State<DeckScreen> {
+class DeckScreenState extends State<DeckScreen> {
   late LayoutInterpreter _interp;
   StreamSubscription<StateUpdate>? _sub;
   String? _armedId;
@@ -96,6 +105,11 @@ class _DeckScreenState extends State<DeckScreen> {
     return false;
   }
 
+  /// Opens the Designer over this deck, then reloads to reflect saved edits.
+  /// Exposed so the [AppShell]'s top-bar Edit button can drive it when the deck
+  /// is hosted [DeckScreen.embedded].
+  Future<void> openEditor() => _openEditor();
+
   Future<void> _openEditor() async {
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => DeckEditor(source: widget.source, deckId: widget.deckId),
@@ -123,10 +137,21 @@ class _DeckScreenState extends State<DeckScreen> {
     return 'Deck';
   }
 
+  /// Public title accessor so a host shell can render it in its own top bar.
+  String get title => _title;
+
   @override
   Widget build(BuildContext context) {
+    // Embedded: just the deck canvas — the AppShell paints the chrome around it.
+    if (widget.embedded) {
+      return Padding(
+        padding: const EdgeInsets.all(DeckSpacing.sm),
+        child: _interp.build(),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E14),
+      backgroundColor: DeckColors.bg,
       appBar: AppBar(
         leading: widget.onBack != null
             ? IconButton(
@@ -136,7 +161,7 @@ class _DeckScreenState extends State<DeckScreen> {
             : null,
         title: Text(_title),
         actions: [
-          _StatusBadge(widget.source.status),
+          ConnectionBadge(widget.source.status),
           IconButton(
             key: const Key('deck-edit'),
             icon: const Icon(Icons.edit),
@@ -146,42 +171,14 @@ class _DeckScreenState extends State<DeckScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: _interp.build(),
+        child: BackgroundGradient(
+          child: Padding(
+            padding: const EdgeInsets.all(DeckSpacing.sm),
+            child: _interp.build(),
+          ),
         ),
       ),
     );
   }
 }
 
-/// The connection status pill in the app bar.
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge(this.status);
-  final ValueListenable<ConnStatus> status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Center(
-        child: ValueListenableBuilder<ConnStatus>(
-          valueListenable: status,
-          builder: (context, s, _) {
-            final (color, text) = switch (s) {
-              ConnStatus.demo => (Colors.cyanAccent, 'demo'),
-              ConnStatus.connecting => (Colors.amberAccent, 'connecting'),
-              ConnStatus.connected => (Colors.greenAccent, 'live'),
-              ConnStatus.disconnected => (Colors.redAccent, 'offline'),
-            };
-            return Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.circle, size: 11, color: color),
-              const SizedBox(width: 6),
-              Text(text, key: const Key('deck-conn-badge')),
-            ]);
-          },
-        ),
-      ),
-    );
-  }
-}

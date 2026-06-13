@@ -1,20 +1,21 @@
 /// CyberDeck client app entrypoint. Routes: Landing → (Demo Mode | Connect →
-/// Pairing) → Deck list → Deck. Demo Mode is the offline, zero-setup path used to
-/// exercise the full experience on desktop and mobile.
+/// Pairing) → the app Shell (nav rail + top bar + hosted deck). Demo Mode is the
+/// offline, zero-setup path used to exercise the full experience on desktop and
+/// mobile.
 library;
 
 import 'package:flutter/material.dart';
 
-import 'app/deck.dart';
-import 'app/deck_list.dart';
 import 'app/landing.dart';
 import 'app/pairing.dart';
+import 'app/shell.dart';
 import 'data/deck_source.dart';
 import 'data/engine_deck_source.dart';
 import 'data/mock_deck_source.dart';
 import 'net/connection_manager.dart';
 import 'net/discovery.dart';
 import 'net/pairing.dart';
+import 'theme/app_theme.dart';
 
 void main() => runApp(const CyberDeckApp());
 
@@ -26,13 +27,7 @@ class CyberDeckApp extends StatelessWidget {
     return MaterialApp(
       title: 'CyberDeck',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(useMaterial3: true).copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0A0E14),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00E5FF),
-          brightness: Brightness.dark,
-        ),
-      ),
+      theme: buildDeckTheme(),
       home: const RootScreen(),
     );
   }
@@ -48,7 +43,6 @@ class RootScreen extends StatefulWidget {
 class _RootScreenState extends State<RootScreen> {
   DeviceIdentity? _identity;
   DeckSource? _source;
-  String? _deckId;
   bool _pairing = false;
   bool _connecting = false;
 
@@ -75,7 +69,6 @@ class _RootScreenState extends State<RootScreen> {
       if (!mounted) return;
       setState(() {
         _source = src;
-        _deckId = 'live';
         _connecting = false;
       });
     } catch (e) {
@@ -89,10 +82,7 @@ class _RootScreenState extends State<RootScreen> {
 
   Future<void> _leaveSource() async {
     final s = _source;
-    setState(() {
-      _source = null;
-      _deckId = null;
-    });
+    setState(() => _source = null);
     await s?.dispose();
   }
 
@@ -125,17 +115,6 @@ class _RootScreenState extends State<RootScreen> {
     if (source == null) {
       return LandingScreen(onDemo: _enterDemo, onConnect: _connect);
     }
-    if (_deckId == null) {
-      return DeckListScreen(
-        source: source,
-        onOpen: (id) => setState(() => _deckId = id),
-        onBack: _leaveSource,
-      );
-    }
-    return DeckScreen(
-      source: source,
-      deckId: _deckId!,
-      onBack: () => setState(() => _deckId = null),
-    );
+    return AppShell(source: source, onExit: _leaveSource);
   }
 }
