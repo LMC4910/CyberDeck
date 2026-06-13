@@ -152,16 +152,53 @@ class _SparklinePainter extends CustomPainter {
     final dx = size.width / (series.length - 1);
 
     final path = Path();
+    Offset? first;
+    Offset last = Offset.zero;
     for (var i = 0; i < series.length; i++) {
       final x = dx * i;
       final norm = (series[i] - lo) / range; // 0..1
       final y = pad + (1 - norm) * usableH; // higher value → higher on screen
+      final p = Offset(x, y);
       if (i == 0) {
         path.moveTo(x, y);
+        first = p;
       } else {
         path.lineTo(x, y);
       }
+      last = p;
     }
+
+    // Soft gradient area below the trace for depth.
+    if (first != null) {
+      final area = Path.from(path)
+        ..lineTo(last.dx, size.height)
+        ..lineTo(first.dx, size.height)
+        ..close();
+      canvas.drawPath(
+        area,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              accent.withValues(alpha: 0.30),
+              accent.withValues(alpha: 0.0),
+            ],
+          ).createShader(Offset.zero & size),
+      );
+    }
+
+    // Outer glow pass under the crisp trace.
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = accent.withValues(alpha: 0.5)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
 
     final trace = Paint()
       ..style = PaintingStyle.stroke

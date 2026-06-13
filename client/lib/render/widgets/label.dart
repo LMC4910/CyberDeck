@@ -2,31 +2,50 @@
 /// static text or a bound state value with presentation-side unit formatting
 /// (ADR-0019 — units format here, not in the typed state). `valueRules` apply a
 /// conditional accent.
+///
+/// Repainted on the CyberDeck design system (Wave 1, C1): the value reads in the
+/// display face by default (a `style.font` role override is honoured) and a
+/// matching `valueRules` style tints the text via the accent (status themes still
+/// read as error/warn/ok). The rendered text + key are unchanged so it stays
+/// editable and testable.
 library;
 
 import 'package:flutter/material.dart';
 
+import '../../theme/fonts.dart';
+import '../../theme/tokens.dart';
 import '../registry.dart';
+import 'widget_theme.dart';
 
 /// Builds a label from a render context (the registry builder).
 Widget buildLabel(BuildContext context, WidgetRenderContext ctx) {
   final node = ctx.node;
-  final label = node.appearance.style['label'] as String? ?? '';
-  final unit = node.config['unit'] as String? ??
-      node.appearance.style['unit'] as String? ??
-      '';
+  final style = node.appearance.style;
+  final label = style['label'] as String? ?? '';
+  final unit = node.config['unit'] as String? ?? style['unit'] as String? ?? '';
   final valueText = formatLabelValue(ctx.value, unit);
   final matched = evaluateValueRules(ctx.value, node.appearance.valueRules);
-  final isError = (matched?['theme'] as String?)?.contains('error') ?? false;
+
+  // A matching rule tints the text with its resolved accent; otherwise text uses
+  // the primary token (or a `style.color`/`style.theme` accent if authored).
+  final hasRule = matched != null;
+  final color = hasRule
+      ? resolveAccent(matched, fallback: DeckColors.textPrimary)
+      : resolveAccent(style, fallback: DeckColors.textPrimary);
 
   final text = label.isEmpty ? valueText : '$label: $valueText';
   return Center(
-    child: Text(
-      text,
-      key: Key('label-${node.id}'),
-      style: TextStyle(
-        color: isError ? Colors.redAccent : null,
-        fontWeight: isError ? FontWeight.bold : FontWeight.normal,
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        key: Key('label-${node.id}'),
+        textAlign: TextAlign.center,
+        style: DeckType.forRole(
+          style['font'] as String? ?? DeckFonts.display,
+          color: color,
+          fontWeight: hasRule ? FontWeight.w700 : FontWeight.w600,
+        ),
       ),
     ),
   );

@@ -47,6 +47,39 @@ num gaugeMax(WidgetNode node) => _asNum(node.config['max']) ?? 100;
 /// Reads the display `unit` from a node config.
 String? gaugeUnit(WidgetNode node) => node.config['unit'] as String?;
 
+/// The card title for a gauge: explicit `style.title`, else `style.label`.
+String? gaugeTitle(WidgetNode node) =>
+    (node.appearance.style['title'] as String?) ??
+    (node.appearance.style['label'] as String?);
+
+/// Coerces an arbitrary value into a list of doubles (a series), or null.
+/// A `List` rides through; a scalar is treated as a single-element series.
+List<double>? gaugeSeries(Object? value) {
+  if (value is List) {
+    final out = <double>[];
+    for (final e in value) {
+      final n = _asNum(e);
+      if (n != null) out.add(n.toDouble());
+    }
+    return out.isEmpty ? null : out;
+  }
+  return null;
+}
+
+/// Summary stats (min / max / avg) for a numeric [series]; null when empty.
+({double min, double max, double avg})? gaugeStats(List<double>? series) {
+  if (series == null || series.isEmpty) return null;
+  var lo = series.first;
+  var hi = series.first;
+  var sum = 0.0;
+  for (final v in series) {
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+    sum += v;
+  }
+  return (min: lo, max: hi, avg: sum / series.length);
+}
+
 num? _asNum(Object? value) {
   if (value is num) return value;
   if (value is String) return num.tryParse(value);
