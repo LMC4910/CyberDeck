@@ -1,15 +1,18 @@
 # CyberDeck — macOS installer (.pkg)
 
-Builds a flat `.pkg` that installs the engine + all five bundled plugins under
-`/usr/local/cyberdeck` and registers the engine as a per-user **launchd
-LaunchAgent** (`io.cyberdeck.cyberdeck`, `RunAtLoad` + `KeepAlive`) so the deck
-stays reachable after the UI closes (**P1-AC-01**). A bundled `uninstall.sh`
-unregisters the agent and removes the tree (**P1-AC-15**).
+Builds a `.pkg` that installs the engine + all five bundled plugins under
+`/usr/local/cyberdeck` **and the desktop client at `/Applications/CyberDeck.app`**
+(one product, never one without the other) and registers the engine as a per-user
+**launchd LaunchAgent** (`io.cyberdeck.cyberdeck`, `RunAtLoad` + `KeepAlive`) so the
+deck stays reachable after the UI closes (**P1-AC-01**). A bundled `uninstall.sh`
+unregisters the agent and removes both (**P1-AC-15**). The client is **mandatory** —
+`build-pkg.sh` aborts if no `.app` is staged in `dist/macos/client/`.
 
-> **Status: documented-manual.** `pkgbuild`/`productbuild`/`notarytool` are
-> macOS-only, so the engine + plugins are **cross-compiled** here (`task dist:macos`,
-> darwin/arm64) but the `.pkg` build, signing, notarization, and runtime were **not
-> executed** on this Windows host. Run the steps below on a Mac.
+> **Status: documented-manual.** `pkgbuild`/`productbuild`/`notarytool` and the
+> Flutter macOS build are macOS-only. The engine + plugins **cross-compile** here
+> (`task dist:macos`, darwin/arm64); the client + `.pkg` build on the `macos-latest`
+> CI runner (`installers.yml`). Signing, notarization, and runtime are not executed
+> on this Windows host. Run the steps below on a Mac for a local build.
 
 ## Files
 
@@ -25,18 +28,15 @@ unregisters the agent and removes the tree (**P1-AC-15**).
 ## Build (on macOS)
 
 ```sh
-# 1. Cross-compile (works on any host) or build natively on the Mac:
-task dist:macos                     # → dist/macos/cyberdeck + dist/macos/plugins/*
+# 1. Build the bundle ON a Mac — engine + plugins + the Flutter macOS client
+#    (dist:macos runs dist:client:macos, which builds the .app into dist/macos/client/):
+task dist:macos                     # → dist/macos/{cyberdeck, plugins/*, client/*.app}
 
-# 2. (Optional) build the Flutter client natively so it's bundled into /Applications:
-( cd client && flutter build macos ) \
-  && cp -R client/build/macos/Build/Products/Release/cyberdeck_client.app dist/macos/CyberDeck.app
-
-# 3. Build the .pkg (optionally sign):
+# 2. Build the .pkg (optionally sign) — aborts if the client .app is missing:
 SIGN_IDENTITY="Developer ID Installer: Your Name (TEAMID)" \
   installers/macos/build-pkg.sh 1.0.0
 
-# 4. (Optional) notarize + staple for distribution:
+# 3. (Optional) notarize + staple for distribution:
 installers/macos/notarize.sh Output/CyberDeck-1.0.0.pkg cyberdeck-notary
 ```
 

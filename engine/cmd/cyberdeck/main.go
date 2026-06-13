@@ -190,6 +190,10 @@ func runService(ctx context.Context, actionArg string, opts serveOptions, stdout
 func serve(ctx context.Context, mode string, opts serveOptions, logger *log.Logger, stdout io.Writer) error {
 	configPath, dataDir, port, pluginsDir, powerLive := opts.configPath, opts.dataDir, opts.port, opts.pluginsDir, opts.powerLive
 
+	// Announce the selected mode before contending for the single-instance lock so
+	// the chosen path is observable even when another instance already holds it.
+	logger.Printf("cyberdeck %s starting in %s mode", version, mode)
+
 	lock, err := lifecycle.AcquireInstance(instanceName(dataDir), func() {
 		logger.Printf("focus requested by another launch")
 	})
@@ -206,8 +210,7 @@ func serve(ctx context.Context, mode string, opts serveOptions, logger *log.Logg
 	if cfgErr != nil {
 		logger.Printf("config: %v (continuing with defaults)", cfgErr)
 	}
-	logger.Printf("cyberdeck %s starting in %s mode (telemetry cpu interval %dms)",
-		version, mode, cfg.Telemetry.CPUIntervalMS)
+	logger.Printf("config loaded (telemetry cpu interval %dms)", cfg.Telemetry.CPUIntervalMS)
 
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		return fmt.Errorf("create data dir: %w", err)

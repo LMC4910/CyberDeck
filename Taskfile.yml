@@ -98,12 +98,15 @@ tasks:
       - cd plugins/launchers && go build -o ../../run/plugins/launchers/launchers.exe .
       - cd plugins/notifications && go build -o ../../run/plugins/notifications/notifications.exe .
 
-  # --- distribution: per-OS release bundles ---
+  # --- distribution: per-OS release bundles (engine + plugins + desktop client) ---
   # Each dist:<os> cross-compiles the Go engine + ALL five bundled plugins for that
-  # target (pure-Go SQLite → CGO_ENABLED=0 cross-compiles cleanly) into
-  # dist/<os>/, then bundles the client where it can be built natively. Flutter
-  # desktop is built on the target OS, so the client is bundled on Windows here and
-  # documented as a manual native build for macOS/Linux (see docs/RUNNING.md §D).
+  # target (pure-Go SQLite → CGO_ENABLED=0 cross-compiles cleanly) into dist/<os>/,
+  # then builds + bundles the Flutter desktop client. The client is a NATIVE build
+  # (Flutter desktop only builds on its own OS), so each dist:client:<os> runs on the
+  # matching OS (locally on Windows; the macOS/Linux runners in installers.yml).
+  # On a host that can't build a given client it no-ops with a clear message — but
+  # the installers REQUIRE the client (a missing client fails packaging), so a real
+  # release runs each dist:<os> on its own OS to get one combined installer.
 
   dist:windows:
     desc: "Release bundle for Windows (engine + 5 plugins + Flutter Windows client)"
@@ -113,16 +116,18 @@ tasks:
       - task: dist:client:windows
 
   dist:macos:
-    desc: "Release bundle for macOS arm64 (engine + 5 plugins; client built manually on a Mac — see docs/RUNNING.md)"
+    desc: "Release bundle for macOS arm64 (engine + 5 plugins + Flutter macOS client)"
     cmds:
       - task: dist:bundle
         vars: { OS: macos, GOOS: darwin, GOARCH: arm64, EXT: "" }
+      - task: dist:client:macos
 
   dist:linux:
-    desc: "Release bundle for Linux amd64 (engine + 5 plugins; client built manually on Linux — see docs/RUNNING.md)"
+    desc: "Release bundle for Linux amd64 (engine + 5 plugins + Flutter Linux client)"
     cmds:
       - task: dist:bundle
         vars: { OS: linux, GOOS: linux, GOARCH: amd64, EXT: "" }
+      - task: dist:client:linux
 
   dist:all:
     desc: "Build the Windows, macOS and Linux release bundles"
@@ -166,6 +171,38 @@ tasks:
             echo "bundled Flutter Windows client into dist/windows/client"
           else
             echo "client/windows not present - skipping client bundle (build it natively per docs/RUNNING.md)"
+          fi
+
+  # dist:client:macos builds the Flutter macOS .app (native, on a Mac) and copies it
+  # into the release dir. No-ops with a clear message off-macOS; the .pkg build
+  # requires it (so a real macOS release runs this on macos-latest).
+  dist:client:macos:
+    internal: true
+    cmds:
+      - cmd: |
+          if [ "$(uname -s)" = "Darwin" ] && [ -d client/macos ]; then
+            ( cd client && flutter build macos --release )
+            mkdir -p dist/macos/client
+            cp -R client/build/macos/Build/Products/Release/*.app dist/macos/client/
+            echo "bundled Flutter macOS client (.app) into dist/macos/client"
+          else
+            echo "not macOS (or client/macos absent) - skipping client bundle; the .pkg build requires it (run on macos-latest)"
+          fi
+
+  # dist:client:linux builds the Flutter Linux bundle (native, on Linux) and copies
+  # it into the release dir. No-ops with a clear message off-Linux; the AppImage
+  # build requires it (so a real Linux release runs this on ubuntu-latest).
+  dist:client:linux:
+    internal: true
+    cmds:
+      - cmd: |
+          if [ "$(uname -s)" = "Linux" ] && [ -d client/linux ]; then
+            ( cd client && flutter build linux --release )
+            mkdir -p dist/linux/client
+            cp -r client/build/linux/*/release/bundle/. dist/linux/client/
+            echo "bundled Flutter Linux client into dist/linux/client"
+          else
+            echo "not Linux (or client/linux absent) - skipping client bundle; the AppImage build requires it (run on ubuntu-latest)"
           fi
 
   run:engine:

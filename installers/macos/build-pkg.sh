@@ -4,12 +4,12 @@
 # Packages the release bundle from `task dist:macos`:
 #   dist/macos/cyberdeck
 #   dist/macos/plugins/<name>/<name>   (telemetry, power, volume, launchers, notifications)
-# (+ the Flutter macOS .app when built natively — see notes below)
+#   dist/macos/client/*.app            (Flutter macOS desktop client — REQUIRED)
 #
-# into a flat component .pkg that installs the engine + plugins under
-#   /usr/local/cyberdeck/
-# and registers the engine as a per-user launchd LaunchAgent (P1-AC-01) via the
-# postinstall script, so the deck stays reachable after the UI closes.
+# into a .pkg that installs the engine + plugins under /usr/local/cyberdeck/ AND the
+# desktop client at /Applications/CyberDeck.app — one product, never one without the
+# other — and registers the engine as a per-user launchd LaunchAgent (P1-AC-01) via
+# the postinstall script, so the deck stays reachable after the UI closes.
 # The pre-uninstall is provided as a separate script (macOS .pkg has no native
 # uninstall); see scripts/uninstall.sh (P1-AC-15).
 #
@@ -39,6 +39,14 @@ if [[ ! -x "$DIST/cyberdeck" ]]; then
   exit 1
 fi
 
+# The .pkg MUST contain BOTH the engine and the desktop client — never one without
+# the other. dist:client:macos stages the Flutter .app under dist/macos/client/.
+CLIENT_APP="$(find "$DIST/client" -maxdepth 1 -name '*.app' -print -quit 2>/dev/null || true)"
+if [[ -z "$CLIENT_APP" ]]; then
+  echo "error: no Flutter macOS .app in $DIST/client — run 'task dist:macos' on a Mac (it builds the client) before packaging. The installer must bundle engine + client together." >&2
+  exit 1
+fi
+
 rm -rf "$BUILD" "$OUT"
 mkdir -p "$PKGROOT$INSTALL_ROOT" "$SCRIPTS" "$OUT"
 
@@ -51,11 +59,10 @@ chmod -R u+rwX,go+rX "$PKGROOT$INSTALL_ROOT"
 chmod +x "$PKGROOT$INSTALL_ROOT/cyberdeck" "$PKGROOT$INSTALL_ROOT/uninstall.sh"
 find "$PKGROOT$INSTALL_ROOT/plugins" -type f -exec chmod +x {} +
 
-# Optional: bundle the Flutter macOS .app if it was built natively.
-if [[ -d "$DIST/CyberDeck.app" ]]; then
-  mkdir -p "$PKGROOT/Applications"
-  cp -R "$DIST/CyberDeck.app" "$PKGROOT/Applications/CyberDeck.app"
-fi
+# Bundle the Flutter macOS client into /Applications/CyberDeck.app (mandatory; the
+# guard above guarantees CLIENT_APP exists). Normalise the name to CyberDeck.app.
+mkdir -p "$PKGROOT/Applications"
+cp -R "$CLIENT_APP" "$PKGROOT/Applications/CyberDeck.app"
 
 # --- install scripts: register the launchd service on install --------------------
 cp "$HERE/scripts/postinstall" "$SCRIPTS/postinstall"

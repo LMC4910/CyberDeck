@@ -73,12 +73,17 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: engine/go.mod
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.1
+          channel: stable
+          cache: true
       - name: install Task
         uses: arduino/setup-task@v2
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: build release bundle (engine + plugins, darwin/arm64)
+      - name: build release bundle (engine + plugins + Flutter macOS client)
         run: task dist:macos
       - name: build .pkg (unsigned — set SIGN_IDENTITY + run notarize.sh for release)
         run: installers/macos/build-pkg.sh "$CYBERDECK_VERSION"
@@ -88,37 +93,42 @@ jobs:
           path: installers/macos/Output/*.pkg
           if-no-files-found: error
 
-  # --- Linux: dist bundle + .deb/.rpm + AppImage ---------------------------------
+  # --- Linux: dist bundle + single self-contained AppImage -----------------------
   linux:
-    name: linux installers (.deb/.rpm/AppImage)
+    name: linux installer (AppImage)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: engine/go.mod
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.1
+          channel: stable
+          cache: true
+      - name: install Flutter Linux desktop build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
       - name: install Task
         uses: arduino/setup-task@v2
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: build release bundle (engine + plugins, linux/amd64)
+      - name: build release bundle (engine + plugins + Flutter Linux client)
         run: task dist:linux
-      - name: install nfpm + appimagetool
+      - name: install appimagetool
         run: |
           set -euo pipefail
-          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           curl -fsSL -o /usr/local/bin/appimagetool \
             https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x /usr/local/bin/appimagetool
-      - name: build .deb + .rpm
-        run: installers/linux/build-packages.sh "$CYBERDECK_VERSION"
-      - name: build AppImage
+      - name: build AppImage (engine + client in one file)
         # appimagetool needs FUSE; --appimage-extract-and-run avoids it on CI runners.
         run: APPIMAGE_EXTRACT_AND_RUN=1 installers/linux/appimage/build-appimage.sh "$CYBERDECK_VERSION"
       - uses: actions/upload-artifact@v4
         with:
-          name: cyberdeck-linux-packages
-          path: installers/linux/Output/*
+          name: cyberdeck-linux-appimage
+          path: installers/linux/Output/*.AppImage
           if-no-files-found: error

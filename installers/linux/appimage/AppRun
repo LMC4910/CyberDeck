@@ -1,17 +1,42 @@
 #!/bin/sh
-# CyberDeck AppImage entrypoint. The AppImage is a portable, no-install bundle, so
-# by default it launches the engine in console/foreground mode (prints the pairing
-# QR). To register the systemd background service from the AppImage instead, run it
-# with the --service argument(s), e.g.:
-#   ./CyberDeck-x86_64.AppImage --service install   (needs sudo to write the unit)
+# CyberDeck AppImage entrypoint — ONE portable file containing BOTH the engine and
+# the desktop client, so the client can never run without its engine.
+#
+# Default (no args): start the bundled engine in the background (the engine's own
+# single-instance guard makes this a no-op if one is already running — e.g. a
+# user systemd service), then launch the desktop client in the foreground. When the
+# client exits, the engine we started is stopped.
+#
+# Explicit pass-throughs:
+#   ./CyberDeck-x86_64.AppImage --service install|uninstall   systemd *user* unit (boot persistence)
+#   ./CyberDeck-x86_64.AppImage --engine                      run only the engine (console, prints pairing QR)
 #
 # HERE resolves to the mounted AppDir root at runtime.
 HERE="$(dirname "$(readlink -f "${0}")")"
 ENGINE="${HERE}/usr/bin/cyberdeck"
+PLUGINS="${HERE}/usr/bin/plugins"
+CLIENT="${HERE}/usr/bin/client/cyberdeck_client"
 
-# Point the engine at the bundled plugins (defaultPluginsDir looks next to the exe,
-# but the AppImage mount path is read-only/ephemeral, so pass it explicitly).
-if [ "$#" -eq 0 ]; then
-  exec "${ENGINE}" --console --plugins "${HERE}/usr/bin/plugins"
-fi
-exec "${ENGINE}" --plugins "${HERE}/usr/bin/plugins" "$@"
+case "${1:-}" in
+  --service)
+    shift
+    exec "${ENGINE}" --service --plugins "${PLUGINS}" "$@"
+    ;;
+  --engine|--console)
+    exec "${ENGINE}" --console --plugins "${PLUGINS}"
+    ;;
+esac
+
+# Combined default: engine (background) + client (foreground). A second engine
+# started while one is already up exits immediately via the engine's single-instance
+# guard, so the client always has exactly one local engine to talk to.
+"${ENGINE}" --plugins "${PLUGINS}" >/dev/null 2>&1 &
+ENGINE_PID=$!
+
+"${CLIENT}" "$@"
+STATUS=$?
+
+# Stop the engine we spawned (no-op if the guard already made it exit, or if the
+# engine is owned by a systemd user service).
+kill "${ENGINE_PID}" 2>/dev/null || true
+exit "${STATUS}"

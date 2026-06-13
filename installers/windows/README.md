@@ -1,10 +1,12 @@
 # CyberDeck — Windows installer (Inno Setup)
 
 `cyberdeck.iss` builds a self-contained Windows setup `.exe` that installs the
-engine + all five bundled plugins (+ the Flutter desktop client when present) and
-registers the engine as an auto-start **Windows SCM service** so the deck stays
-reachable after the UI is closed (**P1-AC-01**). Uninstall stops + removes the
-service and deletes the install tree (**P1-AC-15**).
+engine + all five bundled plugins **and the Flutter desktop client** (one product,
+never one without the other) and registers the engine as an auto-start **Windows SCM
+service** so the deck stays reachable after the UI is closed (**P1-AC-01**). Uninstall
+stops + removes the service and deletes the install tree (**P1-AC-15**). The client is
+**mandatory** — a compile-time `#error` guard fails packaging if the client bundle is
+missing from `dist\windows\client\`.
 
 ## Prerequisites
 
@@ -12,11 +14,11 @@ service and deletes the install tree (**P1-AC-15**).
 - The staged release bundle in `dist\windows\` from the repo root:
 
   ```powershell
-  task dist:windows   # engine + 5 plugins (+ Flutter client if Flutter is installed)
+  task dist:windows   # engine + 5 plugins + Flutter Windows client (Flutter required)
   ```
 
   This produces `dist\windows\cyberdeck.exe`, `dist\windows\plugins\<name>\<name>.exe`,
-  and (when the client was built natively) `dist\windows\client\`.
+  and `dist\windows\client\cyberdeck_client.exe` (all required by the installer).
 
 ## Build the installer
 
@@ -35,8 +37,8 @@ built. Output: `installers\windows\Output\CyberDeck-Setup-<version>.exe`.
   service needs a stable absolute engine path).
 - Preserves the `cyberdeck.exe` + `plugins\<name>\<name>.exe` layout the engine
   expects (`defaultPluginsDir` resolves `plugins\` next to the executable).
-- Bundles the Flutter client under `client\` **if** it was built (the file rule uses
-  `skipifsourcedoesntexist`, so an engine-only bundle still installs cleanly).
+- Bundles the Flutter client under `client\` (mandatory) and creates the Start-menu
+  + optional desktop shortcuts pointing at `client\cyberdeck_client.exe`.
 - With the **Background service** task checked (default), runs
   `cyberdeck.exe --service install`, which registers the auto-start `CyberDeck` SCM
   service via `engine/internal/service/windows.go` and starts it.

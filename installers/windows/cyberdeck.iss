@@ -3,7 +3,7 @@
 ; Packages the release bundle produced by `task dist:windows`:
 ;   dist\windows\cyberdeck.exe
 ;   dist\windows\plugins\<name>\<name>.exe   (telemetry, power, volume, launchers, notifications)
-;   dist\windows\client\                      (Flutter Windows desktop runner, optional)
+;   dist\windows\client\                      (Flutter Windows desktop runner, REQUIRED)
 ;
 ; into a per-machine install under {autopf}\CyberDeck and registers the engine as
 ; an auto-start Windows SCM service (P1-AC-01) by invoking the engine's own
@@ -28,6 +28,14 @@
 #define MyClientExeName "cyberdeck_client.exe"
 ; DistDir is the staged release bundle (relative to this .iss file → repo root\dist\windows).
 #define DistDir "..\..\dist\windows"
+
+; A CyberDeck installer must ALWAYS contain BOTH the engine and the desktop client —
+; shipping one without the other is the exact failure this guard prevents. Fail the
+; build loudly if the Flutter client runner is missing from the bundle (run
+; `task dist:windows`, which builds the client, before packaging).
+#if !FileExists(AddBackslash(DistDir) + "client\\" + MyClientExeName)
+  #error CyberDeck client runner not found in dist\windows\client. Run `task dist:windows` (it builds the Flutter Windows client) before packaging — the installer must bundle engine + client together.
+#endif
 
 [Setup]
 ; A stable AppId keeps upgrades/uninstall correct across versions — do not change it.
@@ -66,23 +74,22 @@ Name: "installservice"; Description: "Run the CyberDeck engine as a background s
 ; below must be preserved.
 Source: "{#DistDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#DistDir}\plugins\*"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Flutter Windows desktop client (optional — present only when built natively on
-; Windows via `task dist:windows`). `skipifsourcedoesntexist` keeps the engine-only
-; bundle installable when the client wasn't built.
-Source: "{#DistDir}\client\*"; DestDir: "{app}\client"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+; Flutter Windows desktop client — MANDATORY. The compile-time guard above ensures
+; this is present, so engine and client always install together as one product.
+Source: "{#DistDir}\client\*"; DestDir: "{app}\client"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\client\{#MyClientExeName}"; WorkingDir: "{app}\client"; Check: ClientInstalled
+Name: "{group}\{#MyAppName}"; Filename: "{app}\client\{#MyClientExeName}"; WorkingDir: "{app}\client"
 Name: "{group}\{#MyAppName} Engine (console)"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--console"; WorkingDir: "{app}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\client\{#MyClientExeName}"; WorkingDir: "{app}\client"; Tasks: desktopicon; Check: ClientInstalled
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\client\{#MyClientExeName}"; WorkingDir: "{app}\client"; Tasks: desktopicon
 
 [Run]
 ; Register + start the engine as an SCM service via the engine's own installer.
 ; runascurrentuser is omitted so it runs elevated (the installer is already admin).
 Filename: "{app}\{#MyAppExeName}"; Parameters: "--service install"; StatusMsg: "Registering the CyberDeck background service..."; Flags: runhidden waituntilterminated; Tasks: installservice
-; Offer to launch the client after install (only if it was bundled).
-Filename: "{app}\client\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; WorkingDir: "{app}\client"; Flags: nowait postinstall skipifsilent; Check: ClientInstalled
+; Offer to launch the client after install.
+Filename: "{app}\client\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; WorkingDir: "{app}\client"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 ; Stop + remove the SCM service BEFORE the files are deleted (clean uninstall, P1-AC-15).
@@ -93,11 +100,3 @@ Filename: "{app}\{#MyAppExeName}"; Parameters: "--service uninstall"; RunOnceId:
 ; is intentionally left in place — it holds the user's decks/pairings).
 Type: filesandordirs; Name: "{app}\plugins"
 Type: filesandordirs; Name: "{app}\client"
-
-[Code]
-// ClientInstalled reports whether the Flutter client runner was bundled, so the
-// client shortcuts/launch step are skipped on an engine-only install.
-function ClientInstalled: Boolean;
-begin
-  Result := FileExists(ExpandConstant('{app}\client\{#MyClientExeName}'));
-end;

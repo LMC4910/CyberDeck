@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=CyberDeck
-Comment=Cyberpunk command center engine
+Comment=Cyberpunk command center (engine + desktop client)
 Exec=AppRun
 Icon=cyberdeck
 Categories=Utility;System;
-Terminal=true
+Terminal=false
