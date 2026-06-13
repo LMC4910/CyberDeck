@@ -47,6 +47,10 @@ dependencies:
   mobile_scanner: ^5.2.3
   tray_manager: ^0.5.3
 
+  # Cyberpunk type scale (Wave 0): Rajdhani/Orbitron/Exo 2/Inter/JetBrains Mono,
+  # fetched + cached at runtime by the design-system fonts layer (theme/fonts.dart).
+  google_fonts: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -68,6 +72,11 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Launcher art (Wave 0). Widgets resolve `assets/logos/<name>.png` and fall back
+  # to a procedural neon tile when the asset is absent (see assets/logos/README.md).
+  assets:
+    - assets/logos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
