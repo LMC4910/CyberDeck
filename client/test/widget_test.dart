@@ -14,6 +14,17 @@ import 'package:flutter_test/flutter_test.dart';
 Future<void> _teardown(WidgetTester tester, MockDeckSource source) async {
   await tester.pumpWidget(const SizedBox()); // unmount listeners
   await source.dispose(); // cancel the telemetry timer
+  tester.view.resetPhysicalSize();
+  tester.view.resetDevicePixelRatio();
+}
+
+/// The rich Home "Control Center" deck is authored for a wide control-surface
+/// display; size the test view to a representative desktop window so its dense
+/// 24x16 grid lays its cards out without overflow (the default 800x600 test
+/// surface is far smaller than any real deck).
+void _useDeckSurface(WidgetTester tester) {
+  tester.view.devicePixelRatio = 1.0;
+  tester.view.physicalSize = const Size(1440, 900);
 }
 
 void main() {
@@ -46,6 +57,7 @@ void main() {
 
   testWidgets('deck renders live gauges and a button gives feedback',
       (tester) async {
+    _useDeckSurface(tester);
     final source = MockDeckSource();
     await tester.pumpWidget(MaterialApp(
       home: DeckScreen(source: source, deckId: 'system'),
@@ -54,17 +66,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byKey(const Key('gauge-value-cpu')), findsOneWidget);
-    expect(find.text('LOCK'), findsOneWidget);
 
-    await tester.tap(find.text('LOCK'));
+    // The TERMINAL launcher button is non-destructive: a single tap gives feedback.
+    expect(find.text('TERMINAL'), findsOneWidget);
+    await tester.tap(find.text('TERMINAL'));
     await tester.pump();
     await tester.pump();
-    expect(find.text('Locked (demo)'), findsOneWidget);
+    expect(find.text('Launching Terminal'), findsOneWidget);
     await _teardown(tester, source);
   });
 
   testWidgets('destructive action requires a second confirming tap',
       (tester) async {
+    _useDeckSurface(tester);
     final source = MockDeckSource();
     await tester.pumpWidget(MaterialApp(
       home: DeckScreen(source: source, deckId: 'system'),
@@ -84,12 +98,15 @@ void main() {
   });
 
   testWidgets('designer: select a widget then remove it', (tester) async {
+    _useDeckSurface(tester);
     final source = MockDeckSource();
     await tester.pumpWidget(MaterialApp(
       home: DeckEditor(source: source, deckId: 'system'),
     ));
     await tester.pump();
 
+    await tester.ensureVisible(find.byKey(const Key('edit-hit-lock')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('edit-hit-lock')));
     await tester.pump();
     expect(find.byKey(const Key('editor-label-lock')), findsOneWidget);

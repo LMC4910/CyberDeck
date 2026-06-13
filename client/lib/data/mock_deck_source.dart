@@ -62,6 +62,15 @@ class MockDeckSource implements DeckSource {
       _set(id, next);
       return ActionOutcome.success(next ? 'On' : 'Off');
     }
+    if (actionId == 'mock.media.toggle') {
+      final media = _state['media'];
+      if (media is Map) {
+        final playing = !(media['playing'] == true);
+        _set('media', {...media.cast<String, Object?>(), 'playing': playing});
+        return ActionOutcome.success(playing ? 'Playing' : 'Paused');
+      }
+      return const ActionOutcome.success();
+    }
     if (actionId.startsWith('mock.set:')) {
       final id = actionId.substring('mock.set:'.length);
       final v = params?['value'];
@@ -94,12 +103,31 @@ class MockDeckSource implements DeckSource {
 
   void _tick() {
     _phase += 0.18;
-    // CPU: a wandering sine with jitter; RAM/disk drift gently.
+    // Home dashboard System Monitor: temps gently wander around their nominals;
+    // RAM (GB) drifts. These drive the live gauge arcs + centre values.
+    final cpuTemp = (42 + 4 * math.sin(_phase) + (_rng.nextDouble() - 0.5) * 2)
+        .clamp(30, 90);
+    final gpuTemp = (55 + 5 * math.sin(_phase * 0.8 + 1) + (_rng.nextDouble() - 0.5) * 2)
+        .clamp(35, 92);
+    final ramGb = (_asD('sys.ram') + (_rng.nextDouble() - 0.5) * 0.6).clamp(8, 30);
+    _set('sys.cpu.temp', double.parse(cpuTemp.toStringAsFixed(1)));
+    _set('sys.gpu.temp', double.parse(gpuTemp.toStringAsFixed(1)));
+    _set('sys.ram', double.parse(ramGb.toStringAsFixed(1)));
+
+    // Media player progress creeps forward while playing (wraps at the end).
+    final media = _state['media'];
+    if (media is Map && media['playing'] == true) {
+      final next = {
+        ...media.cast<String, Object?>(),
+        'progress': (((media['progress'] as num?)?.toDouble() ?? 0) + 0.01) % 1.0,
+      };
+      _set('media', next);
+    }
+
+    // Legacy ids for the simpler media/home decks.
     final cpu = (45 + 30 * math.sin(_phase) + _rng.nextDouble() * 12).clamp(2, 99);
-    final ram = (_asD('sys.ram') + (_rng.nextDouble() - 0.5) * 4).clamp(20, 92);
     final disk = (_asD('sys.disk') + (_rng.nextDouble() - 0.5) * 0.6).clamp(40, 95);
     _set('sys.cpu', double.parse(cpu.toStringAsFixed(1)));
-    _set('sys.ram', double.parse(ram.toStringAsFixed(1)));
     _set('sys.disk', double.parse(disk.toStringAsFixed(1)));
     _set('sys.clock', _clock());
   }
@@ -121,6 +149,26 @@ class MockDeckSource implements DeckSource {
         return 'Locked (demo)';
       case 'system.sleep':
         return 'Sleeping (demo)';
+      case 'launch.terminal':
+        return 'Launching Terminal';
+      case 'launch.files':
+        return 'Opening File Explorer';
+      case 'launch.control':
+        return 'Opening Control Panel';
+      case 'launch.app:disney':
+        return 'Launching Disney+';
+      case 'launch.app:prime':
+        return 'Launching Prime Video';
+      case 'launch.app:netflix':
+        return 'Launching Netflix';
+      case 'launch.app:chrome':
+        return 'Launching Chrome';
+      case 'launch.app:chatgpt':
+        return 'Launching ChatGPT';
+      case 'mock.shuffle':
+        return 'Shuffle';
+      case 'mock.repeat':
+        return 'Repeat';
       case 'mock.prev':
         return 'Previous track';
       case 'mock.next':

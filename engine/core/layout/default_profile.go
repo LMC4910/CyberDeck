@@ -11,144 +11,172 @@ package layout
 //   - button: appearance.style.label; interaction.tap = {target:"action", ref:<id>};
 //     config.confirm=true marks a destructive action (client requires a 2-tap).
 func DefaultProfile() *Profile {
-	gauge := func(id, typ, state, label, unit string, p Placement) Widget {
+	// tempGauge: a circular gauge for a 0..100 temperature (°C). The bound scalar
+	// drives the arc + centre value; config.history is a literal series feeding the
+	// client gauge's inline sparkline + MIN/AVG/MAX row. valueRules tints the arc
+	// red past the hot threshold (client-side, zero round-trip).
+	tempGauge := func(id, title, state, unit string, history []any, p Placement) Widget {
 		return Widget{
 			ID:        id,
-			Type:      typ,
+			Type:      "gauge.circular",
 			Placement: p,
 			Appearance: map[string]any{
 				"stateBinding": state,
-				"style":        map[string]any{"label": label},
-				// red when hot (client-side value rules, zero round-trip).
+				"style":        map[string]any{"title": title},
 				"valueRules": []any{
 					map[string]any{"op": ">=", "value": 85.0, "accent": "#ff3b3b"},
 				},
 			},
-			Config: map[string]any{"min": 0.0, "max": 100.0, "unit": unit},
+			Config: map[string]any{"min": 0.0, "max": 100.0, "unit": unit, "history": history},
 		}
 	}
-	button := func(id, label, actionID string, destructive bool, p Placement) Widget {
+	// ramGauge: like tempGauge but with no hot threshold (percent/usage gauge).
+	ramGauge := func(id, title, state, unit string, history []any, p Placement) Widget {
+		return Widget{
+			ID:        id,
+			Type:      "gauge.circular",
+			Placement: p,
+			Appearance: map[string]any{
+				"stateBinding": state,
+				"style":        map[string]any{"title": title},
+			},
+			Config: map[string]any{"min": 0.0, "max": 100.0, "unit": unit, "history": history},
+		}
+	}
+
+	// section.header: appearance.style.{title,rule}. A small-caps region label.
+	header := func(id, title string, p Placement) Widget {
 		return Widget{
 			ID:         id,
-			Type:       "button",
+			Type:       "section.header",
 			Placement:  p,
-			Appearance: map[string]any{"style": map[string]any{"label": label}},
-			Interaction: map[string]any{
-				"tap": map[string]any{"target": "action", "ref": actionID},
+			Appearance: map[string]any{"style": map[string]any{"title": title, "rule": true}},
+		}
+	}
+	// launcher: appearance.style.{label,icon,color}; tap → launch.url (param carries
+	// the target the launchers plugin opens, PROJ-175).
+	launcher := func(id, label, icon, color, target string, p Placement) Widget {
+		return Widget{
+			ID:        id,
+			Type:      "launcher",
+			Placement: p,
+			Appearance: map[string]any{
+				"style": map[string]any{"label": label, "icon": icon, "color": color},
 			},
-			Config: map[string]any{"confirm": destructive},
+			Interaction: map[string]any{"tap": map[string]any{
+				"target": "action", "ref": "launch.url", "param": target}},
+		}
+	}
+	// iconButton: a button with a leading icon (appearance.style.{label,icon}).
+	iconButton := func(id, label, icon, actionID string, destructive bool, p Placement) Widget {
+		return Widget{
+			ID:        id,
+			Type:      "button",
+			Placement: p,
+			Appearance: map[string]any{
+				"style": map[string]any{"label": label, "icon": icon},
+			},
+			Interaction: map[string]any{"tap": map[string]any{"target": "action", "ref": actionID}},
+			Config:      map[string]any{"confirm": destructive},
 		}
 	}
 
 	page := Page{
 		ID: "home",
 		Grid: map[string]any{
-			"columns": 24, "rows": 18, "gutter": 8, "marginX": 16, "marginY": 16,
+			"columns": 24, "rows": 16, "gutter": 8, "marginX": 16, "marginY": 16,
 		},
 		Widgets: []Widget{
-			gauge("w-cpu", "gauge.circular", "system.cpu.percent", "CPU", "%",
-				Placement{Col: 1, Row: 1, ColSpan: 6, RowSpan: 6}),
-			gauge("w-ram", "gauge.circular", "system.ram.percent", "RAM", "%",
-				Placement{Col: 8, Row: 1, ColSpan: 6, RowSpan: 6}),
-			gauge("w-disk", "gauge.linear", "system.disk.percent", "DISK", "%",
-				Placement{Col: 15, Row: 1, ColSpan: 8, RowSpan: 3}),
+			// QUICK LAUNCH — a header + a row of launcher tiles (launchers plugin,
+			// PROJ-175). Each tap opens its target URL/app.
+			header("w-quick-header", "QUICK LAUNCH",
+				Placement{Col: 0, Row: 0, ColSpan: 18, RowSpan: 1}),
+			launcher("w-l-disney", "Disney+", "play", "#1f6feb", "https://disneyplus.com",
+				Placement{Col: 0, Row: 1, ColSpan: 3, RowSpan: 3}),
+			launcher("w-l-prime", "Prime Video", "play", "#00a8e1", "https://primevideo.com",
+				Placement{Col: 3, Row: 1, ColSpan: 3, RowSpan: 3}),
+			launcher("w-l-netflix", "Netflix", "play", "#e50914", "https://netflix.com",
+				Placement{Col: 6, Row: 1, ColSpan: 3, RowSpan: 3}),
+			launcher("w-l-chrome", "Chrome", "browser", "#4285f4", "https://google.com",
+				Placement{Col: 9, Row: 1, ColSpan: 3, RowSpan: 3}),
+			launcher("w-l-chatgpt", "ChatGPT", "app", "#10a37f", "https://chatgpt.com",
+				Placement{Col: 12, Row: 1, ColSpan: 3, RowSpan: 3}),
+
+			// VOLUME — vertical slider card on the right (volume plugin, PROJ-174),
+			// reflects system.volume.
+			header("w-volume-header", "VOLUME",
+				Placement{Col: 19, Row: 0, ColSpan: 5, RowSpan: 1}),
 			{
-				ID:        "w-uptime",
-				Type:      "label",
-				Placement: Placement{Col: 15, Row: 5, ColSpan: 8, RowSpan: 2},
+				ID:        "w-volume",
+				Type:      "slider",
+				Placement: Placement{Col: 20, Row: 1, ColSpan: 3, RowSpan: 9},
 				Appearance: map[string]any{
-					"stateBinding": "system.uptime",
-					"style":        map[string]any{"label": "UPTIME"},
+					"stateBinding": "system.volume",
+					"style":        map[string]any{"orientation": "vertical"},
 				},
-				Config: map[string]any{"unit": "s"},
-			},
-			// Notification-count badge (notifications plugin, PROJ-176). Degrades to
-			// "--" when the OS exposes no count. Sits in the free band below the gauges.
-			{
-				ID:        "w-notif",
-				Type:      "label",
-				Placement: Placement{Col: 1, Row: 7, ColSpan: 6, RowSpan: 2},
-				Appearance: map[string]any{
-					"stateBinding": "notification.count",
-					"style":        map[string]any{"label": "NOTIFS"},
-				},
-			},
-			// GPU gauges (telemetry plugin, PROJ-172). load is a percent gauge; temp is
-			// the source of the system.gpu.high threshold event. Both degrade to "--"
-			// when no supported GPU is present.
-			gauge("w-gpu-load", "gauge.circular", "system.gpu.load", "GPU", "%",
-				Placement{Col: 8, Row: 7, ColSpan: 6, RowSpan: 2}),
-			{
-				ID:        "w-gpu-temp",
-				Type:      "label",
-				Placement: Placement{Col: 15, Row: 7, ColSpan: 8, RowSpan: 2},
-				Appearance: map[string]any{
-					"stateBinding": "system.gpu.temp",
-					"style":        map[string]any{"label": "GPU TEMP"},
-					"valueRules": []any{
-						map[string]any{"op": ">=", "value": 85.0, "accent": "#ff3b3b"},
-					},
-				},
-				Config: map[string]any{"unit": "C"},
-			},
-			button("b-lock", "LOCK", "system.lock", false,
-				Placement{Col: 1, Row: 9, ColSpan: 5, RowSpan: 3}),
-			button("b-sleep", "SLEEP", "system.sleep", false,
-				Placement{Col: 7, Row: 9, ColSpan: 5, RowSpan: 3}),
-			button("b-restart", "RESTART", "system.restart", true,
-				Placement{Col: 13, Row: 9, ColSpan: 5, RowSpan: 3}),
-			button("b-shutdown", "SHUTDOWN", "system.shutdown", true,
-				Placement{Col: 19, Row: 9, ColSpan: 5, RowSpan: 3}),
-			// Volume slider + mute (volume plugin, PROJ-174) — reflects system.volume.
-			{
-				ID:          "w-volume",
-				Type:        "slider",
-				Placement:   Placement{Col: 1, Row: 13, ColSpan: 12, RowSpan: 2},
-				Appearance:  map[string]any{"stateBinding": "system.volume"},
 				Interaction: map[string]any{"dragValue": map[string]any{"target": "action", "ref": "volume.set"}},
 				Config:      map[string]any{"min": 0.0, "max": 100.0},
 			},
+
+			// Now-playing media card (media plugin) — reads the media.* state map.
 			{
-				ID:   "w-mute",
-				Type: "toggle",
-				Placement: Placement{Col: 14, Row: 13, ColSpan: 4, RowSpan: 2},
+				ID:        "w-player",
+				Type:      "media.player",
+				Placement: Placement{Col: 0, Row: 4, ColSpan: 18, RowSpan: 4},
 				Appearance: map[string]any{
-					"stateBinding": "system.muted",
-					"style":        map[string]any{"label": "MUTE"},
+					"stateBinding": "media.nowplaying",
+					"style":        map[string]any{"track": "Blinding Lights", "artist": "The Weeknd"},
 				},
-				Interaction: map[string]any{"tap": map[string]any{"target": "action", "ref": "volume.mute"}},
-			},
-			// Launch a URL (launchers plugin, PROJ-175). `param` carries the target.
-			{
-				ID:         "w-open",
-				Type:       "button",
-				Placement:  Placement{Col: 19, Row: 13, ColSpan: 5, RowSpan: 2},
-				Appearance: map[string]any{"style": map[string]any{"label": "OPEN GITHUB"}},
-				Interaction: map[string]any{"tap": map[string]any{
-					"target": "action", "ref": "launch.url", "param": "https://github.com"}},
-				Config: map[string]any{"confirm": false},
-			},
-			// GPU VRAM (telemetry plugin, PROJ-172) — used/total in bytes. Degrades to
-			// "--" with no supported GPU. Sits in the free band below the volume row.
-			{
-				ID:        "w-gpu-vram-used",
-				Type:      "label",
-				Placement: Placement{Col: 1, Row: 16, ColSpan: 11, RowSpan: 2},
-				Appearance: map[string]any{
-					"stateBinding": "system.gpu.vram.used",
-					"style":        map[string]any{"label": "VRAM USED"},
+				Interaction: map[string]any{
+					"previous":  map[string]any{"target": "action", "ref": "media.previous"},
+					"playPause": map[string]any{"target": "action", "ref": "media.play"},
+					"next":      map[string]any{"target": "action", "ref": "media.next"},
+					"shuffle":   map[string]any{"target": "action", "ref": "media.shuffle"},
+					"repeat":    map[string]any{"target": "action", "ref": "media.repeat"},
 				},
-				Config: map[string]any{"unit": "B"},
 			},
+
+			// Action button row.
+			iconButton("b-lock", "LOCK", "power", "system.lock", true,
+				Placement{Col: 0, Row: 8, ColSpan: 4, RowSpan: 2}),
+			iconButton("b-terminal", "TERMINAL", "terminal", "launch.terminal", false,
+				Placement{Col: 4, Row: 8, ColSpan: 4, RowSpan: 2}),
+			iconButton("b-files", "FILE EXPLORER", "folder", "launch.files", false,
+				Placement{Col: 8, Row: 8, ColSpan: 5, RowSpan: 2}),
+			iconButton("b-control", "CONTROL PANEL", "settings", "launch.control", false,
+				Placement{Col: 13, Row: 8, ColSpan: 5, RowSpan: 2}),
+			iconButton("b-sleep", "SLEEP", "power", "system.sleep", true,
+				Placement{Col: 19, Row: 10, ColSpan: 5, RowSpan: 2}),
+
+			// SYSTEM MONITOR — three circular gauges (telemetry plugin, PROJ-172):
+			// CPU temp, GPU temp, RAM. Each carries a literal history series so the
+			// client gauge's inline sparkline + MIN/AVG/MAX row light up; the bound
+			// scalar drives the live arc + centre value. The hot threshold tints the
+			// arc red client-side (zero round-trip).
+			header("w-monitor-header", "SYSTEM MONITOR",
+				Placement{Col: 0, Row: 10, ColSpan: 18, RowSpan: 1}),
+			tempGauge("w-cpu", "CPU TEMPERATURE", "system.cpu.temp", "C",
+				[]any{38.0, 40.0, 39.0, 41.0, 43.0, 42.0, 44.0, 42.0, 41.0, 42.0},
+				Placement{Col: 0, Row: 11, ColSpan: 5, RowSpan: 5}),
+			tempGauge("w-gpu", "GPU TEMPERATURE", "system.gpu.temp", "C",
+				[]any{51.0, 53.0, 52.0, 54.0, 56.0, 55.0, 57.0, 55.0, 54.0, 55.0},
+				Placement{Col: 5, Row: 11, ColSpan: 5, RowSpan: 5}),
+			ramGauge("w-ram", "RAM USAGE", "system.ram.percent", "%",
+				[]any{40.0, 44.0, 42.0, 46.0, 48.0, 45.0, 47.0, 44.0, 46.0, 45.0},
+				Placement{Col: 10, Row: 11, ColSpan: 5, RowSpan: 5}),
+
+			// SYSTEM STATUS — a host-authored status list on the right.
 			{
-				ID:        "w-gpu-vram-total",
-				Type:      "label",
-				Placement: Placement{Col: 13, Row: 16, ColSpan: 11, RowSpan: 2},
-				Appearance: map[string]any{
-					"stateBinding": "system.gpu.vram.total",
-					"style":        map[string]any{"label": "VRAM TOTAL"},
-				},
-				Config: map[string]any{"unit": "B"},
+				ID:        "w-status",
+				Type:      "status.list",
+				Placement: Placement{Col: 15, Row: 11, ColSpan: 9, RowSpan: 5},
+				Appearance: map[string]any{"style": map[string]any{"title": "SYSTEM STATUS"}},
+				Config: map[string]any{"items": []any{
+					map[string]any{"label": "Power Plan", "value": "Balanced", "icon": "bolt"},
+					map[string]any{"label": "Network", "value": "Connected", "icon": "network", "theme": "success"},
+					map[string]any{"label": "Storage", "value": "420 / 512 GB", "icon": "storage"},
+					map[string]any{"label": "Uptime", "value": "--", "icon": "clock"},
+				}},
 			},
 		},
 	}
