@@ -1,9 +1,9 @@
 /// Type-scale provider for the CyberDeck design system (Wave 0).
 ///
-/// [DeckFonts] in `tokens.dart` names the font *roles* as plain strings (so the
-/// tokens carry no package dependency). This layer is the one place that maps
-/// those roles to real, renderable [TextStyle]s via `google_fonts`, fetching +
-/// caching the families at runtime:
+/// [DeckFonts] in `tokens.dart` names the font *roles* as plain strings. This
+/// layer maps those roles to real, renderable [TextStyle]s backed by the font
+/// families BUNDLED in `pubspec.yaml` (client/fonts/*.ttf) — so the cyberpunk
+/// type renders deterministically and OFFLINE, with no runtime network fetch:
 ///
 ///  * [DeckFonts.display]    → Rajdhani       — hero numerals / big titles
 ///  * [DeckFonts.displayAlt] → Orbitron       — techy display alternate
@@ -17,11 +17,37 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'tokens.dart';
 
-/// Maps [DeckFonts] roles to concrete [TextStyle]s backed by Google Fonts.
+// Bundled font family names (must match the `fonts:` families in pubspec.yaml).
+const String _rajdhani = 'Rajdhani';
+const String _orbitron = 'Orbitron';
+const String _exo2 = 'Exo 2';
+const String _inter = 'Inter';
+const String _jetBrainsMono = 'JetBrains Mono';
+
+TextStyle _font(
+  String family, {
+  TextStyle? base,
+  double? fontSize,
+  FontWeight? fontWeight,
+  Color? color,
+  double? letterSpacing,
+  double? height,
+}) {
+  final style = TextStyle(
+    fontFamily: family,
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    color: color,
+    letterSpacing: letterSpacing,
+    height: height,
+  );
+  return base?.merge(style) ?? style;
+}
+
+/// Maps [DeckFonts] roles to concrete [TextStyle]s backed by bundled fonts.
 ///
 /// Every helper layers the requested family/size/weight on top of an optional
 /// [base] style and defaults the colour to a sensible text token — callers can
@@ -36,14 +62,13 @@ abstract final class DeckType {
     double? height,
     TextStyle? base,
   }) =>
-      GoogleFonts.rajdhani(
-        textStyle: base,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: color,
-        letterSpacing: letterSpacing,
-        height: height,
-      );
+      _font(_rajdhani,
+          base: base,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          letterSpacing: letterSpacing,
+          height: height);
 
   /// Orbitron — techy display alternate ([DeckFonts.displayAlt]).
   static TextStyle displayAlt({
@@ -54,14 +79,13 @@ abstract final class DeckType {
     double? height,
     TextStyle? base,
   }) =>
-      GoogleFonts.orbitron(
-        textStyle: base,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: color,
-        letterSpacing: letterSpacing,
-        height: height,
-      );
+      _font(_orbitron,
+          base: base,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          letterSpacing: letterSpacing,
+          height: height);
 
   /// Exo 2 — section headings ([DeckFonts.heading]).
   static TextStyle heading({
@@ -72,14 +96,13 @@ abstract final class DeckType {
     double? height,
     TextStyle? base,
   }) =>
-      GoogleFonts.exo2(
-        textStyle: base,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: color,
-        letterSpacing: letterSpacing,
-        height: height,
-      );
+      _font(_exo2,
+          base: base,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          letterSpacing: letterSpacing,
+          height: height);
 
   /// Inter — body / UI copy ([DeckFonts.body]).
   static TextStyle body({
@@ -90,14 +113,13 @@ abstract final class DeckType {
     double? height,
     TextStyle? base,
   }) =>
-      GoogleFonts.inter(
-        textStyle: base,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: color,
-        letterSpacing: letterSpacing,
-        height: height,
-      );
+      _font(_inter,
+          base: base,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          letterSpacing: letterSpacing,
+          height: height);
 
   /// JetBrains Mono — telemetry / fixed-width readouts ([DeckFonts.mono]).
   static TextStyle mono({
@@ -108,14 +130,13 @@ abstract final class DeckType {
     double? height,
     TextStyle? base,
   }) =>
-      GoogleFonts.jetBrainsMono(
-        textStyle: base,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: color,
-        letterSpacing: letterSpacing,
-        height: height,
-      );
+      _font(_jetBrainsMono,
+          base: base,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          letterSpacing: letterSpacing,
+          height: height);
 
   /// A small-caps-ish muted section label: Exo 2, wide tracking, [DeckColors]
   /// secondary text. The renderer upper-cases the text; this style supplies the
