@@ -63,17 +63,20 @@ List<NavDestination> buildNavDestinations(List<DeckSummary> decks) {
   }
 
   return [
+    // Dashboard is the rich Control Center home (the enriched 'dashboard'/'system'
+    // deck) — never the Smart Home demo deck.
     NavDestination(
       id: 'dashboard',
       icon: Icons.dashboard_outlined,
       label: 'Dashboard',
-      deckId: find(['home', 'dashboard', 'system']),
+      deckId: find(['dashboard', 'system']),
     ),
-    NavDestination(
+    // Apps / System / Security are placeholders until their pages are authored
+    // (the Smart Home + Media demo decks remain reachable from the deck list).
+    const NavDestination(
       id: 'apps',
       icon: Icons.apps_outlined,
       label: 'Apps',
-      deckId: find(['apps', 'home']),
     ),
     NavDestination(
       id: 'media',
@@ -81,11 +84,10 @@ List<NavDestination> buildNavDestinations(List<DeckSummary> decks) {
       label: 'Media',
       deckId: find(['media']),
     ),
-    NavDestination(
+    const NavDestination(
       id: 'system',
       icon: Icons.memory_outlined,
       label: 'System',
-      deckId: find(['system']),
     ),
     const NavDestination(
       id: 'security',
@@ -154,15 +156,9 @@ class _AppShellState extends State<AppShell> {
   // forwards the request to the embedded deck via its GlobalKey.
   Future<void> _edit() => _deckKey.currentState?.openEditor() ?? Future.value();
 
-  String _pageTitle() {
-    final deckId = _current.deckId;
-    if (deckId != null) {
-      for (final d in widget.source.decks()) {
-        if (d.id == deckId) return d.title;
-      }
-    }
-    return _current.label;
-  }
+  // The page title is the nav destination's label (e.g. "Dashboard") so the top
+  // bar names the PAGE, not the backing deck's internal title.
+  String _pageTitle() => _current.label;
 
   String _pageSubtitle() {
     final deckId = _current.deckId;
