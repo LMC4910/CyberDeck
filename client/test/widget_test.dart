@@ -24,7 +24,7 @@ Future<void> _teardown(WidgetTester tester, MockDeckSource source) async {
 /// surface is far smaller than any real deck).
 void _useDeckSurface(WidgetTester tester) {
   tester.view.devicePixelRatio = 1.0;
-  tester.view.physicalSize = const Size(1440, 900);
+  tester.view.physicalSize = const Size(1920, 1200);
 }
 
 void main() {
@@ -46,12 +46,12 @@ void main() {
       home: DeckListScreen(source: source, onOpen: (id) => opened = id),
     ));
     await tester.pump();
-    expect(find.text('System Monitor'), findsOneWidget);
+    expect(find.text('Dashboard'), findsOneWidget);
     expect(find.text('Media'), findsOneWidget);
     expect(find.text('Smart Home'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('deck-card-system')));
-    expect(opened, 'system');
+    await tester.tap(find.byKey(const Key('deck-card-dashboard')));
+    expect(opened, 'dashboard');
     await _teardown(tester, source);
   });
 
@@ -60,16 +60,16 @@ void main() {
     _useDeckSurface(tester);
     final source = MockDeckSource();
     await tester.pumpWidget(MaterialApp(
-      home: DeckScreen(source: source, deckId: 'system'),
+      home: DeckScreen(source: source, deckId: 'dashboard'),
     ));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byKey(const Key('gauge-value-cpu')), findsOneWidget);
+    expect(find.byKey(const Key('gauge-value-dash.cpu.gauge')), findsOneWidget);
 
-    // The TERMINAL launcher button is non-destructive: a single tap gives feedback.
-    expect(find.text('TERMINAL'), findsOneWidget);
-    await tester.tap(find.text('TERMINAL'));
+    // The Terminal control tile is non-destructive: a single tap gives feedback.
+    expect(find.text('Terminal'), findsOneWidget);
+    await tester.tap(find.text('Terminal'));
     await tester.pump();
     await tester.pump();
     expect(find.text('Launching Terminal'), findsOneWidget);
@@ -81,19 +81,19 @@ void main() {
     _useDeckSurface(tester);
     final source = MockDeckSource();
     await tester.pumpWidget(MaterialApp(
-      home: DeckScreen(source: source, deckId: 'system'),
+      home: DeckScreen(source: source, deckId: 'dashboard'),
     ));
     await tester.pump(const Duration(milliseconds: 100));
 
-    await tester.tap(find.text('SLEEP')); // armed, not executed
+    await tester.tap(find.text('Lock System')); // armed, not executed
     await tester.pump();
     await tester.pump();
     expect(find.textContaining('Tap again to confirm'), findsOneWidget);
 
-    await tester.tap(find.text('SLEEP')); // confirm → executes
+    await tester.tap(find.text('Lock System')); // confirm → executes
     await tester.pump();
     await tester.pump();
-    expect(find.text('Sleeping (demo)'), findsOneWidget);
+    expect(find.text('Locked (demo)'), findsOneWidget);
     await _teardown(tester, source);
   });
 
@@ -101,19 +101,19 @@ void main() {
     _useDeckSurface(tester);
     final source = MockDeckSource();
     await tester.pumpWidget(MaterialApp(
-      home: DeckEditor(source: source, deckId: 'system'),
+      home: DeckEditor(source: source, deckId: 'dashboard'),
     ));
     await tester.pump();
 
-    await tester.ensureVisible(find.byKey(const Key('edit-hit-lock')));
+    await tester.ensureVisible(find.byKey(const Key('edit-hit-dash.ctl.lock')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('edit-hit-lock')));
+    await tester.tap(find.byKey(const Key('edit-hit-dash.ctl.lock')));
     await tester.pump();
-    expect(find.byKey(const Key('editor-label-lock')), findsOneWidget);
+    expect(find.byKey(const Key('editor-label-dash.ctl.lock')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('editor-remove')));
     await tester.pump();
-    expect(find.byKey(const Key('edit-hit-lock')), findsNothing);
+    expect(find.byKey(const Key('edit-hit-dash.ctl.lock')), findsNothing);
     await _teardown(tester, source);
   });
 }

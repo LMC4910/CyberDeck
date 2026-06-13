@@ -62,22 +62,46 @@ class MockDeckSource implements DeckSource {
       _set(id, next);
       return ActionOutcome.success(next ? 'On' : 'Off');
     }
-    if (actionId == 'mock.media.toggle') {
-      final media = _state['media'];
-      if (media is Map) {
-        final playing = !(media['playing'] == true);
-        _set('media', {...media.cast<String, Object?>(), 'playing': playing});
-        return ActionOutcome.success(playing ? 'Playing' : 'Paused');
-      }
-      return const ActionOutcome.success();
+    if (actionId == 'mock.media.toggle' || actionId == 'media.transport.playPause') {
+      return _togglePlaying();
     }
     if (actionId.startsWith('mock.set:')) {
       final id = actionId.substring('mock.set:'.length);
-      final v = params?['value'];
-      _set(id, v);
+      _set(id, params?['value']);
       return const ActionOutcome.success();
     }
+    // Volume sliders (dashboard + media mixer) carry their level in params.value;
+    // the action id names which channel. Reflect it so the slider tracks the drag.
+    if (actionId == 'media.volume.set') {
+      final v = params?['value'];
+      if (v != null) _set('media.volume', v);
+      return const ActionOutcome.success('Volume set');
+    }
+    if (actionId == 'media.volume.mute') {
+      final muted = !(_state['media.muted'] == true);
+      _set('media.muted', muted);
+      return ActionOutcome.success(muted ? 'Muted' : 'Unmuted');
+    }
+    if (actionId == 'media.transport.pause') {
+      _set('media.playing', false);
+      final media = _state['media'];
+      if (media is Map) {
+        _set('media', {...media.cast<String, Object?>(), 'playing': false});
+      }
+      return const ActionOutcome.success('Paused');
+    }
     return ActionOutcome.success(_friendly(actionId));
+  }
+
+  ActionOutcome _togglePlaying() {
+    final media = _state['media'];
+    var playing = true;
+    if (media is Map) {
+      playing = !(media['playing'] == true);
+      _set('media', {...media.cast<String, Object?>(), 'playing': playing});
+    }
+    _set('media.playing', playing);
+    return ActionOutcome.success(playing ? 'Playing' : 'Paused');
   }
 
   @override
@@ -103,33 +127,46 @@ class MockDeckSource implements DeckSource {
 
   void _tick() {
     _phase += 0.18;
-    // Home dashboard System Monitor: temps gently wander around their nominals;
-    // RAM (GB) drifts. These drive the live gauge arcs + centre values.
-    final cpuTemp = (42 + 4 * math.sin(_phase) + (_rng.nextDouble() - 0.5) * 2)
+
+    // Temperatures gently wander around their nominals (°C); these drive the
+    // dashboard/overview/gaming/notification gauges + their sparklines.
+    final cpuTemp = (52 + 6 * math.sin(_phase) + (_rng.nextDouble() - 0.5) * 2)
         .clamp(30, 90);
-    final gpuTemp = (55 + 5 * math.sin(_phase * 0.8 + 1) + (_rng.nextDouble() - 0.5) * 2)
-        .clamp(35, 92);
-    final ramGb = (_asD('sys.ram') + (_rng.nextDouble() - 0.5) * 0.6).clamp(8, 30);
-    _set('sys.cpu.temp', double.parse(cpuTemp.toStringAsFixed(1)));
-    _set('sys.gpu.temp', double.parse(gpuTemp.toStringAsFixed(1)));
-    _set('sys.ram', double.parse(ramGb.toStringAsFixed(1)));
+    final gpuTemp =
+        (61 + 7 * math.sin(_phase * 0.8 + 1) + (_rng.nextDouble() - 0.5) * 2)
+            .clamp(35, 92);
+    _set('sys.cpu.temp', _r1(cpuTemp));
+    _set('sys.gpu.temp', _r1(gpuTemp));
+
+    // Loads (%) — CPU/GPU/RAM utilisation drift for the metric tiles + gauges.
+    _set('sys.cpu.load', _r1((_asD('sys.cpu.load') + _jitter(3)).clamp(4, 96)));
+    _set('sys.gpu.load', _r1((_asD('sys.gpu.load') + _jitter(3)).clamp(4, 98)));
+    _set('sys.ram', _r1((_asD('sys.ram') + _jitter(1.2)).clamp(30, 92)));
+
+    // Network throughput / latency for System Control + Gaming.
+    _set('net.download', _r1((_asD('net.download') + _jitter(6)).clamp(20, 940)));
+    _set('net.upload', _r1((_asD('net.upload') + _jitter(2)).clamp(2, 200)));
+    _set('net.ping', _r1((_asD('net.ping') + _jitter(2)).clamp(4, 90)));
+
+    // Game FPS + power draw + room temps wander a touch.
+    _set('game.fps', _r1((_asD('game.fps') + _jitter(4)).clamp(30, 240)));
+    _set('home.energy.now',
+        _r1((_asD('home.energy.now') + _jitter(8)).clamp(40, 500)));
 
     // Media player progress creeps forward while playing (wraps at the end).
     final media = _state['media'];
     if (media is Map && media['playing'] == true) {
-      final next = {
+      final progress =
+          (((media['progress'] as num?)?.toDouble() ?? 0) + 0.01) % 1.0;
+      final duration = (media['duration'] as num?)?.toDouble() ?? 200;
+      _set('media', {
         ...media.cast<String, Object?>(),
-        'progress': (((media['progress'] as num?)?.toDouble() ?? 0) + 0.01) % 1.0,
-      };
-      _set('media', next);
+        'progress': progress,
+        'elapsed': (progress * duration).round(),
+      });
     }
 
-    // Legacy ids for the simpler media/home decks.
-    final cpu = (45 + 30 * math.sin(_phase) + _rng.nextDouble() * 12).clamp(2, 99);
-    final disk = (_asD('sys.disk') + (_rng.nextDouble() - 0.5) * 0.6).clamp(40, 95);
-    _set('sys.cpu', double.parse(cpu.toStringAsFixed(1)));
-    _set('sys.disk', double.parse(disk.toStringAsFixed(1)));
-    _set('sys.clock', _clock());
+    _set('sys.clock', _clock12());
   }
 
   double _asD(String id) {
@@ -137,34 +174,39 @@ class MockDeckSource implements DeckSource {
     return v is num ? v.toDouble() : 0;
   }
 
-  String _clock() {
+  double _jitter(double amp) => (_rng.nextDouble() - 0.5) * 2 * amp;
+
+  double _r1(num v) => double.parse(v.toStringAsFixed(1));
+
+  // 12-hour wall clock (e.g. "10:30 AM") to match the smart-home sys.clock binding.
+  String _clock12() {
     final now = DateTime.now();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(now.hour)}:${two(now.minute)}:${two(now.second)}';
+    final h = now.hour % 12 == 0 ? 12 : now.hour % 12;
+    final mm = now.minute.toString().padLeft(2, '0');
+    return '$h:$mm ${now.hour < 12 ? 'AM' : 'PM'}';
   }
 
+  /// Human feedback for an action id. Covers the legacy demo verbs plus the
+  /// dotted Wave 1 vocabulary (app.launch.*, media.transport.*, system.*, game.*,
+  /// home.scene.*, launcher.open.*) generically so any tile gives sensible feedback.
   String _friendly(String actionId) {
     switch (actionId) {
       case 'system.lock':
         return 'Locked (demo)';
       case 'system.sleep':
         return 'Sleeping (demo)';
-      case 'launch.terminal':
-        return 'Launching Terminal';
-      case 'launch.files':
-        return 'Opening File Explorer';
-      case 'launch.control':
-        return 'Opening Control Panel';
-      case 'launch.app:disney':
-        return 'Launching Disney+';
-      case 'launch.app:prime':
-        return 'Launching Prime Video';
-      case 'launch.app:netflix':
-        return 'Launching Netflix';
-      case 'launch.app:chrome':
-        return 'Launching Chrome';
-      case 'launch.app:chatgpt':
-        return 'Launching ChatGPT';
+      case 'system.restart':
+        return 'Restarting (demo)';
+      case 'system.shutdown':
+        return 'Shutting down (demo)';
+      case 'system.logoff':
+        return 'Logging off (demo)';
+      case 'system.hibernate':
+        return 'Hibernating (demo)';
+      case 'media.transport.next':
+        return 'Next track';
+      case 'media.transport.previous':
+        return 'Previous track';
       case 'mock.shuffle':
         return 'Shuffle';
       case 'mock.repeat':
@@ -173,12 +215,32 @@ class MockDeckSource implements DeckSource {
         return 'Previous track';
       case 'mock.next':
         return 'Next track';
-      case 'mock.scene.movie':
-        return 'Movie scene activated';
-      case 'mock.scene.night':
-        return 'Night scene activated';
-      default:
-        return actionId;
     }
+    // Dotted families → a readable verb + the trailing segment ("Title Cased").
+    final dot = actionId.lastIndexOf('.');
+    final tail = dot >= 0 ? actionId.substring(dot + 1) : actionId;
+    final name = _titleCase(tail);
+    if (actionId.startsWith('app.launch.') ||
+        actionId.startsWith('launch.app:') ||
+        actionId.startsWith('launcher.open.') ||
+        actionId.startsWith('game.launch.')) {
+      return 'Launching $name';
+    }
+    if (actionId.startsWith('home.scene.')) return '$name scene activated';
+    if (actionId.startsWith('performance.setMode.')) {
+      return '$name performance mode';
+    }
+    if (actionId.startsWith('game.profile.set.')) return '$name profile';
+    if (actionId.startsWith('mock.scene.')) return '$name scene activated';
+    return name;
+  }
+
+  String _titleCase(String s) {
+    if (s.isEmpty) return s;
+    return s
+        .split(RegExp(r'[\s_:-]+'))
+        .where((w) => w.isNotEmpty)
+        .map((w) => w[0].toUpperCase() + w.substring(1))
+        .join(' ');
   }
 }

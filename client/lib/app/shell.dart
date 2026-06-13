@@ -3,7 +3,8 @@
 /// [BackgroundGradient]:
 ///
 ///  * a left NAV RAIL — logo on top, a column of destination icons (Dashboard /
-///    Apps / Media / System / Security), and settings + power pinned to the
+///    System Control / Media / Gaming / Smart Home / Overview / Notifications),
+///    and settings + power pinned to the
 ///    bottom. The active destination is highlighted with an accent pill, a left
 ///    accent bar and a soft glow. Selecting a destination switches the hosted
 ///    deck/page.
@@ -63,20 +64,20 @@ List<NavDestination> buildNavDestinations(List<DeckSummary> decks) {
   }
 
   return [
-    // Dashboard is the rich Control Center home (the enriched 'dashboard'/'system'
-    // deck) — never the Smart Home demo deck.
+    // The seven authored CyberDeck pages, in order — Dashboard first (the rich
+    // Control-Center home). Each resolves to its stable deck id; the label is the
+    // page title shown in the top bar.
     NavDestination(
       id: 'dashboard',
       icon: Icons.dashboard_outlined,
       label: 'Dashboard',
       deckId: find(['dashboard', 'system']),
     ),
-    // Apps / System / Security are placeholders until their pages are authored
-    // (the Smart Home + Media demo decks remain reachable from the deck list).
-    const NavDestination(
-      id: 'apps',
-      icon: Icons.apps_outlined,
-      label: 'Apps',
+    NavDestination(
+      id: 'system-control',
+      icon: Icons.tune_outlined,
+      label: 'System Control',
+      deckId: find(['system-control']),
     ),
     NavDestination(
       id: 'media',
@@ -84,15 +85,29 @@ List<NavDestination> buildNavDestinations(List<DeckSummary> decks) {
       label: 'Media',
       deckId: find(['media']),
     ),
-    const NavDestination(
-      id: 'system',
-      icon: Icons.memory_outlined,
-      label: 'System',
+    NavDestination(
+      id: 'gaming',
+      icon: Icons.sports_esports_outlined,
+      label: 'Gaming',
+      deckId: find(['gaming']),
     ),
-    const NavDestination(
-      id: 'security',
-      icon: Icons.shield_outlined,
-      label: 'Security',
+    NavDestination(
+      id: 'smart-home',
+      icon: Icons.home_outlined,
+      label: 'Smart Home',
+      deckId: find(['smart-home', 'home']),
+    ),
+    NavDestination(
+      id: 'overview',
+      icon: Icons.monitor_heart_outlined,
+      label: 'Overview',
+      deckId: find(['overview']),
+    ),
+    NavDestination(
+      id: 'notifications',
+      icon: Icons.notifications_none_outlined,
+      label: 'Notifications',
+      deckId: find(['notifications']),
     ),
   ];
 }
