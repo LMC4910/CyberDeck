@@ -1,0 +1,9 @@
+# CyberDeck Android release signing — copy to `key.properties` (gitignored) and fill in.
+# Generate a keystore once:
+#   keytool -genkey -v -keystore ~/cyberdeck-release.jks -keyalg RSA -keysize 2048 \
+#           -validity 10000 -alias cyberdeck
+# Then point storeFile at it (absolute path, or relative to android/app).
+storeFile=/absolute/path/to/cyberdeck-release.jks
+storePassword=CHANGEME
+keyAlias=cyberdeck
+keyPassword=CHANGEME

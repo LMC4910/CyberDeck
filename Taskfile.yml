@@ -205,6 +205,48 @@ tasks:
             echo "not Linux (or client/linux absent) - skipping client bundle; the AppImage build requires it (run on ubuntu-latest)"
           fi
 
+  # --- mobile clients (remote clients — no engine; they pair with a PC engine over LAN) ---
+  # The Android/iOS apps are the CyberDeck client only. There is NO engine on mobile;
+  # the phone/tablet discovers and pairs with a desktop engine over the LAN. Release
+  # signing is documented in docs/MOBILE_BUILD.md (Android key.properties; iOS certs).
+
+  dist:android:
+    desc: "Release Android client — APK + AAB into dist/android/ (signed if android/key.properties exists, else debug)"
+    cmds:
+      - cmd: |
+          if [ -d client/android ]; then
+            ( cd client && flutter build apk --release && flutter build appbundle --release )
+            mkdir -p dist/android
+            cp client/build/app/outputs/flutter-apk/app-release.apk dist/android/cyberdeck-client.apk
+            cp client/build/app/outputs/bundle/release/app-release.aab dist/android/cyberdeck-client.aab
+            echo "built dist/android/cyberdeck-client.{apk,aab}"
+          else
+            echo "client/android not present - skipping"
+          fi
+
+  dist:ios:
+    desc: "Build the iOS client (macOS + Xcode only). Unsigned verification build; signed IPA via docs/MOBILE_BUILD.md"
+    cmds:
+      - cmd: |
+          if [ "$(uname -s)" = "Darwin" ] && [ -d client/ios ]; then
+            if [ -n "${IOS_EXPORT_OPTIONS:-}" ]; then
+              ( cd client && flutter build ipa --release --export-options-plist="$IOS_EXPORT_OPTIONS" )
+              mkdir -p dist/ios && cp client/build/ios/ipa/*.ipa dist/ios/ 2>/dev/null || true
+              echo "built signed IPA into dist/ios/ (export options: $IOS_EXPORT_OPTIONS)"
+            else
+              ( cd client && flutter build ios --release --no-codesign )
+              echo "iOS app compiled (unsigned). Set IOS_EXPORT_OPTIONS to a plist for a distributable IPA - see docs/MOBILE_BUILD.md"
+            fi
+          else
+            echo "not macOS (or client/ios absent) - skipping; build iOS on a Mac (run on macos-latest)"
+          fi
+
+  dist:mobile:
+    desc: "Build the Android + iOS clients (iOS no-ops off macOS)"
+    cmds:
+      - task: dist:android
+      - task: dist:ios
+
   run:engine:
     desc: "Build + run the host engine in console mode (prints a pairing QR; power dry-run)"
     deps: [dist:engine]

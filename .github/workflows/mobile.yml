@@ -1,0 +1,97 @@
+# CyberDeck — mobile client builds (Android APK/AAB + iOS).
+#
+# The Android/iOS apps are the CyberDeck *client only* — there is no engine on mobile;
+# the device pairs with a desktop engine over the LAN. Separate from ci.yml (merge
+# gates) and installers.yml (desktop packaging). Runs on demand / on tags.
+#
+# Android signs with a release keystore when these repo secrets are present, else it
+# debug-signs (a buildable but non-distributable APK):
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+# iOS does an unsigned verification build here; a signed/distributable IPA needs an
+# Apple Developer account + certs (see docs/MOBILE_BUILD.md).
+name: mobile
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Marketing version (informational; pubspec drives versionName)"
+        required: false
+        default: "0.0.0-dev"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  # --- Android: APK + AAB --------------------------------------------------------
+  android:
+    name: android client (APK + AAB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.1
+          channel: stable
+          cache: true
+      - name: install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: configure release signing (if secrets present)
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PW: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "${KS_B64:-}" ]; then
+            echo "$KS_B64" | base64 -d > client/android/app/release.jks
+            {
+              echo "storeFile=release.jks"
+              echo "storePassword=$KS_PW"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "keyPassword=$KEY_PW"
+            } > client/android/key.properties
+            echo "release keystore configured"
+          else
+            echo "no ANDROID_KEYSTORE_* secrets — building debug-signed (non-distributable)"
+          fi
+      - name: build APK + AAB
+        run: task dist:android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cyberdeck-android
+          path: dist/android/*
+          if-no-files-found: error
+
+  # --- iOS: unsigned verification build ------------------------------------------
+  ios:
+    name: ios client (build verification)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.1
+          channel: stable
+          cache: true
+      - name: install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: build iOS (unsigned — compiles the app; signed IPA needs Apple certs)
+        run: task dist:ios
+      # A distributable IPA requires signing certs + an ExportOptions.plist; set
+      # IOS_EXPORT_OPTIONS and provide certs (e.g. via apple-actions/import-codesign-certs)
+      # then `task dist:ios` emits dist/ios/*.ipa. See docs/MOBILE_BUILD.md.
