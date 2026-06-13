@@ -23,6 +23,10 @@ import '../registry.dart';
 import 'gauge_common.dart';
 
 /// Builds a circular gauge from a render context (the registry builder).
+///
+/// BARE by default under the granularity model (no built-in [CardChrome]) so it
+/// can sit on top of a [panel]; set `style.card:true` to re-enable its own card.
+/// Per-widget accent comes via `style.color`/`style.theme` (e.g. purple/green).
 Widget buildCircularGauge(BuildContext context, WidgetRenderContext ctx) {
   final node = ctx.node;
   final fraction = gaugeFraction(ctx.value, gaugeMin(node), gaugeMax(node));
@@ -35,11 +39,7 @@ Widget buildCircularGauge(BuildContext context, WidgetRenderContext ctx) {
   final series = gaugeSeries(ctx.value) ?? gaugeSeries(node.config['history']);
   final stats = gaugeStats(series);
 
-  return CardChrome(
-    title: title,
-    accent: accent,
-    padding: const EdgeInsets.all(DeckSpacing.md),
-    child: LayoutBuilder(
+  final body = LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxHeight.isFinite &&
             constraints.maxHeight < 160;
@@ -87,8 +87,17 @@ Widget buildCircularGauge(BuildContext context, WidgetRenderContext ctx) {
           ],
         );
       },
-    ),
   );
+
+  if (node.appearance.style['card'] == true) {
+    return CardChrome(
+      title: title,
+      accent: accent,
+      padding: const EdgeInsets.all(DeckSpacing.md),
+      child: body,
+    );
+  }
+  return body;
 }
 
 /// A small MIN / AVG / MAX readout row beneath the gauge.

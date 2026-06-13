@@ -10,6 +10,7 @@ library;
 import 'package:flutter/material.dart';
 
 import 'model.dart';
+import 'widgets/control_tile.dart';
 import 'widgets/gauge_circular.dart';
 import 'widgets/button.dart';
 import 'widgets/gauge_linear.dart';
@@ -19,12 +20,17 @@ import 'widgets/launcher.dart';
 import 'widgets/media_card.dart';
 import 'widgets/media_player.dart';
 import 'widgets/metric_tile.dart';
+import 'widgets/notification_item.dart';
 import 'widgets/page_nav.dart';
+import 'widgets/panel.dart';
+import 'widgets/ring.dart';
 import 'widgets/section_header.dart';
 import 'widgets/slider.dart';
 import 'widgets/sparkline.dart';
+import 'widgets/stat_row.dart';
 import 'widgets/status_list.dart';
 import 'widgets/toggle.dart';
+import 'widgets/visualizer.dart';
 
 /// Receives an interaction from a widget: the widget node and the gesture slot
 /// (e.g. "tap"). The consumer maps `node.interaction[slot]` to an action / flow /
@@ -100,6 +106,14 @@ class RendererRegistry {
     r.register('status.list', buildStatusList);
     r.register('metric.tile', buildMetricTile);
     r.register('section.header', buildSectionHeader);
+    // Wave 0 granularity-model widgets: a glass panel BACKGROUND plus small bare
+    // widgets meant to be clustered on top of it (each individually editable).
+    r.register('panel', buildPanel);
+    r.register('stat.row', buildStatRow);
+    r.register('control.tile', buildControlTile);
+    r.register('visualizer', buildVisualizer);
+    r.register('ring', buildRing);
+    r.register('notification.item', buildNotificationItem);
     return r;
   }
 }

@@ -50,6 +50,42 @@ List<ParamSchema> builtinWidgetSchema(String type) {
         ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
         ParamSchema(name: 'trailing', type: ParamType.text, label: 'Trailing'),
       ];
+    // Wave 0 granularity-model widgets.
+    case 'panel':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'accent', type: ParamType.color, label: 'Accent'),
+      ];
+    case 'stat.row':
+      return const [
+        ParamSchema(name: 'label', type: ParamType.text, label: 'Label'),
+        ParamSchema(name: 'value', type: ParamType.text, label: 'Value'),
+        ParamSchema(name: 'unit', type: ParamType.text, label: 'Unit'),
+      ];
+    case 'control.tile':
+      return const [
+        ParamSchema(name: 'label', type: ParamType.text, label: 'Label'),
+        ParamSchema(name: 'icon', type: ParamType.text, label: 'Icon'),
+      ];
+    case 'visualizer':
+      return const [
+        ParamSchema(
+            name: 'bars', type: ParamType.integer, label: 'Bars', min: 3, max: 64),
+      ];
+    case 'ring':
+      return const [
+        ParamSchema(name: 'sublabel', type: ParamType.text, label: 'Sub-label'),
+        ParamSchema(name: 'unit', type: ParamType.text, label: 'Unit'),
+        ParamSchema(name: 'min', type: ParamType.number, label: 'Min'),
+        ParamSchema(name: 'max', type: ParamType.number, label: 'Max'),
+      ];
+    case 'notification.item':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'body', type: ParamType.text, label: 'Body'),
+        ParamSchema(name: 'time', type: ParamType.text, label: 'Time'),
+        ParamSchema(name: 'icon', type: ParamType.text, label: 'Icon'),
+      ];
     default:
       return const [];
   }

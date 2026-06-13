@@ -87,7 +87,13 @@ Widget buildMediaPlayer(BuildContext context, WidgetRenderContext ctx) {
           ],
         ),
         const SizedBox(height: DeckSpacing.md),
-        _ProgressBar(id: node.id, progress: info.progress, accent: accent),
+        _ProgressBar(
+          id: node.id,
+          progress: info.progress,
+          accent: accent,
+          elapsed: info.elapsed,
+          duration: info.duration,
+        ),
         const SizedBox(height: DeckSpacing.md),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -136,19 +142,30 @@ class PlayerInfo extends MediaInfo {
     required super.artist,
     required super.playing,
     required this.progress,
+    this.elapsed,
+    this.duration,
   });
 
   /// Playback progress 0..1 (clamped); 0 when unknown.
   final double progress;
+
+  /// Optional elapsed seconds (host-authored); drives the `m:ss` time row.
+  final double? elapsed;
+
+  /// Optional track duration in seconds (host-authored).
+  final double? duration;
 }
 
 /// Extracts player fields from a bound [value]: a `Map`
-/// (`{track, artist, playing, progress}`) or a plain string title; falls back to
-/// the node's style `track`/`artist` and shows "--" when nothing is bound.
+/// (`{track, artist, playing, progress, elapsed, duration}`) or a plain string
+/// title; falls back to the node's style `track`/`artist` and shows "--" when
+/// nothing is bound.
 PlayerInfo playerInfoFromValue(Object? value, WidgetNode node) {
   final style = node.appearance.style;
   final styleTrack = style['track'] as String?;
   final styleArtist = style['artist'] as String?;
+  // Duration may be authored in style for a static preview.
+  final styleDuration = _seconds(style['duration']);
 
   if (value is Map) {
     final m = value.cast<Object?, Object?>();
@@ -157,6 +174,8 @@ PlayerInfo playerInfoFromValue(Object? value, WidgetNode node) {
       artist: _str(m['artist']) ?? styleArtist ?? '',
       playing: m['playing'] == true,
       progress: _progress(m['progress']),
+      elapsed: _seconds(m['elapsed']),
+      duration: _seconds(m['duration']) ?? styleDuration,
     );
   }
   if (value is String && value.isNotEmpty) {
@@ -165,6 +184,7 @@ PlayerInfo playerInfoFromValue(Object? value, WidgetNode node) {
       artist: styleArtist ?? '',
       playing: false,
       progress: 0,
+      duration: styleDuration,
     );
   }
   return PlayerInfo(
@@ -172,7 +192,14 @@ PlayerInfo playerInfoFromValue(Object? value, WidgetNode node) {
     artist: styleArtist ?? '',
     playing: false,
     progress: 0,
+    duration: styleDuration,
   );
+}
+
+double? _seconds(Object? v) {
+  if (v == null) return null;
+  final n = v is num ? v.toDouble() : double.tryParse('$v');
+  return (n != null && n.isFinite && n >= 0) ? n : null;
 }
 
 String? _str(Object? v) {
@@ -345,33 +372,68 @@ class _ProgressBar extends StatelessWidget {
     required this.id,
     required this.progress,
     required this.accent,
+    this.elapsed,
+    this.duration,
   });
 
   final String id;
   final double progress;
   final Color accent;
 
+  /// Optional elapsed/duration in seconds (host-authored); when given the
+  /// `m:ss / m:ss` time row is shown above the bar (matching the prototype).
+  final double? elapsed;
+  final double? duration;
+
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(3),
-      child: Stack(
-        children: [
-          Container(
-            key: Key('player-progress-$id'),
-            height: 5,
-            color: DeckColors.border,
+    final p = progress.clamp(0.0, 1.0);
+    // Derive elapsed from progress×duration when only a duration is known.
+    final elapsedSec = elapsed ?? (duration != null ? duration! * p : null);
+    final timeStyle = DeckType.mono(fontSize: 10, color: DeckColors.textSecondary);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (duration != null) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(_fmt(elapsedSec ?? 0), key: Key('player-elapsed-$id'), style: timeStyle),
+              Text(_fmt(duration!), key: Key('player-duration-$id'), style: timeStyle),
+            ],
           ),
-          FractionallySizedBox(
-            widthFactor: progress.clamp(0.0, 1.0),
-            child: Container(
-              height: 5,
-              decoration: BoxDecoration(gradient: accentGradient()),
-            ),
-          ),
+          const SizedBox(height: DeckSpacing.xs),
         ],
-      ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: Stack(
+            children: [
+              Container(
+                key: Key('player-progress-$id'),
+                height: 5,
+                color: DeckColors.border,
+              ),
+              FractionallySizedBox(
+                widthFactor: p,
+                child: Container(
+                  height: 5,
+                  decoration: BoxDecoration(gradient: accentGradient()),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
+  }
+
+  /// Formats a duration in seconds as `m:ss`.
+  static String _fmt(double seconds) {
+    final s = seconds.isFinite && seconds >= 0 ? seconds.round() : 0;
+    final m = s ~/ 60;
+    final r = s % 60;
+    return '$m:${r.toString().padLeft(2, '0')}';
   }
 }
 

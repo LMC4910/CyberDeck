@@ -20,6 +20,10 @@ import '../registry.dart';
 import 'gauge_common.dart';
 
 /// Builds a linear gauge/bar from a render context (the registry builder).
+///
+/// BARE by default under the granularity model (no built-in [CardChrome]) so it
+/// can sit on top of a [panel]; set `style.card:true` to re-enable its own card.
+/// Per-widget accent comes via `style.color`/`style.theme`.
 Widget buildLinearGauge(BuildContext context, WidgetRenderContext ctx) {
   final node = ctx.node;
   final fraction = gaugeFraction(ctx.value, gaugeMin(node), gaugeMax(node));
@@ -29,10 +33,7 @@ Widget buildLinearGauge(BuildContext context, WidgetRenderContext ctx) {
   // Segment count is editable via config.segments (sane default + floor).
   final segments = ((node.config['segments'] as num?)?.toInt() ?? 20).clamp(4, 60);
 
-  return CardChrome(
-    accent: accent,
-    padding: const EdgeInsets.all(DeckSpacing.md),
-    child: Column(
+  final body = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -74,8 +75,16 @@ Widget buildLinearGauge(BuildContext context, WidgetRenderContext ctx) {
           ),
         ),
       ],
-    ),
-  );
+    );
+
+  if (node.appearance.style['card'] == true) {
+    return CardChrome(
+      accent: accent,
+      padding: const EdgeInsets.all(DeckSpacing.md),
+      child: body,
+    );
+  }
+  return body;
 }
 
 class _SegmentedBarPainter extends CustomPainter {

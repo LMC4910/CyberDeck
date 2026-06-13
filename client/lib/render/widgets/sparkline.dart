@@ -12,22 +12,35 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../theme/surfaces.dart';
 import '../../theme/tokens.dart';
 import '../registry.dart';
 import 'widget_theme.dart';
 
 /// Builds a sparkline from a render context (the registry builder).
+///
+/// BARE by default under the granularity model (no card chrome) so it can sit on
+/// top of a [panel]; set `style.card:true` to wrap it in its own [CardChrome].
 Widget buildSparkline(BuildContext context, WidgetRenderContext ctx) {
   final node = ctx.node;
   final accent = resolveAccent(node.appearance.style);
   final capacity = (node.config['capacity'] as num?)?.toInt() ?? 64;
-  return _Sparkline(
+  final spark = _Sparkline(
     key: Key('sparkline-${node.id}'),
     id: node.id,
     value: ctx.value,
     accent: accent,
     capacity: capacity < 2 ? 2 : capacity,
   );
+  if (node.appearance.style['card'] == true) {
+    return CardChrome(
+      accent: accent,
+      title: node.appearance.style['title'] as String?,
+      padding: const EdgeInsets.all(DeckSpacing.md),
+      child: SizedBox(height: 60, child: spark),
+    );
+  }
+  return spark;
 }
 
 /// Coerces a bound value into a list of samples. A `List` rides through as the
