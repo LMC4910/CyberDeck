@@ -60,10 +60,9 @@ List<WidgetNode> _favoriteGames() {
   return [
     panel('fav.panel', placement: at(0, 0, colSpan: 18, rowSpan: 5),
         title: 'Favorite Games', accent: accent),
-    label('fav.subtitle',
-        placement: at(1, 1, colSpan: 12, rowSpan: 1),
-        text: 'Launch, manage and optimize your games',
-        font: 'body',
+    sectionHeader('fav.subtitle',
+        placement: at(1, 1, colSpan: 14, rowSpan: 1),
+        title: 'Launch, manage and optimize your games',
         color: '#8E92C4'),
     for (var i = 0; i < posters.length; i++)
       launcher('fav.${posters[i]['id']}',
@@ -245,29 +244,22 @@ List<WidgetNode> _networkStatus() {
 // ──────────────────────────────────────────────────────────────────────────
 List<WidgetNode> _gameLauncher() {
   const accent = 'accent-purple';
-  final launchers = <Map<String, String>>[
-    {'id': 'steam', 'label': 'Steam', 'icon': 'app', 'color': '#3BA7FF'},
-    {'id': 'epic', 'label': 'Epic Games', 'icon': 'app', 'color': '#F2F3FF'},
-    {'id': 'battlenet', 'label': 'Battle.net', 'icon': 'app', 'color': '#3BA7FF'},
-    {'id': 'gog', 'label': 'GOG Galaxy', 'icon': 'app', 'color': '#B5651D'},
-    {'id': 'xbox', 'label': 'Xbox App', 'icon': 'game', 'color': '#5DAE3A'},
-  ];
-
   return [
     panel('launch.panel', placement: at(18, 0, colSpan: 6, rowSpan: 8),
         title: 'Game Launcher', accent: accent),
-    for (var i = 0; i < launchers.length; i++) ...[
-      iconButton('launch.${launchers[i]['id']}',
-          icon: launchers[i]['icon']!,
-          placement: at(19, 1 + i, colSpan: 1, rowSpan: 1),
-          action: 'launcher.open.${launchers[i]['id']}',
-          color: launchers[i]['color']),
-      label('launch.${launchers[i]['id']}.label',
-          placement: at(20, 1 + i, colSpan: 3, rowSpan: 1),
-          text: launchers[i]['label']!,
-          font: 'body',
-          color: '#B9BCE0'),
-    ],
+    // A list of platform launchers (icon + name + a launch affordance). Rendered
+    // as a status list so each row reads icon→name→action cleanly and the list
+    // clips/scrolls inside the panel rather than overflowing it.
+    statusList('launch.list',
+        placement: at(19, 1, colSpan: 4, rowSpan: 6),
+        color: accent,
+        items: const [
+          {'label': 'Steam', 'value': 'Launch', 'icon': 'app', 'color': '#3BA7FF'},
+          {'label': 'Epic Games', 'value': 'Launch', 'icon': 'app', 'color': '#F2F3FF'},
+          {'label': 'Battle.net', 'value': 'Launch', 'icon': 'app', 'color': '#3BA7FF'},
+          {'label': 'GOG Galaxy', 'value': 'Launch', 'icon': 'app', 'color': '#B5651D'},
+          {'label': 'Xbox App', 'value': 'Launch', 'icon': 'game', 'color': '#5DAE3A'},
+        ]),
   ];
 }
 
