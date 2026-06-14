@@ -3,6 +3,12 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+    <!-- QR pairing scans the engine's pairing code with the camera (mobile_scanner).
+         The camera is optional (manual payload entry is the fallback), so the app
+         still installs on camera-less devices. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
     <application
         android:label="cyberdeck_client"
         android:name="${applicationName}"

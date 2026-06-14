@@ -46,13 +46,81 @@ class _CameraScanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan pairing QR')),
+      appBar: AppBar(
+        title: const Text('Scan pairing QR'),
+        actions: [
+          // Always-available fallback (and the escape hatch if the camera is
+          // blocked): type/paste the pairing payload instead of scanning.
+          IconButton(
+            key: const Key('scan-manual'),
+            icon: const Icon(Icons.keyboard),
+            tooltip: 'Enter payload manually',
+            onPressed: () => _manual(context),
+          ),
+        ],
+      ),
       body: MobileScanner(
         onDetect: (capture) {
           if (capture.barcodes.isEmpty) return;
           final raw = capture.barcodes.first.rawValue;
           if (raw != null) Navigator.of(context).pop(raw);
         },
+        // Without this, a denied/unavailable camera shows a blank screen. Surface
+        // the reason + the manual-entry fallback so pairing never dead-ends.
+        errorBuilder: (context, error, child) => _CameraError(
+          message: _describe(error),
+          onManual: () => _manual(context),
+        ),
+      ),
+    );
+  }
+
+  /// Opens manual payload entry; pops the scan page with the result when given.
+  Future<void> _manual(BuildContext context) async {
+    final value = await const ManualQrEntry().scan(context);
+    if (value != null && value.isNotEmpty && context.mounted) {
+      Navigator.of(context).pop(value);
+    }
+  }
+
+  static String _describe(MobileScannerException error) {
+    if (error.errorCode == MobileScannerErrorCode.permissionDenied) {
+      return 'Camera access is denied. Enable the Camera permission for CyberDeck '
+          'in Settings, or enter the pairing payload manually.';
+    }
+    return 'The camera is unavailable on this device. Enter the pairing payload '
+        'manually instead.';
+  }
+}
+
+/// Shown when the camera cannot start (permission denied / no camera): explains
+/// why and offers the manual-entry fallback so pairing still works.
+class _CameraError extends StatelessWidget {
+  const _CameraError({required this.message, required this.onManual});
+
+  final String message;
+  final VoidCallback onManual;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.no_photography_outlined, size: 48),
+            const SizedBox(height: 16),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              key: const Key('scan-error-manual'),
+              onPressed: onManual,
+              icon: const Icon(Icons.keyboard),
+              label: const Text('Enter payload manually'),
+            ),
+          ],
+        ),
       ),
     );
   }
