@@ -35,28 +35,30 @@ const List<Map<String, dynamic>> _heatRules = [
   },
 ];
 
-/// The System Control page layout (24x16 grid).
+/// The System Control page layout (24x18 grid). Two tall top panels (System
+/// Control + Performance Modes) over a bottom band (Storage / System Info / Fan /
+/// Networks / Uptime); a Quick Shortcuts list runs down the right column.
 LayoutPage systemControlPage() {
   final widgets = <WidgetNode>[
     // ───────────────────────── Page title ─────────────────────────
-    label(
+    // Static captions use section.header so they render the literal text (a
+    // bound `label` would append a "-- " value placeholder when unbound).
+    sectionHeader(
       'sc.title',
       placement: at(0, 0, colSpan: 12, rowSpan: 1),
-      text: 'SYSTEM CONTROL',
-      font: 'display',
+      title: 'System Control',
       color: _cyan,
     ),
-    label(
+    sectionHeader(
       'sc.subtitle',
       placement: at(0, 1, colSpan: 12, rowSpan: 1),
-      text: 'Manage your system, performance and utilities',
-      font: 'body',
+      title: 'Manage your system, performance and utilities',
     ),
 
     // ════════════════════════ SYSTEM CONTROL (power actions) ════════════════
     panel(
       'sc.power.panel',
-      placement: at(0, 2, colSpan: 8, rowSpan: 8),
+      placement: at(0, 2, colSpan: 9, rowSpan: 9),
       title: 'System Control',
       accent: _cyan,
     ),
@@ -167,102 +169,92 @@ LayoutPage systemControlPage() {
     // ════════════════════════ PERFORMANCE MODES ════════════════════════════
     panel(
       'sc.perf.panel',
-      placement: at(8, 2, colSpan: 8, rowSpan: 8),
+      placement: at(9, 2, colSpan: 7, rowSpan: 9),
       title: 'Performance Modes',
       accent: _purple,
     ),
-    label(
-      'sc.perf.hint',
-      placement: at(9, 2, colSpan: 6, rowSpan: 1),
-      text: 'Optimize your system performance',
-      font: 'body',
-    ),
+    // Four modes, each a NAME header above a muted DESCRIPTION, with its
+    // Activate/Active tile aligned right. Each mode occupies a 2-row block so the
+    // two text lines breathe; the cluster fills rows 3–10 inside the panel.
+    // section.header renders literal text (a bound `label` would append "-- ").
     // Silent.
-    label(
+    sectionHeader(
       'sc.perf.silent.name',
-      placement: at(9, 3, colSpan: 4, rowSpan: 1),
-      text: 'Silent Mode',
-      font: 'heading',
+      placement: at(10, 3, colSpan: 4, rowSpan: 1),
+      title: 'Silent Mode',
       color: _cyan,
     ),
-    label(
+    sectionHeader(
       'sc.perf.silent.desc',
-      placement: at(9, 4, colSpan: 4, rowSpan: 1),
-      text: 'Low power, minimal fan noise',
-      font: 'body',
+      placement: at(10, 4, colSpan: 4, rowSpan: 1),
+      title: 'Reduces fan speed and power usage',
     ),
     controlTile(
       'sc.perf.silent.activate',
       label: 'Activate',
       icon: 'check',
       action: 'performance.setMode.silent',
-      placement: at(14, 3, colSpan: 1, rowSpan: 1),
+      placement: at(14, 3, colSpan: 2, rowSpan: 2),
       color: _cyan,
     ),
     // Balanced (active by default).
-    label(
+    sectionHeader(
       'sc.perf.balanced.name',
-      placement: at(9, 5, colSpan: 4, rowSpan: 1),
-      text: 'Balanced Mode',
-      font: 'heading',
+      placement: at(10, 5, colSpan: 4, rowSpan: 1),
+      title: 'Balanced Mode',
       color: _ok,
     ),
-    label(
+    sectionHeader(
       'sc.perf.balanced.desc',
-      placement: at(9, 6, colSpan: 4, rowSpan: 1),
-      text: 'Optimal performance and efficiency',
-      font: 'body',
+      placement: at(10, 6, colSpan: 4, rowSpan: 1),
+      title: 'Balanced performance and efficiency',
     ),
     controlTile(
       'sc.perf.balanced.activate',
       label: 'Active',
       icon: 'check',
       action: 'performance.setMode.balanced',
-      placement: at(14, 5, colSpan: 1, rowSpan: 1),
+      placement: at(14, 5, colSpan: 2, rowSpan: 2),
       color: _ok,
     ),
     // Performance.
-    label(
+    sectionHeader(
       'sc.perf.high.name',
-      placement: at(9, 7, colSpan: 4, rowSpan: 1),
-      text: 'Performance Mode',
-      font: 'heading',
+      placement: at(10, 7, colSpan: 4, rowSpan: 1),
+      title: 'Performance Mode',
       color: _warn,
     ),
-    label(
+    sectionHeader(
       'sc.perf.high.desc',
-      placement: at(9, 8, colSpan: 4, rowSpan: 1),
-      text: 'Higher performance, more power',
-      font: 'body',
+      placement: at(10, 8, colSpan: 4, rowSpan: 1),
+      title: 'Higher performance and fan speed',
     ),
     controlTile(
       'sc.perf.high.activate',
       label: 'Activate',
       icon: 'bolt',
       action: 'performance.setMode.performance',
-      placement: at(14, 7, colSpan: 1, rowSpan: 1),
+      placement: at(14, 7, colSpan: 2, rowSpan: 2),
       color: _warn,
     ),
     // Turbo.
-    label(
+    sectionHeader(
       'sc.perf.turbo.name',
-      placement: at(9, 9, colSpan: 4, rowSpan: 1),
-      text: 'Turbo Mode',
-      font: 'heading',
+      placement: at(10, 9, colSpan: 4, rowSpan: 1),
+      title: 'Turbo Mode',
       color: _err,
     ),
-    label(
+    sectionHeader(
       'sc.perf.turbo.desc',
-      placement: at(9, 10, colSpan: 4, rowSpan: 1),
-      text: 'Maximum performance, max power draw',
-      font: 'body',
+      placement: at(10, 10, colSpan: 4, rowSpan: 1),
+      title: 'Maximum performance (all cores)',
     ),
     controlTile(
       'sc.perf.turbo.activate',
       label: 'Activate',
       icon: 'bolt',
       action: 'performance.setMode.turbo',
-      placement: at(14, 9, colSpan: 1, rowSpan: 1),
+      placement: at(14, 9, colSpan: 2, rowSpan: 2),
       color: _err,
       confirm: true,
     ),
@@ -270,7 +262,7 @@ LayoutPage systemControlPage() {
     // ════════════════════════ QUICK SHORTCUTS ══════════════════════════════
     statusList(
       'sc.shortcuts',
-      placement: at(16, 2, colSpan: 8, rowSpan: 5),
+      placement: at(16, 2, colSpan: 8, rowSpan: 6),
       title: 'Quick Shortcuts',
       color: _purple,
       items: const [
@@ -288,7 +280,7 @@ LayoutPage systemControlPage() {
     // ════════════════════════ NETWORKS ═════════════════════════════════════
     panel(
       'sc.net.panel',
-      placement: at(16, 7, colSpan: 8, rowSpan: 6),
+      placement: at(16, 8, colSpan: 8, rowSpan: 6),
       title: 'Networks',
       accent: _cyan,
     ),
@@ -296,14 +288,14 @@ LayoutPage systemControlPage() {
     statRow(
       'sc.net.down.label',
       label: 'Download',
-      placement: at(17, 8, colSpan: 3, rowSpan: 1),
+      placement: at(17, 9, colSpan: 3, rowSpan: 1),
       stateBinding: 'net.download',
       unit: ' Mbps',
       color: _cyan,
     ),
     sparkline(
       'sc.net.down.spark',
-      placement: at(20, 8, colSpan: 3, rowSpan: 1),
+      placement: at(20, 9, colSpan: 3, rowSpan: 1),
       stateBinding: 'net.download.series',
       color: _cyan,
       capacity: 48,
@@ -312,14 +304,14 @@ LayoutPage systemControlPage() {
     statRow(
       'sc.net.up.label',
       label: 'Upload',
-      placement: at(17, 9, colSpan: 3, rowSpan: 1),
+      placement: at(17, 11, colSpan: 3, rowSpan: 1),
       stateBinding: 'net.upload',
       unit: ' Mbps',
       color: _purple,
     ),
     sparkline(
       'sc.net.up.spark',
-      placement: at(20, 9, colSpan: 3, rowSpan: 1),
+      placement: at(20, 11, colSpan: 3, rowSpan: 1),
       stateBinding: 'net.upload.series',
       color: _purple,
       capacity: 48,
@@ -328,14 +320,14 @@ LayoutPage systemControlPage() {
     statRow(
       'sc.net.ping.label',
       label: 'Ping',
-      placement: at(17, 10, colSpan: 3, rowSpan: 1),
+      placement: at(17, 12, colSpan: 3, rowSpan: 1),
       stateBinding: 'net.ping',
       unit: ' ms',
       color: _ok,
     ),
     sparkline(
       'sc.net.ping.spark',
-      placement: at(20, 10, colSpan: 3, rowSpan: 1),
+      placement: at(20, 12, colSpan: 3, rowSpan: 1),
       stateBinding: 'net.ping.series',
       color: _ok,
       capacity: 48,
@@ -344,13 +336,13 @@ LayoutPage systemControlPage() {
     // ════════════════════════ STORAGE DRIVES ═══════════════════════════════
     panel(
       'sc.storage.panel',
-      placement: at(0, 10, colSpan: 8, rowSpan: 6),
+      placement: at(0, 11, colSpan: 8, rowSpan: 7),
       title: 'Storage Drives',
       accent: _cyan,
     ),
     gaugeLinear(
       'sc.storage.c',
-      placement: at(1, 11, colSpan: 6, rowSpan: 1),
+      placement: at(1, 12, colSpan: 6, rowSpan: 1),
       stateBinding: 'storage.c.percent',
       label: 'C: System (SSD)',
       unit: '%',
@@ -359,7 +351,7 @@ LayoutPage systemControlPage() {
     ),
     gaugeLinear(
       'sc.storage.d',
-      placement: at(1, 12, colSpan: 6, rowSpan: 1),
+      placement: at(1, 13, colSpan: 6, rowSpan: 1),
       stateBinding: 'storage.d.percent',
       label: 'D: Games (SSD)',
       unit: '%',
@@ -368,7 +360,7 @@ LayoutPage systemControlPage() {
     ),
     gaugeLinear(
       'sc.storage.e',
-      placement: at(1, 13, colSpan: 6, rowSpan: 1),
+      placement: at(1, 14, colSpan: 6, rowSpan: 1),
       stateBinding: 'storage.e.percent',
       label: 'E: Media (HDD)',
       unit: '%',
@@ -377,7 +369,7 @@ LayoutPage systemControlPage() {
     ),
     gaugeLinear(
       'sc.storage.f',
-      placement: at(1, 14, colSpan: 6, rowSpan: 1),
+      placement: at(1, 15, colSpan: 6, rowSpan: 1),
       stateBinding: 'storage.f.percent',
       label: 'F: Backup (HDD)',
       unit: '%',
@@ -388,7 +380,7 @@ LayoutPage systemControlPage() {
     // ════════════════════════ SYSTEM INFORMATION ═══════════════════════════
     panel(
       'sc.sysinfo.panel',
-      placement: at(8, 10, colSpan: 5, rowSpan: 6),
+      placement: at(8, 11, colSpan: 5, rowSpan: 7),
       title: 'System Information',
       accent: _purple,
     ),
@@ -396,30 +388,30 @@ LayoutPage systemControlPage() {
       'sc.sysinfo.os',
       label: 'Operating System',
       value: 'Windows 11 Pro',
-      placement: at(9, 11, colSpan: 3, rowSpan: 1),
+      placement: at(9, 12, colSpan: 3, rowSpan: 1),
     ),
     statRow(
       'sc.sysinfo.cpu',
       label: 'Processor',
       value: 'Intel Core i9-13900K',
-      placement: at(9, 12, colSpan: 3, rowSpan: 1),
+      placement: at(9, 13, colSpan: 3, rowSpan: 1),
     ),
     statRow(
       'sc.sysinfo.mobo',
       label: 'Motherboard',
       value: 'ROG Z790 Hero',
-      placement: at(9, 13, colSpan: 3, rowSpan: 1),
+      placement: at(9, 14, colSpan: 3, rowSpan: 1),
     ),
     statRow(
       'sc.sysinfo.gpu',
       label: 'GPU',
       value: 'RTX 4090',
-      placement: at(9, 14, colSpan: 3, rowSpan: 1),
+      placement: at(9, 15, colSpan: 3, rowSpan: 1),
     ),
     statRow(
       'sc.sysinfo.cputemp',
       label: 'CPU Temp',
-      placement: at(9, 15, colSpan: 3, rowSpan: 1),
+      placement: at(9, 16, colSpan: 3, rowSpan: 1),
       stateBinding: 'sys.cpu.temp',
       unit: '°C',
       valueRules: _heatRules,
@@ -429,39 +421,37 @@ LayoutPage systemControlPage() {
     // ════════════════════════ FAN CONTROL ══════════════════════════════════
     panel(
       'sc.fan.panel',
-      placement: at(13, 10, colSpan: 3, rowSpan: 6),
+      placement: at(13, 11, colSpan: 3, rowSpan: 7),
       title: 'Fan Control',
       accent: _cyan,
     ),
-    label(
+    sectionHeader(
       'sc.fan.cpu.label',
-      placement: at(13, 11, colSpan: 3, rowSpan: 1),
-      text: 'CPU Fan',
-      font: 'body',
+      placement: at(13, 12, colSpan: 3, rowSpan: 1),
+      title: 'CPU Fan',
     ),
     slider(
       'sc.fan.cpu',
-      placement: at(13, 12, colSpan: 3, rowSpan: 1),
+      placement: at(13, 13, colSpan: 3, rowSpan: 1),
       stateBinding: 'fan.cpu.percent',
       action: 'fan.setSpeed.cpu',
       color: _cyan,
     ),
-    label(
+    sectionHeader(
       'sc.fan.case1.label',
-      placement: at(13, 13, colSpan: 3, rowSpan: 1),
-      text: 'Case Fan 1',
-      font: 'body',
+      placement: at(13, 14, colSpan: 3, rowSpan: 1),
+      title: 'Case Fan 1',
     ),
     slider(
       'sc.fan.case1',
-      placement: at(13, 14, colSpan: 3, rowSpan: 1),
+      placement: at(13, 15, colSpan: 3, rowSpan: 1),
       stateBinding: 'fan.case1.percent',
       action: 'fan.setSpeed.case1',
       color: _purple,
     ),
     toggle(
       'sc.fan.auto',
-      placement: at(13, 15, colSpan: 3, rowSpan: 1),
+      placement: at(13, 16, colSpan: 3, rowSpan: 1),
       stateBinding: 'fan.auto',
       label: 'Auto Fan Control',
       action: 'fan.toggleAuto',
@@ -471,20 +461,25 @@ LayoutPage systemControlPage() {
     // ════════════════════════ SYSTEM UPTIME ════════════════════════════════
     panel(
       'sc.uptime.panel',
-      placement: at(16, 13, colSpan: 8, rowSpan: 3),
+      placement: at(16, 14, colSpan: 8, rowSpan: 4),
       title: 'System Uptime',
       accent: _purple,
       glow: false,
     ),
-    iconButton(
+    // A square clock chip (control.tile renders the deck-icon set, which includes
+    // 'clock'; the round `button` widget's icon map does not) beside the live
+    // uptime readout.
+    controlTile(
       'sc.uptime.icon',
+      label: '',
       icon: 'clock',
-      placement: at(17, 14, colSpan: 1, rowSpan: 1),
+      action: 'system.openUptime',
+      placement: at(17, 15, colSpan: 2, rowSpan: 2),
       color: _purple,
     ),
     label(
       'sc.uptime.value',
-      placement: at(18, 14, colSpan: 5, rowSpan: 1),
+      placement: at(19, 15, colSpan: 4, rowSpan: 2),
       stateBinding: 'sys.uptime',
       font: 'mono',
       color: _cyan,
@@ -493,7 +488,7 @@ LayoutPage systemControlPage() {
 
   return LayoutPage(
     id: 'system-control',
-    grid: const GridConfig(columns: 24, rows: 16),
+    grid: const GridConfig(columns: 24, rows: 18),
     widgets: widgets,
   );
 }
