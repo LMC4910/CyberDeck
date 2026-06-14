@@ -21,6 +21,33 @@ Widget buildMediaCard(BuildContext context, WidgetRenderContext ctx) {
   final accent = resolveAccent(node.appearance.style);
   final info = mediaInfoFromValue(ctx.value, node);
 
+  final transport = Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
+      _TransportButton(
+        id: node.id,
+        slot: 'previous',
+        icon: Icons.skip_previous,
+        accent: accent,
+        onTap: () => ctx.emit('previous'),
+      ),
+      _TransportButton(
+        id: node.id,
+        slot: 'playPause',
+        icon: info.playing ? Icons.pause : Icons.play_arrow,
+        accent: accent,
+        onTap: () => ctx.emit('playPause'),
+      ),
+      _TransportButton(
+        id: node.id,
+        slot: 'next',
+        icon: Icons.skip_next,
+        accent: accent,
+        onTap: () => ctx.emit('next'),
+      ),
+    ],
+  );
+
   return DecoratedBox(
     key: Key('media-card-${node.id}'),
     decoration: BoxDecoration(
@@ -28,65 +55,51 @@ Widget buildMediaCard(BuildContext context, WidgetRenderContext ctx) {
       border: Border.all(color: DeckColors.border),
       borderRadius: BorderRadius.circular(DeckSpacing.radius),
     ),
-    child: Padding(
-      padding: const EdgeInsets.all(DeckSpacing.md),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Flexible(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  info.track,
-                  key: Key('media-track-${node.id}'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: DeckColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(DeckSpacing.radius),
+      child: Padding(
+        padding: const EdgeInsets.all(DeckSpacing.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      info.track,
+                      key: Key('media-track-${node.id}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: DeckColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      info.artist,
+                      key: Key('media-artist-${node.id}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: DeckColors.textSecondary),
+                    ),
+                  ],
                 ),
-                Text(
-                  info.artist,
-                  key: Key('media-artist-${node.id}'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: DeckColors.textSecondary),
-                ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(height: DeckSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _TransportButton(
-                id: node.id,
-                slot: 'previous',
-                icon: Icons.skip_previous,
-                accent: accent,
-                onTap: () => ctx.emit('previous'),
-              ),
-              _TransportButton(
-                id: node.id,
-                slot: 'playPause',
-                icon: info.playing ? Icons.pause : Icons.play_arrow,
-                accent: accent,
-                onTap: () => ctx.emit('playPause'),
-              ),
-              _TransportButton(
-                id: node.id,
-                slot: 'next',
-                icon: Icons.skip_next,
-                accent: accent,
-                onTap: () => ctx.emit('next'),
-              ),
-            ],
-          ),
-        ],
+            const SizedBox(height: DeckSpacing.sm),
+            // Transport keeps its touch-target size but scales down (never
+            // striping) when the cell is too short for the full row.
+            Flexible(
+              child: FittedBox(fit: BoxFit.scaleDown, child: transport),
+            ),
+          ],
+        ),
       ),
     ),
   );

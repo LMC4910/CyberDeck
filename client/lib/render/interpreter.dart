@@ -190,6 +190,14 @@ class LayoutInterpreter {
   }
 }
 
+/// The fixed cell edge (logical px) used by the runtime SCALE-TO-FIT canvas. The
+/// deck is laid out once at a fixed design size built from this constant and the
+/// page grid, then uniformly scaled into the viewport by a [FittedBox] — so a
+/// page looks identical at every window size (thin letterbox if the aspect ratio
+/// differs) and widgets never overflow because the window got smaller. The
+/// Designer keeps using [GridConfig.cellWidth]/[cellHeight] for its own canvas.
+const double kDesignCell = 60;
+
 class _LayoutView extends StatelessWidget {
   const _LayoutView(this.interp);
 
@@ -202,17 +210,31 @@ class _LayoutView extends StatelessWidget {
       valueListenable: interp.structure,
       builder: (context, _, _) {
         final grid = interp.grid;
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final cellW = grid.cellWidth(constraints.maxWidth);
-            final cellH = grid.cellHeight(_finite(constraints.maxHeight));
-            return Stack(
-              children: [
-                for (final id in interp.widgetIds)
-                  _positioned(id, grid, cellW, cellH),
-              ],
-            );
-          },
+        // Fixed design canvas geometry (independent of the live viewport).
+        final cols = grid.columns > 0 ? grid.columns : 1;
+        final rows = grid.rows > 0 ? grid.rows : 1;
+        final designW = grid.marginX * 2 +
+            cols * kDesignCell +
+            (cols - 1) * grid.gutter;
+        final designH = grid.marginY * 2 +
+            rows * kDesignCell +
+            (rows - 1) * grid.gutter;
+        // Build the Stack/Positioned tree at the FIXED design size, then scale it
+        // uniformly into whatever space we're given, centred (BoxFit.contain).
+        return Center(
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: designW,
+              height: designH,
+              child: Stack(
+                children: [
+                  for (final id in interp.widgetIds)
+                    _positioned(id, grid, kDesignCell, kDesignCell),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
@@ -238,8 +260,6 @@ class _LayoutView extends StatelessWidget {
       ),
     );
   }
-
-  static double _finite(double v) => v.isFinite ? v : 600.0;
 }
 
 /// Renders a single widget node: rebuilds when its node changes (per-widget op) or

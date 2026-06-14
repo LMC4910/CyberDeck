@@ -37,30 +37,40 @@ Widget buildLinearGauge(BuildContext context, WidgetRenderContext ctx) {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (label.isNotEmpty)
-              Expanded(
-                child: Text(
-                  label,
-                  key: Key('gauge-label-${node.id}'),
-                  style: DeckType.sectionLabel(),
-                  overflow: TextOverflow.ellipsis,
+        // Header (label + value) shrinks to fit a short cell rather than
+        // overflowing — the value never disappears, it scales down.
+        Flexible(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (label.isNotEmpty)
+                Expanded(
+                  child: Text(
+                    label,
+                    key: Key('gauge-label-${node.id}'),
+                    style: DeckType.sectionLabel(),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    valueText,
+                    key: Key('gauge-value-${node.id}'),
+                    style: DeckType.display(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: accent,
+                      height: 1.0,
+                    ),
+                  ),
                 ),
               ),
-            Text(
-              valueText,
-              key: Key('gauge-value-${node.id}'),
-              style: DeckType.display(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: accent,
-                height: 1.0,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: DeckSpacing.sm),
         SizedBox(

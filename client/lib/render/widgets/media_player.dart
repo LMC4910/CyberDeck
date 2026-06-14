@@ -32,6 +32,56 @@ Widget buildMediaPlayer(BuildContext context, WidgetRenderContext ctx) {
   final accent = resolveAccent(node.appearance.style);
   final info = playerInfoFromValue(ctx.value, node);
 
+  // The now-playing header (art + title/artist/visualizer) is the elastic block:
+  // it's allowed to shrink (Flexible + scaleDown) so the player fits its cell even
+  // when short, while the progress bar + transport row keep their intrinsic size.
+  final header = Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _AlbumArt(
+        id: node.id,
+        asset: node.appearance.style['albumArt'] as String?,
+        accent: accent,
+      ),
+      const SizedBox(width: DeckSpacing.lg),
+      Expanded(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              info.track,
+              key: Key('player-track-${node.id}'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: DeckType.heading(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              info.artist,
+              key: Key('player-artist-${node.id}'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: DeckType.body(
+                fontSize: 13,
+                color: DeckColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: DeckSpacing.sm),
+            _Visualizer(
+              id: node.id,
+              playing: info.playing,
+              accent: accent,
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+
   return CardChrome(
     key: Key('media-player-${node.id}'),
     accent: accent,
@@ -40,52 +90,10 @@ Widget buildMediaPlayer(BuildContext context, WidgetRenderContext ctx) {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _AlbumArt(
-              id: node.id,
-              asset: node.appearance.style['albumArt'] as String?,
-              accent: accent,
-            ),
-            const SizedBox(width: DeckSpacing.lg),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    info.track,
-                    key: Key('player-track-${node.id}'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: DeckType.heading(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    info.artist,
-                    key: Key('player-artist-${node.id}'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: DeckType.body(
-                      fontSize: 13,
-                      color: DeckColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: DeckSpacing.sm),
-                  _Visualizer(
-                    id: node.id,
-                    playing: info.playing,
-                    accent: accent,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        // Header shrinks first (never striping) when the cell is short: it keeps
+        // its bounded width (so the Expanded title column is happy) but is clipped
+        // to whatever vertical space remains rather than overflowing the card.
+        Flexible(child: ClipRect(child: header)),
         const SizedBox(height: DeckSpacing.md),
         _ProgressBar(
           id: node.id,

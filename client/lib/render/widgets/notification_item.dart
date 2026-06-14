@@ -118,5 +118,8 @@ Widget buildNotificationItem(BuildContext context, WidgetRenderContext ctx) {
       child: row,
     );
   }
-  return row;
+  // Safety net: if dropped into a cell shorter than the row's intrinsic height,
+  // clip to the cell instead of painting outside it. (Cosmetic overflow only —
+  // the row itself is horizontal, so it never stripes.)
+  return ClipRect(child: row);
 }

@@ -47,25 +47,30 @@ Widget buildStatusList(BuildContext context, WidgetRenderContext ctx) {
               ),
             ),
           )
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < items.length; i++) ...[
-                if (i > 0)
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: DeckColors.border,
+        // A list that exceeds the panel scrolls within it (and clips at the panel
+        // edge) rather than overflowing/striping the card. The scroll view shrink-
+        // wraps so a short list still hugs its content.
+        : SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  if (i > 0)
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: DeckColors.border,
+                    ),
+                  _StatusRow(
+                    id: node.id,
+                    index: i,
+                    item: items[i],
+                    fallbackAccent: accent,
                   ),
-                _StatusRow(
-                  id: node.id,
-                  index: i,
-                  item: items[i],
-                  fallbackAccent: accent,
-                ),
+                ],
               ],
-            ],
+            ),
           ),
   );
 }
