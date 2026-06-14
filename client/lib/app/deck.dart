@@ -54,6 +54,23 @@ class DeckScreenState extends State<DeckScreen> {
     _buildInterpreter();
   }
 
+  @override
+  void didUpdateWidget(covariant DeckScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The AppShell hosts this screen under a stable GlobalKey and swaps `deckId`
+    // when the nav rail switches pages — so the State is reused. Reload the
+    // interpreter when the deck (or source) changes, otherwise the canvas would
+    // stay stuck on the first page.
+    if (oldWidget.deckId != widget.deckId ||
+        !identical(oldWidget.source, widget.source)) {
+      unawaited(_sub?.cancel());
+      _interp.dispose();
+      _armedId = null;
+      _armedAt = null;
+      _buildInterpreter();
+    }
+  }
+
   void _buildInterpreter() {
     _interp = LayoutInterpreter(registry: RendererRegistry.withBuiltins())
       ..load(widget.source.layout(widget.deckId))
