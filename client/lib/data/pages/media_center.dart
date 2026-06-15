@@ -1,25 +1,24 @@
-/// Media Center page (Wave 1) — the deck's audio/media command surface.
+/// Media Center page — the deck's audio/media command surface.
 ///
-/// Authored under the GRANULARITY MODEL: every visual "card" is a glass [panel]
-/// placed FIRST (so the interpreter, painting in list order, sits it BEHIND),
-/// then small BARE widgets (the media player, sliders, launchers, tiles, poster
-/// launchers, notification rows, weather labels) are layered ON TOP — each one
-/// individually editable in the Designer.
+/// ONE WIDGET = ONE ENTITY: every visual CARD is a SINGLE composite node that
+/// draws its OWN card chrome + all of its sub-content. There are NO `panel`
+/// backgrounds with decomposed clusters layered on top. The rich now-playing
+/// player, the volume cards, the notifications feed, the events list and the
+/// recently-played posters are each one editor entity; the individual controls
+/// (launchers + media-tool control tiles) are already single-entity tiles and
+/// stay one node each.
 ///
-/// Mirrors "Reference Images/media.png": Now Playing (large media.player) +
-/// Audio Control sliders along the top, a far-right column of Notifications /
-/// Upcoming Events / Weather, then Quick Access launchers + Media Tools tiles,
-/// and a Recently Played poster row across the bottom.
+/// Mirrors "Reference Images/media.png": a large Now Playing player + four
+/// volume cards + a Notifications feed across the top; Quick Access launchers,
+/// Media Tools control tiles and an Upcoming Events list across the middle; a
+/// Recently Played poster row along the bottom.
 ///
-/// Bound mock state ids (Wave 2 should seed these):
+/// Bound mock state ids (Wave 2 seeds these):
 ///   * media               — now-playing Map {track,artist,playing,progress,elapsed,duration}
-///   * media.visualizer     — bool (drives the standalone visualizer animation)
-///   * media.volume.system  — 0..100  (System Volume slider)
-///   * media.volume.spotify — 0..100  (Spotify Volume slider)
-///   * media.volume.browser — 0..100  (Browser Volume slider)
-///   * media.volume.discord — 0..100  (Discord Volume slider)
-///   * weather.temp         — num (°C, Weather hero label)
-///   * weather.condition    — String (Weather caption label)
+///   * media.volume.system  — 0..100  (System volume card)
+///   * media.volume.spotify — 0..100  (Spotify volume card)
+///   * media.volume.browser — 0..100  (Browser volume card)
+///   * media.volume.discord — 0..100  (Discord volume card)
 library;
 
 import '../../render/model.dart';
@@ -31,20 +30,19 @@ const String _cyan = '#00B4D8';
 /// Brand purple accent (matches [DeckColors.accentPurple]).
 const String _purple = '#7B2FBE';
 
+/// Spotify / Discord / red brand tints reused below.
+const String _spotify = '#1DB954';
+const String _discord = '#5865F2';
+
 /// Builds the Media Center [LayoutPage] on a 24×16 grid.
 LayoutPage mediaCenterPage() {
   final widgets = <WidgetNode>[
-    // ---------------------------------------------------------------- NOW PLAYING
-    // Panel first (behind), then the rich media player layered on top.
-    panel(
-      'mc.nowplaying.panel',
-      placement: at(0, 0, colSpan: 10, rowSpan: 5),
-      title: 'Now Playing',
-      accent: _purple,
-    ),
+    // ──────────────────────────────────────────────────────────── NOW PLAYING
+    // A SINGLE composite card: the rich media player owns its own chrome, art,
+    // visualizer, progress + transport. No panel behind it.
     mediaPlayer(
-      'mc.nowplaying.player',
-      placement: at(1, 1, colSpan: 8, rowSpan: 4),
+      'mc.nowplaying',
+      placement: at(0, 0, colSpan: 10, rowSpan: 6),
       stateBinding: 'media',
       track: 'Blinding Lights',
       artist: 'The Weeknd',
@@ -52,169 +50,104 @@ LayoutPage mediaCenterPage() {
       color: _purple,
     ),
 
-    // --------------------------------------------------------------- AUDIO CONTROL
-    panel(
-      'mc.audio.panel',
-      placement: at(10, 0, colSpan: 7, rowSpan: 5),
-      title: 'Audio Control',
-      accent: _cyan,
-    ),
-    label(
-      'mc.audio.system.label',
-      placement: at(11, 1, colSpan: 3, rowSpan: 1),
-      text: 'System Volume',
-      font: 'body',
-    ),
+    // ───────────────────────────────────────────────────────────── AUDIO / VOLUMES
+    // Four single composite volume cards (slider card:true) — each its own
+    // titled card with a vertical track + a % readout, bound to its source.
     slider(
-      'mc.audio.system.slider',
-      placement: at(11, 1, colSpan: 5, rowSpan: 1),
+      'mc.vol.system',
+      placement: at(10, 0, colSpan: 2, rowSpan: 6),
       stateBinding: 'media.volume.system',
       action: 'media.volume.set',
+      vertical: true,
+      title: 'System',
       color: _cyan,
     ),
-    label(
-      'mc.audio.spotify.label',
-      placement: at(11, 2, colSpan: 3, rowSpan: 1),
-      text: 'Spotify',
-      font: 'body',
-    ),
     slider(
-      'mc.audio.spotify.slider',
-      placement: at(11, 2, colSpan: 5, rowSpan: 1),
+      'mc.vol.spotify',
+      placement: at(12, 0, colSpan: 2, rowSpan: 6),
       stateBinding: 'media.volume.spotify',
       action: 'media.volume.set',
-      color: '#1DB954',
-    ),
-    label(
-      'mc.audio.browser.label',
-      placement: at(11, 3, colSpan: 3, rowSpan: 1),
-      text: 'Browser',
-      font: 'body',
+      vertical: true,
+      title: 'Spotify',
+      color: _spotify,
     ),
     slider(
-      'mc.audio.browser.slider',
-      placement: at(11, 3, colSpan: 5, rowSpan: 1),
+      'mc.vol.browser',
+      placement: at(14, 0, colSpan: 2, rowSpan: 6),
       stateBinding: 'media.volume.browser',
       action: 'media.volume.set',
+      vertical: true,
+      title: 'Browser',
       color: _cyan,
-    ),
-    label(
-      'mc.audio.discord.label',
-      placement: at(11, 4, colSpan: 3, rowSpan: 1),
-      text: 'Discord',
-      font: 'body',
     ),
     slider(
-      'mc.audio.discord.slider',
-      placement: at(11, 4, colSpan: 5, rowSpan: 1),
+      'mc.vol.discord',
+      placement: at(16, 0, colSpan: 2, rowSpan: 6),
       stateBinding: 'media.volume.discord',
       action: 'media.volume.set',
-      color: _purple,
-    ),
-
-    // ---------------------------------------------------------------- NOTIFICATIONS
-    panel(
-      'mc.notif.panel',
-      placement: at(17, 0, colSpan: 7, rowSpan: 6),
-      title: 'Notifications',
-      accent: _cyan,
-    ),
-    notificationItem(
-      'mc.notif.1',
-      placement: at(18, 1, colSpan: 5, rowSpan: 1),
-      title: 'Spotify',
-      body: 'New release from The Weeknd',
-      time: '2m',
-      icon: 'star',
-      color: '#1DB954',
-    ),
-    notificationItem(
-      'mc.notif.2',
-      placement: at(18, 2, colSpan: 5, rowSpan: 1),
-      title: 'System Update',
-      body: 'Audio drivers updated',
-      time: '14m',
-      icon: 'info',
-      color: _cyan,
-    ),
-    notificationItem(
-      'mc.notif.3',
-      placement: at(18, 3, colSpan: 5, rowSpan: 1),
+      vertical: true,
       title: 'Discord',
-      body: 'Friend joined Voice channel',
-      time: '23m',
-      icon: 'mic',
-      color: _purple,
-    ),
-    notificationItem(
-      'mc.notif.4',
-      placement: at(18, 4, colSpan: 5, rowSpan: 1),
-      title: 'Storage',
-      body: 'Media library backed up',
-      time: '1h',
-      icon: 'check',
-      color: '#00E676',
+      color: _discord,
     ),
 
-    // -------------------------------------------------------------- UPCOMING EVENTS
-    panel(
-      'mc.events.panel',
-      placement: at(17, 6, colSpan: 7, rowSpan: 5),
-      title: 'Upcoming Events',
-      accent: _purple,
-    ),
-    statusList(
-      'mc.events.list',
-      placement: at(18, 7, colSpan: 5, rowSpan: 3),
-      color: _purple,
+    // ──────────────────────────────────────────────────────────── NOTIFICATIONS
+    // A SINGLE composite feed card (replaces per-item notification nodes).
+    notificationList(
+      'mc.notifications',
+      placement: at(18, 0, colSpan: 6, rowSpan: 10),
+      title: 'Notifications',
+      color: _cyan,
       items: const [
-        {'label': 'Team Standup', 'value': '10:30', 'icon': 'clock'},
-        {'label': 'Release Review', 'value': '14:00', 'icon': 'clock'},
-        {'label': 'Album Drop', 'value': '18:00', 'icon': 'star'},
+        {
+          'title': 'Spotify',
+          'body': 'New release from The Weeknd',
+          'time': '2m',
+          'icon': 'star',
+          'color': _spotify,
+        },
+        {
+          'title': 'System Update',
+          'body': 'Audio drivers updated',
+          'time': '14m',
+          'icon': 'info',
+          'color': _cyan,
+        },
+        {
+          'title': 'Discord',
+          'body': 'Friend joined Voice channel',
+          'time': '23m',
+          'icon': 'mic',
+          'color': _discord,
+        },
+        {
+          'title': 'Storage',
+          'body': 'Media library backed up',
+          'time': '1h',
+          'icon': 'check',
+          'color': '#00E676',
+        },
       ],
     ),
 
-    // ---------------------------------------------------------------------- WEATHER
-    panel(
-      'mc.weather.panel',
-      placement: at(17, 11, colSpan: 7, rowSpan: 5),
-      title: 'Weather',
-      accent: _cyan,
-    ),
-    label(
-      'mc.weather.temp',
-      placement: at(18, 12, colSpan: 3, rowSpan: 2),
-      stateBinding: 'weather.temp',
-      unit: '°C',
-      font: 'display',
-      color: _cyan,
-    ),
-    label(
-      'mc.weather.condition',
-      placement: at(18, 14, colSpan: 5, rowSpan: 1),
-      stateBinding: 'weather.condition',
-      text: 'Clear Night',
-      font: 'body',
-    ),
-
-    // --------------------------------------------------------------- QUICK ACCESS
-    panel(
-      'mc.quick.panel',
-      placement: at(0, 5, colSpan: 10, rowSpan: 5),
+    // ──────────────────────────────────────────────────────────── QUICK ACCESS
+    // Section label + individual launcher cards (each launcher is one entity).
+    sectionHeader(
+      'mc.quick.header',
+      placement: at(0, 6, colSpan: 10, rowSpan: 1),
       title: 'Quick Access',
-      accent: _cyan,
+      color: _cyan,
     ),
     launcher(
       'mc.quick.spotify',
-      placement: at(1, 6, colSpan: 2, rowSpan: 3),
+      placement: at(0, 7, colSpan: 2, rowSpan: 3),
       label: 'Spotify',
       icon: 'play',
       action: 'launch.spotify',
-      color: '#1DB954',
+      color: _spotify,
     ),
     launcher(
       'mc.quick.youtube',
-      placement: at(3, 6, colSpan: 2, rowSpan: 3),
+      placement: at(2, 7, colSpan: 2, rowSpan: 3),
       label: 'YouTube',
       icon: 'browser',
       action: 'launch.youtube',
@@ -222,7 +155,7 @@ LayoutPage mediaCenterPage() {
     ),
     launcher(
       'mc.quick.netflix',
-      placement: at(5, 6, colSpan: 2, rowSpan: 3),
+      placement: at(4, 7, colSpan: 2, rowSpan: 3),
       label: 'Netflix',
       icon: 'camera',
       action: 'launch.netflix',
@@ -230,23 +163,32 @@ LayoutPage mediaCenterPage() {
     ),
     launcher(
       'mc.quick.twitch',
-      placement: at(7, 6, colSpan: 2, rowSpan: 3),
+      placement: at(6, 7, colSpan: 2, rowSpan: 3),
       label: 'Twitch',
       icon: 'game',
       action: 'launch.twitch',
       color: _purple,
     ),
+    launcher(
+      'mc.quick.apple',
+      placement: at(8, 7, colSpan: 2, rowSpan: 3),
+      label: 'Apple Music',
+      icon: 'play',
+      action: 'launch.apple',
+      color: '#FA57C1',
+    ),
 
-    // ----------------------------------------------------------------- MEDIA TOOLS
-    panel(
-      'mc.tools.panel',
-      placement: at(10, 5, colSpan: 7, rowSpan: 5),
+    // ───────────────────────────────────────────────────────────── MEDIA TOOLS
+    // Section label + individual control tiles (each tile is one entity).
+    sectionHeader(
+      'mc.tools.header',
+      placement: at(10, 6, colSpan: 8, rowSpan: 1),
       title: 'Media Tools',
-      accent: _purple,
+      color: _purple,
     ),
     controlTile(
       'mc.tools.screenshot',
-      placement: at(11, 6, colSpan: 2, rowSpan: 3),
+      placement: at(10, 7, colSpan: 2, rowSpan: 3),
       label: 'Screenshot',
       icon: 'camera',
       action: 'media.screenshot',
@@ -254,62 +196,99 @@ LayoutPage mediaCenterPage() {
     ),
     controlTile(
       'mc.tools.record',
-      placement: at(13, 6, colSpan: 2, rowSpan: 3),
+      placement: at(12, 7, colSpan: 2, rowSpan: 3),
       label: 'Record',
       icon: 'camera',
       action: 'media.record',
       color: '#FF5252',
     ),
     controlTile(
+      'mc.tools.cast',
+      placement: at(14, 7, colSpan: 2, rowSpan: 3),
+      label: 'Cast',
+      icon: 'browser',
+      action: 'media.cast',
+      color: _purple,
+    ),
+    controlTile(
       'mc.tools.mute',
-      placement: at(15, 6, colSpan: 2, rowSpan: 3),
+      placement: at(16, 7, colSpan: 2, rowSpan: 3),
       label: 'Mute',
       icon: 'mute',
       action: 'media.mute',
       color: _purple,
     ),
 
-    // -------------------------------------------------------------- RECENTLY PLAYED
-    panel(
-      'mc.recent.panel',
-      placement: at(0, 10, colSpan: 17, rowSpan: 6),
-      title: 'Recently Played',
-      accent: _purple,
+    // ────────────────────────────────────────────────────────── UPCOMING EVENTS
+    // A SINGLE composite list card (replaces per-row stat nodes).
+    listCard(
+      'mc.events',
+      placement: at(18, 10, colSpan: 6, rowSpan: 6),
+      title: 'Upcoming Events',
+      color: _purple,
+      items: const [
+        {'leading': 'clock', 'label': 'Team Standup', 'value': '10:30'},
+        {'leading': 'clock', 'label': 'Release Review', 'value': '14:00'},
+        {'leading': 'star', 'label': 'Album Drop', 'value': '18:00'},
+        {'leading': 'mic', 'label': 'Podcast Live', 'value': '21:00'},
+      ],
     ),
-    launcher(
+
+    // ───────────────────────────────────────────────────────── RECENTLY PLAYED
+    // Section label + a row of single composite game/album poster cards.
+    sectionHeader(
+      'mc.recent.header',
+      placement: at(0, 10, colSpan: 18, rowSpan: 1),
+      title: 'Recently Played',
+      color: _purple,
+    ),
+    gamePoster(
       'mc.recent.1',
-      placement: at(1, 11, colSpan: 3, rowSpan: 4),
-      label: 'Starboy',
+      placement: at(0, 11, colSpan: 3, rowSpan: 5),
+      title: 'Starboy',
+      subtitle: 'The Weeknd',
       action: 'media.play.recent1',
       color: _cyan,
     ),
-    launcher(
+    gamePoster(
       'mc.recent.2',
-      placement: at(4, 11, colSpan: 3, rowSpan: 4),
-      label: 'After Hours',
+      placement: at(3, 11, colSpan: 3, rowSpan: 5),
+      title: 'After Hours',
+      subtitle: 'The Weeknd',
       action: 'media.play.recent2',
       color: _purple,
     ),
-    launcher(
+    gamePoster(
       'mc.recent.3',
-      placement: at(7, 11, colSpan: 3, rowSpan: 4),
-      label: 'Dawn FM',
+      placement: at(6, 11, colSpan: 3, rowSpan: 5),
+      title: 'Dawn FM',
+      subtitle: 'The Weeknd',
       action: 'media.play.recent3',
-      color: '#1DB954',
+      color: _spotify,
     ),
-    launcher(
+    gamePoster(
       'mc.recent.4',
-      placement: at(10, 11, colSpan: 3, rowSpan: 4),
-      label: 'Nightcall',
+      placement: at(9, 11, colSpan: 3, rowSpan: 5),
+      title: 'Nightcall',
+      subtitle: 'Kavinsky',
       action: 'media.play.recent4',
       color: '#FF5252',
     ),
-    launcher(
+    gamePoster(
       'mc.recent.5',
-      placement: at(13, 11, colSpan: 3, rowSpan: 4),
-      label: 'Midnight City',
+      placement: at(12, 11, colSpan: 3, rowSpan: 5),
+      title: 'Midnight City',
+      subtitle: 'M83',
       action: 'media.play.recent5',
       color: _cyan,
+    ),
+    gamePoster(
+      'mc.recent.6',
+      placement: at(15, 11, colSpan: 3, rowSpan: 5),
+      title: 'Random Access',
+      subtitle: 'Daft Punk',
+      action: 'media.play.recent6',
+      color: '#F2D900',
     ),
   ];
 
