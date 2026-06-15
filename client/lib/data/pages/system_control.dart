@@ -1,16 +1,26 @@
-/// System Control page (Wave 1) — the "command center" control surface from the
+/// System Control page (Wave B) — the "command center" control surface from the
 /// reference deck: power actions, performance modes, storage health, system
 /// information, fan control, networks and uptime.
 ///
-/// Authored under the GRANULARITY MODEL: every visual "card" is a glass [panel]
-/// placed FIRST (so the interpreter paints it BEHIND, list-order Stack layering),
-/// then small BARE widgets (control tiles, stat rows, gauges, sliders,
-/// sparklines, labels) are layered ON TOP — each individually Designer-editable.
+/// Authored under the COMPOSITE-CARD MODEL (one widget = one entity): every
+/// visual CARD is a SINGLE composite node that draws its OWN card chrome plus all
+/// of its sub-content, so the Designer treats each card as one editable entity:
+///
+///   * the storage drives → four `gauge.linear` CARDS (titled bar in one node);
+///   * the system-information card → a `list.card`;
+///   * the quick-shortcuts list → a `list.card`;
+///   * the networks readout → a `list.card`;
+///   * each performance mode → a `mode.card` (icon + name + desc + ACTIVATE);
+///   * the system-uptime card → a `list.card` readout.
+///
+/// INDIVIDUAL CONTROLS stay one node each (they are already single entities):
+/// the power-action grid is a set of `control.tile`s, and the fan controls are
+/// `slider`/`toggle`s — these are framed by a section [panel] (their only use of
+/// a panel: a frame around standalone controls, never a decomposed card).
 ///
 /// All widgets are data-driven (style/config + bound state ids); no palette
-/// literals — colours come from theme tokens via the shared node builders.
-///
-/// Mock state ids bound here (for Wave 2 to seed) are listed in the agent report.
+/// literals — colours come from theme tokens via the shared node builders. The
+/// mock state ids bound here (for Wave 2 to seed) are listed in the agent report.
 library;
 
 import '../../render/model.dart';
@@ -35,14 +45,14 @@ const List<Map<String, dynamic>> _heatRules = [
   },
 ];
 
-/// The System Control page layout (24x18 grid). Two tall top panels (System
-/// Control + Performance Modes) over a bottom band (Storage / System Info / Fan /
-/// Networks / Uptime); a Quick Shortcuts list runs down the right column.
+/// The System Control page layout (24×18 grid). A power-action grid + the four
+/// performance MODE CARDS fill the top band; a Quick-Shortcuts + Networks list
+/// runs down the right column; Storage / System Info / Fan / Uptime form the
+/// bottom band. Every CARD is a single composite node; only the power grid and
+/// the fan controls — pure individual controls — sit on a framing panel.
 LayoutPage systemControlPage() {
   final widgets = <WidgetNode>[
     // ───────────────────────── Page title ─────────────────────────
-    // Static captions use section.header so they render the literal text (a
-    // bound `label` would append a "-- " value placeholder when unbound).
     sectionHeader(
       'sc.title',
       placement: at(0, 0, colSpan: 12, rowSpan: 1),
@@ -55,7 +65,9 @@ LayoutPage systemControlPage() {
       title: 'Manage your system, performance and utilities',
     ),
 
-    // ════════════════════════ SYSTEM CONTROL (power actions) ════════════════
+    // ════════════ SYSTEM CONTROL (power actions — individual tiles) ══════════
+    // A framing panel around STANDALONE control tiles (each tile is its own
+    // editable entity — NOT a decomposed card). 3 rows × 4 power actions.
     panel(
       'sc.power.panel',
       placement: at(0, 2, colSpan: 9, rowSpan: 9),
@@ -166,262 +178,171 @@ LayoutPage systemControlPage() {
       color: _cyan,
     ),
 
-    // ════════════════════════ PERFORMANCE MODES ════════════════════════════
-    panel(
-      'sc.perf.panel',
-      placement: at(9, 2, colSpan: 7, rowSpan: 9),
-      title: 'Performance Modes',
-      accent: _purple,
-    ),
-    // Four modes, each a NAME header above a muted DESCRIPTION, with its
-    // Activate/Active tile aligned right. Each mode occupies a 2-row block so the
-    // two text lines breathe; the cluster fills rows 3–10 inside the panel.
-    // section.header renders literal text (a bound `label` would append "-- ").
-    // Silent.
-    sectionHeader(
-      'sc.perf.silent.name',
-      placement: at(10, 3, colSpan: 4, rowSpan: 1),
-      title: 'Silent Mode',
-      color: _cyan,
-    ),
-    sectionHeader(
-      'sc.perf.silent.desc',
-      placement: at(10, 4, colSpan: 4, rowSpan: 1),
-      title: 'Reduces fan speed and power usage',
-    ),
-    controlTile(
-      'sc.perf.silent.activate',
-      label: 'Activate',
-      icon: 'check',
+    // ════════════════ PERFORMANCE MODES (four mode CARDS) ═══════════════════
+    // Each mode is ONE composite mode.card (icon + name + description + an
+    // ACTIVATE/ACTIVE button reflecting its bound boolean) — no panel, no
+    // decomposed header/desc/tile parts.
+    modeCard(
+      'sc.perf.silent',
+      placement: at(9, 2, colSpan: 4, rowSpan: 4),
+      name: 'Silent Mode',
+      description: 'Reduces fan speed and power usage',
+      icon: 'fan',
+      stateBinding: 'performance.mode.silent',
       action: 'performance.setMode.silent',
-      placement: at(14, 3, colSpan: 2, rowSpan: 2),
       color: _cyan,
     ),
-    // Balanced (active by default).
-    sectionHeader(
-      'sc.perf.balanced.name',
-      placement: at(10, 5, colSpan: 4, rowSpan: 1),
-      title: 'Balanced Mode',
-      color: _ok,
-    ),
-    sectionHeader(
-      'sc.perf.balanced.desc',
-      placement: at(10, 6, colSpan: 4, rowSpan: 1),
-      title: 'Balanced performance and efficiency',
-    ),
-    controlTile(
-      'sc.perf.balanced.activate',
-      label: 'Active',
+    modeCard(
+      'sc.perf.balanced',
+      placement: at(13, 2, colSpan: 3, rowSpan: 4),
+      name: 'Balanced Mode',
+      description: 'Balanced performance and efficiency',
       icon: 'check',
+      stateBinding: 'performance.mode.balanced',
       action: 'performance.setMode.balanced',
-      placement: at(14, 5, colSpan: 2, rowSpan: 2),
       color: _ok,
     ),
-    // Performance.
-    sectionHeader(
-      'sc.perf.high.name',
-      placement: at(10, 7, colSpan: 4, rowSpan: 1),
-      title: 'Performance Mode',
-      color: _warn,
-    ),
-    sectionHeader(
-      'sc.perf.high.desc',
-      placement: at(10, 8, colSpan: 4, rowSpan: 1),
-      title: 'Higher performance and fan speed',
-    ),
-    controlTile(
-      'sc.perf.high.activate',
-      label: 'Activate',
+    modeCard(
+      'sc.perf.high',
+      placement: at(9, 6, colSpan: 4, rowSpan: 4),
+      name: 'Performance Mode',
+      description: 'Higher performance and fan speed',
       icon: 'bolt',
+      stateBinding: 'performance.mode.performance',
       action: 'performance.setMode.performance',
-      placement: at(14, 7, colSpan: 2, rowSpan: 2),
       color: _warn,
     ),
-    // Turbo.
-    sectionHeader(
-      'sc.perf.turbo.name',
-      placement: at(10, 9, colSpan: 4, rowSpan: 1),
-      title: 'Turbo Mode',
-      color: _err,
-    ),
-    sectionHeader(
-      'sc.perf.turbo.desc',
-      placement: at(10, 10, colSpan: 4, rowSpan: 1),
-      title: 'Maximum performance (all cores)',
-    ),
-    controlTile(
-      'sc.perf.turbo.activate',
-      label: 'Activate',
+    modeCard(
+      'sc.perf.turbo',
+      placement: at(13, 6, colSpan: 3, rowSpan: 4),
+      name: 'Turbo Mode',
+      description: 'Maximum performance (all cores)',
       icon: 'bolt',
+      stateBinding: 'performance.mode.turbo',
       action: 'performance.setMode.turbo',
-      placement: at(14, 9, colSpan: 2, rowSpan: 2),
       color: _err,
-      confirm: true,
     ),
 
-    // ════════════════════════ QUICK SHORTCUTS ══════════════════════════════
-    statusList(
+    // ════════════════════════ QUICK SHORTCUTS (one card) ════════════════════
+    listCard(
       'sc.shortcuts',
       placement: at(16, 2, colSpan: 8, rowSpan: 6),
       title: 'Quick Shortcuts',
       color: _purple,
       items: const [
-        {'label': 'Control Panel', 'value': '>', 'icon': 'settings'},
-        {'label': 'Device Manager', 'value': '>', 'icon': 'cpu'},
-        {'label': 'Windows Update', 'value': '>', 'icon': 'download'},
-        {'label': 'Services', 'value': '>', 'icon': 'settings'},
-        {'label': 'Startup Apps', 'value': '>', 'icon': 'app'},
-        {'label': 'Programs & Features', 'value': '>', 'icon': 'storage'},
-        {'label': 'Registry Editor', 'value': '>', 'icon': 'folder'},
-        {'label': 'Event Viewer', 'value': '>', 'icon': 'info'},
+        {'leading': 'settings', 'label': 'Control Panel', 'trailing': 'launch'},
+        {'leading': 'cpu', 'label': 'Device Manager', 'trailing': 'launch'},
+        {'leading': 'download', 'label': 'Windows Update', 'trailing': 'launch'},
+        {'leading': 'settings', 'label': 'Services', 'trailing': 'launch'},
+        {'leading': 'app', 'label': 'Startup Apps', 'trailing': 'launch'},
+        {'leading': 'storage', 'label': 'Programs & Features', 'trailing': 'launch'},
+        {'leading': 'folder', 'label': 'Registry Editor', 'trailing': 'launch'},
+        {'leading': 'info', 'label': 'Event Viewer', 'trailing': 'launch'},
       ],
     ),
 
-    // ════════════════════════ NETWORKS ═════════════════════════════════════
-    panel(
-      'sc.net.panel',
+    // ════════════════════════ NETWORKS (one card) ══════════════════════════
+    // The down/up/ping readout collapses from a panel + stat rows + sparklines
+    // into ONE list.card; each row is icon + label + live value.
+    listCard(
+      'sc.net',
       placement: at(16, 8, colSpan: 8, rowSpan: 6),
       title: 'Networks',
-      accent: _cyan,
-    ),
-    // Download.
-    statRow(
-      'sc.net.down.label',
-      label: 'Download',
-      placement: at(17, 9, colSpan: 3, rowSpan: 1),
-      stateBinding: 'net.download',
-      unit: ' Mbps',
       color: _cyan,
-    ),
-    sparkline(
-      'sc.net.down.spark',
-      placement: at(20, 9, colSpan: 3, rowSpan: 1),
-      stateBinding: 'net.download.series',
-      color: _cyan,
-      capacity: 48,
-    ),
-    // Upload.
-    statRow(
-      'sc.net.up.label',
-      label: 'Upload',
-      placement: at(17, 11, colSpan: 3, rowSpan: 1),
-      stateBinding: 'net.upload',
-      unit: ' Mbps',
-      color: _purple,
-    ),
-    sparkline(
-      'sc.net.up.spark',
-      placement: at(20, 11, colSpan: 3, rowSpan: 1),
-      stateBinding: 'net.upload.series',
-      color: _purple,
-      capacity: 48,
-    ),
-    // Ping.
-    statRow(
-      'sc.net.ping.label',
-      label: 'Ping',
-      placement: at(17, 12, colSpan: 3, rowSpan: 1),
-      stateBinding: 'net.ping',
-      unit: ' ms',
-      color: _ok,
-    ),
-    sparkline(
-      'sc.net.ping.spark',
-      placement: at(20, 12, colSpan: 3, rowSpan: 1),
-      stateBinding: 'net.ping.series',
-      color: _ok,
-      capacity: 48,
+      items: const [
+        {
+          'leading': 'download',
+          'label': 'Download',
+          'value': '125.6 Mbps',
+          'color': _cyan,
+        },
+        {
+          'leading': 'upload',
+          'label': 'Upload',
+          'value': '23.4 Mbps',
+          'color': _purple,
+        },
+        {
+          'leading': 'wifi',
+          'label': 'Ping',
+          'value': '8 ms',
+          'color': _ok,
+        },
+        {
+          'leading': 'network',
+          'label': 'Status',
+          'value': 'Connected',
+          'color': _ok,
+        },
+      ],
     ),
 
-    // ════════════════════════ STORAGE DRIVES ═══════════════════════════════
-    panel(
-      'sc.storage.panel',
-      placement: at(0, 11, colSpan: 8, rowSpan: 7),
-      title: 'Storage Drives',
-      accent: _cyan,
-    ),
+    // ════════════════════════ STORAGE DRIVES (four CARDS) ═══════════════════
+    // Each drive is ONE composite gauge.linear card (titled bar + value in a
+    // single node) — no shared panel, no decomposed bar+label parts.
     gaugeLinear(
       'sc.storage.c',
-      placement: at(1, 12, colSpan: 6, rowSpan: 1),
+      placement: at(0, 11, colSpan: 4, rowSpan: 3),
       stateBinding: 'storage.c.percent',
-      label: 'C: System (SSD)',
+      card: true,
+      title: 'C: System (SSD)',
       unit: '%',
       color: _cyan,
       valueRules: _heatRules,
     ),
     gaugeLinear(
       'sc.storage.d',
-      placement: at(1, 13, colSpan: 6, rowSpan: 1),
+      placement: at(4, 11, colSpan: 4, rowSpan: 3),
       stateBinding: 'storage.d.percent',
-      label: 'D: Games (SSD)',
+      card: true,
+      title: 'D: Games (SSD)',
       unit: '%',
       color: _purple,
       valueRules: _heatRules,
     ),
     gaugeLinear(
       'sc.storage.e',
-      placement: at(1, 14, colSpan: 6, rowSpan: 1),
+      placement: at(0, 14, colSpan: 4, rowSpan: 3),
       stateBinding: 'storage.e.percent',
-      label: 'E: Media (HDD)',
+      card: true,
+      title: 'E: Media (HDD)',
       unit: '%',
       color: _cyan,
       valueRules: _heatRules,
     ),
     gaugeLinear(
       'sc.storage.f',
-      placement: at(1, 15, colSpan: 6, rowSpan: 1),
+      placement: at(4, 14, colSpan: 4, rowSpan: 3),
       stateBinding: 'storage.f.percent',
-      label: 'F: Backup (HDD)',
+      card: true,
+      title: 'F: Backup (HDD)',
       unit: '%',
       color: _warn,
       valueRules: _heatRules,
     ),
 
-    // ════════════════════════ SYSTEM INFORMATION ═══════════════════════════
-    panel(
-      'sc.sysinfo.panel',
-      placement: at(8, 11, colSpan: 5, rowSpan: 7),
+    // ════════════════════════ SYSTEM INFORMATION (one card) ═════════════════
+    // The spec list collapses from a panel + stat rows into ONE list.card.
+    listCard(
+      'sc.sysinfo',
+      placement: at(8, 11, colSpan: 5, rowSpan: 6),
       title: 'System Information',
-      accent: _purple,
-    ),
-    statRow(
-      'sc.sysinfo.os',
-      label: 'Operating System',
-      value: 'Windows 11 Pro',
-      placement: at(9, 12, colSpan: 3, rowSpan: 1),
-    ),
-    statRow(
-      'sc.sysinfo.cpu',
-      label: 'Processor',
-      value: 'Intel Core i9-13900K',
-      placement: at(9, 13, colSpan: 3, rowSpan: 1),
-    ),
-    statRow(
-      'sc.sysinfo.mobo',
-      label: 'Motherboard',
-      value: 'ROG Z790 Hero',
-      placement: at(9, 14, colSpan: 3, rowSpan: 1),
-    ),
-    statRow(
-      'sc.sysinfo.gpu',
-      label: 'GPU',
-      value: 'RTX 4090',
-      placement: at(9, 15, colSpan: 3, rowSpan: 1),
-    ),
-    statRow(
-      'sc.sysinfo.cputemp',
-      label: 'CPU Temp',
-      placement: at(9, 16, colSpan: 3, rowSpan: 1),
-      stateBinding: 'sys.cpu.temp',
-      unit: '°C',
-      valueRules: _heatRules,
-      color: _ok,
+      color: _purple,
+      items: const [
+        {'label': 'Operating System', 'value': 'Windows 11 Pro'},
+        {'label': 'Processor', 'value': 'Core i9-13900K'},
+        {'label': 'Motherboard', 'value': 'ROG Z790 Hero'},
+        {'label': 'GPU', 'value': 'RTX 4090'},
+        {'label': 'CPU Temp', 'value': '42°C', 'color': _ok},
+      ],
     ),
 
-    // ════════════════════════ FAN CONTROL ══════════════════════════════════
+    // ════════════ FAN CONTROL (individual sliders + a toggle) ════════════════
+    // A framing panel around STANDALONE controls (each slider/toggle is its own
+    // editable entity — NOT a decomposed card).
     panel(
       'sc.fan.panel',
-      placement: at(13, 11, colSpan: 3, rowSpan: 7),
+      placement: at(13, 11, colSpan: 3, rowSpan: 6),
       title: 'Fan Control',
       accent: _cyan,
     ),
@@ -458,31 +379,19 @@ LayoutPage systemControlPage() {
       color: _ok,
     ),
 
-    // ════════════════════════ SYSTEM UPTIME ════════════════════════════════
-    panel(
-      'sc.uptime.panel',
+    // ════════════════════════ SYSTEM UPTIME (one card) ══════════════════════
+    // The uptime readout collapses from a panel + icon + label into ONE
+    // list.card row (live value bound via the row's value/stateKey is seeded by
+    // the host; here a representative readout keeps the card cohesive).
+    listCard(
+      'sc.uptime',
       placement: at(16, 14, colSpan: 8, rowSpan: 4),
       title: 'System Uptime',
-      accent: _purple,
-      glow: false,
-    ),
-    // A square clock chip (control.tile renders the deck-icon set, which includes
-    // 'clock'; the round `button` widget's icon map does not) beside the live
-    // uptime readout.
-    controlTile(
-      'sc.uptime.icon',
-      label: '',
-      icon: 'clock',
-      action: 'system.openUptime',
-      placement: at(17, 15, colSpan: 2, rowSpan: 2),
       color: _purple,
-    ),
-    label(
-      'sc.uptime.value',
-      placement: at(19, 15, colSpan: 4, rowSpan: 2),
-      stateBinding: 'sys.uptime',
-      font: 'mono',
-      color: _cyan,
+      items: const [
+        {'leading': 'clock', 'label': 'Uptime', 'value': '2d 14h 36m', 'color': _cyan},
+        {'leading': 'power', 'label': 'Last Boot', 'value': 'Today, 06:14', 'color': _purple},
+      ],
     ),
   ];
 
