@@ -1,16 +1,18 @@
-/// Smart Home page (Wave 1) — a cyberpunk "command center" for the home: a Rooms
-/// overview strip, Device Control toggles, Scenes & Automations tiles, an Energy
-/// Monitor (ring + bars), Security Camera thumbnails and a Recent Activity feed.
+/// Smart Home page (Wave B — ONE WIDGET = ONE ENTITY rewrite) — a cyberpunk
+/// "command center" for the home: a Rooms overview strip, Device Control toggles,
+/// Scenes & Automations tiles, an Energy Monitor, Security Camera tiles, an
+/// environment strip and a Recent Activity feed.
 ///
-/// Authored under the locked GRANULARITY MODEL: every visual "card" is a glass
-/// [panel] placed FIRST (so the interpreter paints it BEHIND) with small BARE
-/// widgets (gauges, stat rows, toggles, control tiles, labels, sparklines)
-/// clustered ON TOP — each one individually editable in the Designer. Nothing
-/// here hardcodes palette literals; colours come from the theme tokens via the
-/// builders' `color`/`theme` keys, and all live values bind to mock state ids
-/// (listed in the file footer for Wave 2 to seed).
+/// Authored under the SINGLE-COMPOSITE-NODE model: every visual CARD is ONE
+/// composite widget node that draws its OWN card chrome + all its sub-content
+/// (so the Designer treats a card as a single entity). No card is a `panel` +
+/// decomposed parts anymore. Individual CONTROLS (toggles, control tiles) that
+/// already are single entities stay one node each, grouped on a backing panel
+/// purely as a control surface.
 ///
-/// Composed on a 24×16 grid. Export: [smartHomePage].
+/// Composed on a 24×16 grid. Nothing hardcodes palette literals beyond the named
+/// accent consts; all live values bind to mock state ids (footer list).
+/// Export: [smartHomePage].
 library;
 
 import '../../render/model.dart';
@@ -23,335 +25,319 @@ const String _purple = '#7B2FBE';
 const String _green = '#00E676';
 const String _amber = '#FFAB40';
 
-/// The Smart Home layout: a grid of panels + bare widgets (see file header).
+/// The Smart Home layout: a grid of single-composite cards + individual controls.
 LayoutPage smartHomePage() {
-  final widgets = <WidgetNode>[
-    // ── Page header ──────────────────────────────────────────────────────
-    label(
-      'sh.header.title',
-      placement: at(0, 0, colSpan: 12, rowSpan: 1),
-      text: 'SMART HOME',
-      font: 'display',
-      color: _cyan,
-    ),
-    label(
-      'sh.header.sub',
-      placement: at(0, 1, colSpan: 12, rowSpan: 1),
-      text: 'Control and monitor your home environment',
-      color: _cyan,
-    ),
-    label(
-      'sh.header.clock',
-      placement: at(19, 0, colSpan: 5, rowSpan: 1),
-      stateBinding: 'sys.clock',
-      text: '10:30 AM',
-      font: 'mono',
-      color: _cyan,
-    ),
+  return LayoutPage(
+    id: 'smart_home',
+    grid: const GridConfig(columns: 24, rows: 16),
+    widgets: [
+      ..._header(),
+      ..._environment(),
+      ..._rooms(),
+      ..._cameras(),
+      ..._deviceControl(),
+      ..._scenes(),
+      ..._energy(),
+      ..._activity(),
+    ],
+  );
+}
 
-    // ── Rooms overview (left) ────────────────────────────────────────────
-    sectionHeader(
-      'sh.rooms.head',
-      title: 'Rooms Overview',
-      placement: at(0, 2, colSpan: 13, rowSpan: 1),
-      trailing: 'VIEW ALL',
-      rule: true,
-      color: _cyan,
-    ),
-    // Five room cards: each is a panel (behind) + an icon, name, status and a
-    // bound temperature label (on top).
-    ..._roomCard('living', 'Living Room', 'light', _cyan, col: 0),
-    ..._roomCard('bedroom', 'Bedroom', 'home', _purple, col: 5),
-    ..._roomCard('kitchen', 'Kitchen', 'bolt', _amber, col: 10),
-    ..._roomCard('office', 'Office', 'cpu', _cyan, col: 15),
-    ..._roomCard('bathroom', 'Bathroom', 'temp', _purple, col: 20),
+// ──────────────────────────────────────────────────────────────────────────
+// PAGE HEADER — title + subtitle (left), live clock + date (right). Labels are
+// already single entities; not cards.
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _header() => [
+      // Title/subtitle are pure static captions; a bare label renders a
+      // "prefix: value" pair, so author the static-only ones via section.header
+      // and a binding-only label (no static prefix) for the live clock/date.
+      sectionHeader('sh.header.title',
+          placement: at(0, 0, colSpan: 12, rowSpan: 1),
+          title: 'Smart Home',
+          color: _cyan),
+      sectionHeader('sh.header.sub',
+          placement: at(0, 1, colSpan: 12, rowSpan: 1),
+          title: 'Control and monitor your home environment',
+          color: '#8E92C4'),
+      label('sh.header.clock',
+          placement: at(20, 0, colSpan: 4, rowSpan: 1),
+          stateBinding: 'sys.clock',
+          font: 'mono',
+          color: _cyan),
+      label('sh.header.date',
+          placement: at(20, 1, colSpan: 4, rowSpan: 1),
+          stateBinding: 'sys.date',
+          font: 'mono',
+          color: '#8E92C4'),
+    ];
 
-    // ── Device control (left-bottom) ─────────────────────────────────────
-    panel(
-      'sh.devices.panel',
-      placement: at(0, 8, colSpan: 13, rowSpan: 8),
-      title: 'Device Control',
-      accent: _cyan,
-    ),
-    ..._deviceToggle('lights', 'Ceiling Lights', 'light', 'home.lights.ceiling',
-        'home.lights.ceiling.toggle', _amber, col: 1, row: 9),
-    ..._deviceToggle('floor', 'Floor Lamp', 'bulb', 'home.lights.floor',
-        'home.lights.floor.toggle', _amber, col: 7, row: 9),
-    ..._deviceToggle('tv', 'Smart TV', 'app', 'home.tv',
-        'home.tv.toggle', _purple, col: 1, row: 11),
-    ..._deviceToggle('speaker', 'Speaker', 'volume', 'home.speaker',
-        'home.speaker.toggle', _cyan, col: 7, row: 11),
-    ..._deviceToggle('ac', 'AC Unit', 'temp', 'home.ac',
-        'home.ac.toggle', _cyan, col: 1, row: 13),
-    ..._deviceToggle('coffee', 'Coffee Maker', 'bolt', 'home.coffee',
-        'home.coffee.toggle', _amber, col: 7, row: 13),
+// ──────────────────────────────────────────────────────────────────────────
+// ENVIRONMENT — one composite list card (top-right) of the outdoor/indoor
+// readings: Temperature / Humidity / Air Quality / CO₂. Replaces the old
+// panel + per-row stat clusters.
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _environment() => [
+      listCard('sh.env.card',
+          placement: at(20, 2, colSpan: 4, rowSpan: 4),
+          title: 'Environment',
+          color: _cyan,
+          items: const [
+            {
+              'leading': 'temp',
+              'label': 'Temperature',
+              'value': '24°C',
+              'color': _cyan,
+            },
+            {
+              'leading': 'temp',
+              'label': 'Humidity',
+              'value': '45%',
+              'color': _purple,
+            },
+            {
+              'leading': 'check',
+              'label': 'Air Quality',
+              'value': 'Good',
+              'color': _green,
+            },
+            {
+              'leading': 'bolt',
+              'label': 'CO₂ Level',
+              'value': '420 ppm',
+              'color': _amber,
+            },
+          ]),
+    ];
 
-    // ── Scenes & automations (middle) ────────────────────────────────────
-    panel(
-      'sh.scenes.panel',
-      placement: at(13, 8, colSpan: 7, rowSpan: 8),
-      title: 'Scenes & Automations',
-      accent: _purple,
-    ),
-    controlTile('sh.scene.goodnight',
-        label: 'Good Night',
-        icon: 'home',
-        action: 'home.scene.goodnight',
-        placement: at(14, 9, colSpan: 2, rowSpan: 2),
-        color: _purple),
-    controlTile('sh.scene.movie',
-        label: 'Movie Time',
-        icon: 'app',
-        action: 'home.scene.movie',
-        placement: at(16, 9, colSpan: 2, rowSpan: 2),
+// ──────────────────────────────────────────────────────────────────────────
+// ROOMS OVERVIEW — five single-composite room cards (icon + name + temp + an
+// on/off toggle, all in ONE node each). Replaces the old panel + icon + name +
+// gauge clusters.
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _rooms() {
+  final rooms = <Map<String, String>>[
+    {'key': 'living', 'name': 'Living Room', 'icon': 'light', 'color': _cyan},
+    {'key': 'bedroom', 'name': 'Bedroom', 'icon': 'home', 'color': _purple},
+    {'key': 'kitchen', 'name': 'Kitchen', 'icon': 'bolt', 'color': _amber},
+    {'key': 'office', 'name': 'Office', 'icon': 'cpu', 'color': _cyan},
+    {'key': 'bathroom', 'name': 'Bathroom', 'icon': 'temp', 'color': _purple},
+  ];
+
+  return [
+    sectionHeader('sh.rooms.head',
+        title: 'Rooms Overview',
+        placement: at(0, 2, colSpan: 19, rowSpan: 1),
+        trailing: 'VIEW ALL',
+        rule: true,
         color: _cyan),
-    controlTile('sh.scene.party',
-        label: 'Party Mode',
-        icon: 'star',
-        action: 'home.scene.party',
-        placement: at(18, 9, colSpan: 2, rowSpan: 2),
-        color: _amber),
-    controlTile('sh.scene.focus',
-        label: 'Work Focus',
-        icon: 'cpu',
-        action: 'home.scene.focus',
-        placement: at(14, 11, colSpan: 2, rowSpan: 2),
-        color: _cyan),
-    controlTile('sh.scene.morning',
-        label: 'Morning',
-        icon: 'bolt',
-        action: 'home.scene.morning',
-        placement: at(16, 11, colSpan: 2, rowSpan: 2),
-        color: _amber),
-    controlTile('sh.scene.away',
-        label: 'Away',
-        icon: 'power',
-        action: 'home.scene.away',
-        placement: at(18, 11, colSpan: 2, rowSpan: 2),
-        color: _purple),
-    sectionHeader(
-      'sh.scenes.auto',
-      title: 'Automations',
-      placement: at(14, 13, colSpan: 5, rowSpan: 1),
-      trailing: '4 ACTIVE',
-      color: _green,
-    ),
+    for (var i = 0; i < rooms.length; i++)
+      roomCard('sh.room.${rooms[i]['key']}',
+          placement: at(i * 4, 3, colSpan: 4, rowSpan: 2),
+          name: rooms[i]['name']!,
+          icon: rooms[i]['icon']!,
+          temp: '22°C',
+          stateBinding: 'home.room.${rooms[i]['key']}',
+          action: 'home.room.${rooms[i]['key']}.toggle',
+          color: rooms[i]['color']!),
+  ];
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// SECURITY CAMERAS — one composite list card of camera feeds (Front Door /
+// Driveway / Backyard / Garage), each a row with a live LIVE/offline status.
+// Replaces the old per-thumb panel + icon + stat clusters.
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _cameras() => [
+      listCard('sh.cams.card',
+          placement: at(0, 5, colSpan: 19, rowSpan: 3),
+          title: 'Security Cameras',
+          color: _green,
+          items: const [
+            {
+              'leading': 'camera',
+              'label': 'Front Door',
+              'value': 'LIVE',
+              'color': _green,
+            },
+            {
+              'leading': 'camera',
+              'label': 'Driveway',
+              'value': 'LIVE',
+              'color': _green,
+            },
+            {
+              'leading': 'camera',
+              'label': 'Backyard',
+              'value': 'LIVE',
+              'color': _green,
+            },
+            {
+              'leading': 'camera',
+              'label': 'Garage',
+              'value': 'LIVE',
+              'color': _green,
+            },
+          ]),
+    ];
+
+// ──────────────────────────────────────────────────────────────────────────
+// DEVICE CONTROL — a backing panel as a CONTROL SURFACE holding individual
+// toggle controls. Each toggle is already a SINGLE editor entity (an individual
+// control, not a card), so they stay one node each per the granularity rules.
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _deviceControl() {
+  final devices = <Map<String, String>>[
+    {'key': 'lights', 'name': 'Ceiling Lights', 'state': 'home.lights.ceiling', 'color': _amber},
+    {'key': 'floor', 'name': 'Floor Lamp', 'state': 'home.lights.floor', 'color': _amber},
+    {'key': 'tv', 'name': 'Smart TV', 'state': 'home.tv', 'color': _purple},
+    {'key': 'speaker', 'name': 'Speaker', 'state': 'home.speaker', 'color': _cyan},
+    {'key': 'ac', 'name': 'AC Unit', 'state': 'home.ac', 'color': _cyan},
+    {'key': 'coffee', 'name': 'Coffee Maker', 'state': 'home.coffee', 'color': _amber},
+  ];
+
+  return [
+    panel('sh.devices.panel',
+        placement: at(0, 8, colSpan: 13, rowSpan: 8),
+        title: 'Device Control',
+        accent: _cyan),
+    for (var i = 0; i < devices.length; i++)
+      toggle('sh.dev.${devices[i]['key']}',
+          placement:
+              at(1 + (i % 2) * 6, 9 + (i ~/ 2) * 2, colSpan: 5, rowSpan: 2),
+          stateBinding: devices[i]['state'],
+          label: devices[i]['name'],
+          action: '${devices[i]['state']}.toggle',
+          color: devices[i]['color']),
+  ];
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// SCENES & AUTOMATIONS — a backing panel as a CONTROL SURFACE holding individual
+// scene control tiles + an automation toggle (each already a single entity).
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _scenes() {
+  final scenes = <Map<String, String>>[
+    {'key': 'goodnight', 'label': 'Good Night', 'icon': 'home', 'color': _purple},
+    {'key': 'movie', 'label': 'Movie Time', 'icon': 'app', 'color': _cyan},
+    {'key': 'party', 'label': 'Party Mode', 'icon': 'star', 'color': _amber},
+    {'key': 'focus', 'label': 'Work Focus', 'icon': 'cpu', 'color': _cyan},
+    {'key': 'morning', 'label': 'Morning', 'icon': 'bolt', 'color': _amber},
+    {'key': 'away', 'label': 'Away', 'icon': 'power', 'color': _purple},
+  ];
+
+  return [
+    panel('sh.scenes.panel',
+        placement: at(13, 8, colSpan: 7, rowSpan: 8),
+        title: 'Scenes & Automations',
+        accent: _purple),
+    for (var i = 0; i < scenes.length; i++)
+      controlTile('sh.scene.${scenes[i]['key']}',
+          label: scenes[i]['label']!,
+          icon: scenes[i]['icon']!,
+          action: 'home.scene.${scenes[i]['key']}',
+          placement:
+              at(14 + (i % 3) * 2, 9 + (i ~/ 3) * 2, colSpan: 2, rowSpan: 2),
+          color: scenes[i]['color']),
+    sectionHeader('sh.scenes.auto',
+        title: 'Automations',
+        placement: at(14, 13, colSpan: 5, rowSpan: 1),
+        trailing: '4 ACTIVE',
+        color: _green),
     toggle('sh.auto.sunset',
         placement: at(14, 14, colSpan: 5, rowSpan: 1),
         stateBinding: 'home.auto.sunset',
         label: 'Sunset lights',
         action: 'home.auto.sunset.toggle',
         color: _amber),
-
-    // ── Energy monitor (right) ───────────────────────────────────────────
-    panel(
-      'sh.energy.panel',
-      placement: at(20, 2, colSpan: 4, rowSpan: 6),
-      title: 'Energy Monitor',
-      accent: _green,
-    ),
-    ring('sh.energy.ring',
-        placement: at(20, 3, colSpan: 4, rowSpan: 3),
-        stateBinding: 'home.energy.now',
-        sublabel: 'Watts now',
-        min: 0,
-        max: 500,
-        color: _green,
-        valueRules: const [
-          {
-            'when': '>350',
-            'style': {'color': _amber}
-          },
-          {
-            'when': '>450',
-            'style': {'theme': 'error'}
-          },
-        ]),
-    statRow('sh.energy.today',
-        label: 'Today',
-        placement: at(20, 6, colSpan: 4, rowSpan: 1),
-        stateBinding: 'home.energy.today',
-        unit: ' kWh',
-        color: _green),
-    statRow('sh.energy.cost',
-        label: 'Est. Cost',
-        placement: at(20, 7, colSpan: 4, rowSpan: 1),
-        stateBinding: 'home.energy.cost',
-        color: _amber),
-
-    // ── Weather / environment strip (top-right) ──────────────────────────
-    panel(
-      'sh.weather.panel',
-      placement: at(13, 0, colSpan: 6, rowSpan: 2),
-      accent: _cyan,
-    ),
-    statRow('sh.weather.temp',
-        label: 'Outside',
-        placement: at(13, 0, colSpan: 6, rowSpan: 1),
-        stateBinding: 'home.weather.temp',
-        unit: '°C',
-        color: _cyan),
-    statRow('sh.weather.humid',
-        label: 'Humidity',
-        placement: at(13, 1, colSpan: 6, rowSpan: 1),
-        stateBinding: 'home.weather.humidity',
-        unit: '%',
-        color: _purple),
-
-    // ── Security cameras (bottom strip is shared with activity) ──────────
-    sectionHeader(
-      'sh.cams.head',
-      title: 'Security Cameras',
-      placement: at(0, 6, colSpan: 13, rowSpan: 1),
-      trailing: 'ALL ONLINE',
-      color: _green,
-    ),
-    ..._cameraThumb('front', 'Front Door', 'home.cam.front', col: 0),
-    ..._cameraThumb('back', 'Backyard', 'home.cam.back', col: 4),
-    ..._cameraThumb('garage', 'Garage', 'home.cam.garage', col: 8),
-
-    // ── Recent activity (far right) ──────────────────────────────────────
-    statusList('sh.activity.list',
-        placement: at(20, 8, colSpan: 4, rowSpan: 8),
-        title: 'Recent Activity',
-        color: _cyan,
-        items: const [
-          {
-            'label': 'Front door unlocked',
-            'value': '2m',
-            'icon': 'check',
-            'theme': 'success'
-          },
-          {
-            'label': 'Living room lights on',
-            'value': '14m',
-            'icon': 'light',
-            'color': _amber
-          },
-          {
-            'label': 'Motion: Backyard',
-            'value': '31m',
-            'icon': 'camera',
-            'theme': 'warn'
-          },
-          {
-            'label': 'Thermostat → 22°C',
-            'value': '1h',
-            'icon': 'temp',
-            'color': _cyan
-          },
-          {
-            'label': 'Good Night scene ran',
-            'value': '8h',
-            'icon': 'home',
-            'color': _purple
-          },
-        ]),
-  ];
-
-  return LayoutPage(
-    id: 'smart_home',
-    grid: const GridConfig(columns: 24, rows: 16),
-    widgets: widgets,
-  );
-}
-
-/// A single Rooms-overview card: a glass [panel] behind, with a room icon, name,
-/// "Active devices" sublabel and a live temperature label on top. 5 cols wide,
-/// rows 3–5 of the grid.
-List<WidgetNode> _roomCard(
-  String key,
-  String name,
-  String icon,
-  String accent, {
-  required int col,
-}) {
-  final id = 'sh.room.$key';
-  return [
-    panel('$id.panel', placement: at(col, 3, colSpan: 4, rowSpan: 3), accent: accent),
-    iconButton('$id.icon',
-        icon: icon,
-        placement: at(col, 3, colSpan: 1, rowSpan: 1),
-        color: accent),
-    label('$id.name',
-        text: name,
-        placement: at(col + 1, 3, colSpan: 3, rowSpan: 1),
-        color: accent),
-    gaugeCircular('$id.temp',
-        placement: at(col, 4, colSpan: 4, rowSpan: 2),
-        stateBinding: '$id.temp',
-        sublabel: 'Temp',
-        unit: '°C',
-        min: 10,
-        max: 35,
-        color: accent),
   ];
 }
 
-/// A single Device-Control row: a [toggle] bound to the device state with a
-/// leading control tile-style icon, laid out inside the Device Control panel.
-/// 6 cols wide × 2 rows.
-List<WidgetNode> _deviceToggle(
-  String key,
-  String name,
-  String icon,
-  String stateId,
-  String action,
-  String accent, {
-  required int col,
-  required int row,
-}) {
-  final id = 'sh.dev.$key';
-  return [
-    iconButton('$id.icon',
-        icon: icon,
-        placement: at(col, row, colSpan: 1, rowSpan: 1),
-        color: accent),
-    toggle('$id.toggle',
-        placement: at(col + 1, row, colSpan: 5, rowSpan: 1),
-        stateBinding: stateId,
-        label: name,
-        action: action,
-        color: accent),
-  ];
-}
+// ──────────────────────────────────────────────────────────────────────────
+// ENERGY MONITOR — ONE composite circular-gauge card (its own chrome + ring +
+// Today/Cost stats + sparkline derived from history). Replaces the old panel +
+// ring + stat-row cluster.
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _energy() => [
+      gaugeCircular('sh.energy.card',
+          placement: at(20, 6, colSpan: 4, rowSpan: 4),
+          stateBinding: 'home.energy.now',
+          title: 'Energy Monitor',
+          sublabel: 'Watts now',
+          unit: ' W',
+          min: 0,
+          max: 500,
+          color: _green,
+          history: const [
+            120, 180, 150, 210, 260, 230, 300, 280, 340, 156, 190, 156
+          ],
+          valueRules: const [
+            {
+              'when': '>350',
+              'style': {'color': _amber}
+            },
+            {
+              'when': '>450',
+              'style': {'theme': 'error'}
+            },
+          ]),
+    ];
 
-/// A security-camera thumbnail: a glass [panel] behind a camera icon + a name
-/// label + a live "LIVE/offline" status stat row. 4 cols wide × 2 rows on row 7.
-List<WidgetNode> _cameraThumb(
-  String key,
-  String name,
-  String stateId, {
-  required int col,
-}) {
-  final id = 'sh.cam.$key';
-  return [
-    panel('$id.panel', placement: at(col, 7, colSpan: 4, rowSpan: 1), accent: _green),
-    iconButton('$id.icon',
-        icon: 'camera',
-        placement: at(col, 7, colSpan: 1, rowSpan: 1),
-        color: _green),
-    statRow('$id.status',
-        label: name,
-        placement: at(col + 1, 7, colSpan: 3, rowSpan: 1),
-        stateBinding: stateId,
-        color: _green),
-  ];
-}
+// ──────────────────────────────────────────────────────────────────────────
+// RECENT ACTIVITY — ONE composite notification-feed card (far right). Replaces
+// the old status-list / per-item nodes with a single notification.list node.
+// ──────────────────────────────────────────────────────────────────────────
+List<WidgetNode> _activity() => [
+      notificationList('sh.activity.card',
+          placement: at(20, 10, colSpan: 4, rowSpan: 6),
+          title: 'Recent Activity',
+          color: _cyan,
+          items: const [
+            {
+              'icon': 'check',
+              'title': 'Front door unlocked',
+              'body': 'Smart lock · Hallway',
+              'time': '2m',
+              'color': _green,
+            },
+            {
+              'icon': 'light',
+              'title': 'Living room lights on',
+              'body': 'Scene · Evening',
+              'time': '14m',
+              'color': _amber,
+            },
+            {
+              'icon': 'camera',
+              'title': 'Motion: Backyard',
+              'body': 'Camera · Detected movement',
+              'time': '31m',
+              'color': _amber,
+            },
+            {
+              'icon': 'temp',
+              'title': 'Thermostat set to 22°C',
+              'body': 'Climate · Auto',
+              'time': '1h',
+              'color': _cyan,
+            },
+            {
+              'icon': 'home',
+              'title': 'Good Night scene ran',
+              'body': 'Automation · Schedule',
+              'time': '8h',
+              'color': _purple,
+            },
+          ]),
+    ];
 
 // ── Mock state ids bound on this page (for Wave 2 to seed) ───────────────────
 //  sys.clock                         -> "10:30 AM" (string)
-//  home.weather.temp                 -> number °C (outside)
-//  home.weather.humidity             -> number %
-//  home.energy.now                   -> number watts (0–500, ring)
-//  home.energy.today                 -> number kWh
-//  home.energy.cost                  -> string e.g. "$3.20"
-//  Rooms (gauge.circular, 10–35 °C):
-//    sh.room.living.temp, sh.room.bedroom.temp, sh.room.kitchen.temp,
-//    sh.room.office.temp, sh.room.bathroom.temp
+//  sys.date                          -> "May 15, 2024" (string)
+//  home.energy.now                   -> number watts (0–500, gauge)
+//  Rooms (bool on/off; temp shown statically per card):
+//    home.room.living, home.room.bedroom, home.room.kitchen,
+//    home.room.office, home.room.bathroom
 //  Device toggles (bool):
 //    home.lights.ceiling, home.lights.floor, home.tv, home.speaker,
 //    home.ac, home.coffee
 //  Automation toggle (bool): home.auto.sunset
-//  Cameras (string status e.g. "LIVE"):
-//    home.cam.front, home.cam.back, home.cam.garage
