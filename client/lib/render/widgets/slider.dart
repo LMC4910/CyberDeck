@@ -46,12 +46,15 @@ Widget buildSlider(BuildContext context, WidgetRenderContext ctx) {
     return Center(child: slider);
   }
 
-  // Vertical volume slider: rotate the real Slider a quarter turn (drag still
-  // works; the key is preserved) and stack a % readout beneath it.
+  // Vertical "Volume" card: a small-caps title over the rotated track (drag still
+  // works; the key is preserved) and a big % readout beneath. This is the single
+  // composite slider card node. `style.title` labels it (e.g. "Volume").
   final span = (max - min);
   final pct = span <= 0 ? 0 : (((current - min) / span) * 100).round();
   return CardChrome(
+    key: Key('slider-card-${node.id}'),
     accent: accent,
+    title: style['title'] as String?,
     padding: const EdgeInsets.symmetric(
       vertical: DeckSpacing.md,
       horizontal: DeckSpacing.sm,

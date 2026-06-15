@@ -40,9 +40,13 @@ WidgetNode panel(
       }),
     );
 
-/// A 270° circular gauge (BARE by default). Binds to [stateBinding]; `min`/`max`/
-/// `unit` shape the value; `sublabel` rides via style; `color` sets the accent;
-/// `card:true` re-enables the gauge's own [CardChrome]; `title` labels that card.
+/// A 270° circular gauge COMPOSITE CARD (the prototype "CPU TEMPERATURE" card):
+/// a single node drawing its own [CardChrome] with a small-caps [title], a Row of
+/// [ ring (centre value + [sublabel]) | a Min/Max/Avg stat column ] and a
+/// sparkline below. Binds to [stateBinding]; `min`/`max`/`unit` shape the value;
+/// `color` sets the accent. The Min/Max/Avg + sparkline derive from [history] (a
+/// numeric series) or an explicit [stats] `{min,max,avg}`. `card` defaults TRUE
+/// (it represents a card); pass `card:false` for a bare ring on a [panel].
 WidgetNode gaugeCircular(
   String id, {
   required Placement placement,
@@ -53,7 +57,9 @@ WidgetNode gaugeCircular(
   num min = 0,
   num max = 100,
   String? color,
-  bool card = false,
+  bool card = true,
+  List<num>? history,
+  Map<String, num>? stats,
   List<Map<String, dynamic>> valueRules = const [],
 }) =>
     WidgetNode(
@@ -74,15 +80,20 @@ WidgetNode gaugeCircular(
         'min': min,
         'max': max,
         'unit': ?unit,
+        'history': ?history,
+        'stats': ?stats,
       },
     );
 
-/// A segmented linear gauge/bar (BARE by default). `label` shows above the bar;
-/// `segments` sets the cell count; other keys mirror [gaugeCircular].
+/// A segmented linear gauge/bar. As a titled COMPOSITE CARD (default `card:true`)
+/// it draws its own [CardChrome] with a small-caps [title] over the labelled bar +
+/// value. `label` shows above the bar; `segments` sets the cell count. Pass
+/// `card:false` for a bare bar on a [panel]. Other keys mirror [gaugeCircular].
 WidgetNode gaugeLinear(
   String id, {
   required Placement placement,
   String? stateBinding,
+  String? title,
   String? label,
   String? unit,
   num min = 0,
@@ -100,6 +111,7 @@ WidgetNode gaugeLinear(
         stateBinding: stateBinding,
         valueRules: valueRules,
         style: {
+          'title': ?title,
           'label': ?label,
           'color': ?color,
           if (card) 'card': true,
@@ -255,15 +267,18 @@ WidgetNode mediaPlayer(
       ),
     );
 
-/// A decorative animated VISUALIZER bar-box. `bars` sets the count; `color` the
-/// accent; `card:true` wraps it; binding to a `false` value freezes it.
+/// A decorative animated VISUALIZER. As a titled COMPOSITE CARD (default
+/// `card:true`) it draws its own [CardChrome] with a small-caps [title] over the
+/// bar-box. `bars` sets the count; `color` the accent; binding to a `false` value
+/// freezes it. Pass `card:false` for bare bars on a [panel].
 WidgetNode visualizer(
   String id, {
   required Placement placement,
   String? stateBinding,
+  String? title,
   int? bars,
   String? color,
-  bool card = false,
+  bool card = true,
 }) =>
     WidgetNode(
       id: id,
@@ -272,6 +287,7 @@ WidgetNode visualizer(
       appearance: Appearance(
         stateBinding: stateBinding,
         style: {
+          'title': ?title,
           'color': ?color,
           if (card) 'card': true,
         },
@@ -279,8 +295,9 @@ WidgetNode visualizer(
       config: {'bars': ?bars},
     );
 
-/// A donut RING gauge with a centre value + optional [sublabel] (health/storage).
-/// BARE by default; `card:true` wraps it. Other keys mirror [gaugeCircular].
+/// A donut RING gauge COMPOSITE CARD with a centre value + optional [sublabel]
+/// (health/storage). Default `card:true` draws its own titled [CardChrome]; pass
+/// `card:false` for a bare ring on a [panel]. Other keys mirror [gaugeCircular].
 WidgetNode ring(
   String id, {
   required Placement placement,
@@ -291,7 +308,7 @@ WidgetNode ring(
   num min = 0,
   num max = 100,
   String? color,
-  bool card = false,
+  bool card = true,
   List<Map<String, dynamic>> valueRules = const [],
 }) =>
     WidgetNode(
@@ -460,7 +477,9 @@ WidgetNode toggle(
     );
 
 /// A SLIDER bound to [stateBinding] within `min`/`max`; emits `dragValue`. Set
-/// [vertical] for the volume-style vertical slider; `color` sets the accent.
+/// [vertical] for the volume-style vertical COMPOSITE CARD — a titled card (e.g.
+/// [title] "Volume") with a vertical track + a `%` readout, all in one node.
+/// `color` sets the accent.
 WidgetNode slider(
   String id, {
   required Placement placement,
@@ -468,6 +487,7 @@ WidgetNode slider(
   num min = 0,
   num max = 100,
   bool vertical = false,
+  String? title,
   String? action,
   String? color,
 }) =>
@@ -479,11 +499,151 @@ WidgetNode slider(
         stateBinding: stateBinding,
         style: {
           if (vertical) 'orientation': 'vertical',
+          'title': ?title,
           'color': ?color,
         },
       ),
       config: {'min': min, 'max': max},
       interaction: {
         if (action != null) 'dragValue': {'action': action},
+      },
+    );
+
+// ── Wave A composite cards ───────────────────────────────────────────────────
+// Each builds a SINGLE composite-card node (its own chrome + all sub-content), so
+// a card is one editor entity instead of a panel + decomposed parts.
+
+/// A titled NOTIFICATION feed card (one node, replaces per-item nodes). [items]
+/// are maps `{icon?, title, body?, time?, color?}` rendered as rows. `color` sets
+/// the card accent. Type `notification.list`.
+WidgetNode notificationList(
+  String id, {
+  required Placement placement,
+  String? title,
+  List<Map<String, dynamic>> items = const [],
+  String? color,
+}) =>
+    WidgetNode(
+      id: id,
+      type: 'notification.list',
+      placement: placement,
+      appearance: Appearance(style: {
+        'title': ?title,
+        'color': ?color,
+      }),
+      config: {'items': items},
+    );
+
+/// A generic titled LIST card (Top Processes / Recent Activity / Game Profiles /
+/// Detailed Info). [items] are maps `{leading?, label, value?, trailing?, color?}`
+/// where `leading`/`trailing` are deck-icon names. `color` sets the card accent.
+/// Type `list.card`.
+WidgetNode listCard(
+  String id, {
+  required Placement placement,
+  String? title,
+  List<Map<String, dynamic>> items = const [],
+  String? color,
+}) =>
+    WidgetNode(
+      id: id,
+      type: 'list.card',
+      placement: placement,
+      appearance: Appearance(style: {
+        'title': ?title,
+        'color': ?color,
+      }),
+      config: {'items': items},
+    );
+
+/// A Smart-Home ROOM card — icon + [name] + [temp] readout + an on/off toggle
+/// (one node). The toggle REFLECTS [stateBinding] and emits `tap` to [action].
+/// `icon` is a deck-icon name; `color` sets the accent. Type `room.card`.
+WidgetNode roomCard(
+  String id, {
+  required Placement placement,
+  required String name,
+  String? icon,
+  String? temp,
+  String? stateBinding,
+  String? action,
+  String? color,
+  List<Map<String, dynamic>> valueRules = const [],
+}) =>
+    WidgetNode(
+      id: id,
+      type: 'room.card',
+      placement: placement,
+      appearance: Appearance(
+        stateBinding: stateBinding,
+        valueRules: valueRules,
+        style: {
+          'name': name,
+          'icon': ?icon,
+          'temp': ?temp,
+          'color': ?color,
+        },
+      ),
+      interaction: {
+        if (action != null) 'tap': {'action': action},
+      },
+    );
+
+/// A GAME poster card — box art ([art] asset, else a procedural gradient) +
+/// [title] + an optional [subtitle], with a play/launch tap (one node). Tapping
+/// emits `tap` to [action]. `color` sets the accent. Type `game.poster`.
+WidgetNode gamePoster(
+  String id, {
+  required Placement placement,
+  required String title,
+  String? subtitle,
+  String? art,
+  String? action,
+  String? color,
+}) =>
+    WidgetNode(
+      id: id,
+      type: 'game.poster',
+      placement: placement,
+      appearance: Appearance(style: {
+        'title': title,
+        'subtitle': ?subtitle,
+        'art': ?art,
+        'color': ?color,
+      }),
+      interaction: {
+        if (action != null) 'tap': {'action': action},
+      },
+    );
+
+/// A performance-MODE card — icon + [name] + [description] + an ACTIVATE/active
+/// button (one node). The active state REFLECTS [stateBinding]; tapping emits
+/// `tap` to [action]. `icon` is a deck-icon name; `color` sets the accent.
+/// Type `mode.card`.
+WidgetNode modeCard(
+  String id, {
+  required Placement placement,
+  required String name,
+  String? description,
+  String? icon,
+  String? stateBinding,
+  String? action,
+  String? color,
+}) =>
+    WidgetNode(
+      id: id,
+      type: 'mode.card',
+      placement: placement,
+      appearance: Appearance(
+        stateBinding: stateBinding,
+        style: {
+          'name': name,
+          'description': ?description,
+          'icon': ?icon,
+          'color': ?color,
+        },
+      ),
+      interaction: {
+        if (action != null) 'tap': {'action': action},
       },
     );

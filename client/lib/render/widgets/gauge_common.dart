@@ -80,6 +80,18 @@ List<double>? gaugeSeries(Object? value) {
   return (min: lo, max: hi, avg: sum / series.length);
 }
 
+/// Explicit summary stats authored in `config.stats` (`{min,max,avg}`); null when
+/// absent or malformed. Lets a card show Min/Max/Avg without carrying a full
+/// `history` series (the host can publish just the summary).
+({double min, double max, double avg})? gaugeExplicitStats(Object? raw) {
+  if (raw is! Map) return null;
+  final lo = _asNum(raw['min']);
+  final hi = _asNum(raw['max']);
+  final avg = _asNum(raw['avg']);
+  if (lo == null || hi == null || avg == null) return null;
+  return (min: lo.toDouble(), max: hi.toDouble(), avg: avg.toDouble());
+}
+
 num? _asNum(Object? value) {
   if (value is num) return value;
   if (value is String) return num.tryParse(value);

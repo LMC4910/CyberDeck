@@ -35,62 +35,99 @@ Widget buildCircularGauge(BuildContext context, WidgetRenderContext ctx) {
   final title = gaugeTitle(node);
 
   // A series rides the bound value (List) or an explicit config.history slot;
-  // it powers the inline sparkline + the min/avg/max stats row when present.
+  // it powers the inline sparkline + the min/avg/max stats. Explicit
+  // config.stats {min,max,avg} wins over a series-derived summary.
   final series = gaugeSeries(ctx.value) ?? gaugeSeries(node.config['history']);
-  final stats = gaugeStats(series);
+  final stats = gaugeExplicitStats(node.config['stats']) ?? gaugeStats(series);
+  final sublabel = node.appearance.style['sublabel'] as String?;
+  final card = node.appearance.style['card'] == true;
 
-  final body = LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxHeight.isFinite &&
-            constraints.maxHeight < 160;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: CustomPaint(
-                painter: _CircularGaugePainter(fraction: fraction, accent: accent),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(DeckSpacing.lg),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        valueText,
-                        key: Key('gauge-value-${node.id}'),
-                        style: DeckType.display(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w700,
-                          color: accent,
-                          height: 1.0,
-                        ),
-                      ),
-                    ),
+  // The bare ring (centre value + optional sublabel) — the elastic core that
+  // shrinks first via FittedBox so nothing overflows a small cell.
+  final ring = CustomPaint(
+    painter: _CircularGaugePainter(fraction: fraction, accent: accent),
+    child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DeckSpacing.md),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                valueText,
+                key: Key('gauge-value-${node.id}'),
+                style: DeckType.display(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                  height: 1.0,
+                ),
+              ),
+              if (sublabel != null && sublabel.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  sublabel,
+                  key: Key('gauge-sublabel-${node.id}'),
+                  style: DeckType.body(
+                    fontSize: 11,
+                    color: DeckColors.textSecondary,
                   ),
                 ),
-              ),
-            ),
-            if (!compact && series != null && series.length >= 2) ...[
-              const SizedBox(height: DeckSpacing.sm),
-              SizedBox(
-                height: 28,
-                child: CustomPaint(
-                  painter: _MiniSparkPainter(series: series, accent: accent),
-                  child: const SizedBox.expand(),
-                ),
-              ),
+              ],
             ],
-            if (!compact && stats != null) ...[
-              const SizedBox(height: DeckSpacing.sm),
-              _StatsRow(stats: stats, unit: gaugeUnit(node)),
-            ],
-          ],
-        );
-      },
+          ),
+        ),
+      ),
+    ),
   );
 
-  if (node.appearance.style['card'] == true) {
+  // The whole COMPOSITE card body (prototype "CPU TEMPERATURE" card): a Row of
+  // [ ring | Min/Max/Avg stat column ] with a sparkline beneath. When there are
+  // no stats it falls back to a centred ring; when the cell is short it drops the
+  // sparkline. All adaptive via LayoutBuilder + FittedBox so it never overflows.
+  final body = LayoutBuilder(
+    builder: (context, constraints) {
+      final h = constraints.maxHeight;
+      final compact = h.isFinite && h < 150;
+      final showSpark = !compact && series != null && series.length >= 2;
+      final ringWithStats = (stats != null)
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(flex: 3, child: ring),
+                const SizedBox(width: DeckSpacing.lg),
+                Expanded(
+                  flex: 2,
+                  child: _StatsColumn(stats: stats, unit: gaugeUnit(node)),
+                ),
+              ],
+            )
+          : ring;
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(child: ringWithStats),
+          if (showSpark) ...[
+            const SizedBox(height: DeckSpacing.sm),
+            SizedBox(
+              height: 28,
+              child: CustomPaint(
+                painter: _MiniSparkPainter(series: series, accent: accent),
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ],
+        ],
+      );
+    },
+  );
+
+  if (card) {
     return CardChrome(
+      key: Key('gauge-card-${node.id}'),
       title: title,
       accent: accent,
       padding: const EdgeInsets.all(DeckSpacing.md),
@@ -100,33 +137,46 @@ Widget buildCircularGauge(BuildContext context, WidgetRenderContext ctx) {
   return body;
 }
 
-/// A small MIN / AVG / MAX readout row beneath the gauge.
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.stats, required this.unit});
+/// A Min / Max / Avg readout column beside the gauge ring (the prototype's
+/// `flex-1 text-xs space-y-2` stat list). Each row is `label … value`.
+class _StatsColumn extends StatelessWidget {
+  const _StatsColumn({required this.stats, required this.unit});
 
   final ({double min, double max, double avg}) stats;
   final String? unit;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _stat('MIN', stats.min),
-        _stat('AVG', stats.avg),
-        _stat('MAX', stats.max),
+        _row('Min', stats.min),
+        const SizedBox(height: DeckSpacing.sm),
+        _row('Max', stats.max),
+        const SizedBox(height: DeckSpacing.sm),
+        _row('Avg', stats.avg),
       ],
     );
   }
 
-  Widget _stat(String label, double value) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+  Widget _row(String label, double value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: DeckType.sectionLabel(fontSize: 9)),
-        const SizedBox(height: 2),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: DeckType.body(fontSize: 12, color: DeckColors.textSecondary),
+          ),
+        ),
+        const SizedBox(width: DeckSpacing.sm),
         Text(
           formatValue(value, unit),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: DeckType.mono(
             fontSize: 12,
             fontWeight: FontWeight.w600,

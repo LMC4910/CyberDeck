@@ -69,11 +69,13 @@ List<ParamSchema> builtinWidgetSchema(String type) {
       ];
     case 'visualizer':
       return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
         ParamSchema(
             name: 'bars', type: ParamType.integer, label: 'Bars', min: 3, max: 64),
       ];
     case 'ring':
       return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
         ParamSchema(name: 'sublabel', type: ParamType.text, label: 'Sub-label'),
         ParamSchema(name: 'unit', type: ParamType.text, label: 'Unit'),
         ParamSchema(name: 'min', type: ParamType.number, label: 'Min'),
@@ -84,6 +86,65 @@ List<ParamSchema> builtinWidgetSchema(String type) {
         ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
         ParamSchema(name: 'body', type: ParamType.text, label: 'Body'),
         ParamSchema(name: 'time', type: ParamType.text, label: 'Time'),
+        ParamSchema(name: 'icon', type: ParamType.text, label: 'Icon'),
+      ];
+    // Wave A composite cards: each card is ONE editor entity, so its title /
+    // accent / items / series are edited as a unit here.
+    case 'gauge.circular':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'sublabel', type: ParamType.text, label: 'Sub-label'),
+        ParamSchema(name: 'unit', type: ParamType.text, label: 'Unit'),
+        ParamSchema(name: 'min', type: ParamType.number, label: 'Min'),
+        ParamSchema(name: 'max', type: ParamType.number, label: 'Max'),
+        // `history` (numeric series) + `stats` {min,max,avg} feed the sparkline +
+        // the Min/Max/Avg column; surfaced as text so they are at least editable.
+        ParamSchema(name: 'history', type: ParamType.text, label: 'History (JSON)'),
+        ParamSchema(name: 'stats', type: ParamType.text, label: 'Stats (JSON)'),
+      ];
+    case 'gauge.linear':
+    case 'gauge.bar':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'label', type: ParamType.text, label: 'Label'),
+        ParamSchema(name: 'unit', type: ParamType.text, label: 'Unit'),
+        ParamSchema(name: 'min', type: ParamType.number, label: 'Min'),
+        ParamSchema(name: 'max', type: ParamType.number, label: 'Max'),
+        ParamSchema(
+            name: 'segments', type: ParamType.integer, label: 'Segments', min: 4, max: 60),
+      ];
+    case 'slider':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'min', type: ParamType.number, label: 'Min'),
+        ParamSchema(name: 'max', type: ParamType.number, label: 'Max'),
+      ];
+    case 'notification.list':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'items', type: ParamType.text, label: 'Items (JSON)'),
+      ];
+    case 'list.card':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'items', type: ParamType.text, label: 'Items (JSON)'),
+      ];
+    case 'room.card':
+      return const [
+        ParamSchema(name: 'name', type: ParamType.text, label: 'Room'),
+        ParamSchema(name: 'icon', type: ParamType.text, label: 'Icon'),
+        ParamSchema(name: 'temp', type: ParamType.text, label: 'Temperature'),
+      ];
+    case 'game.poster':
+      return const [
+        ParamSchema(name: 'title', type: ParamType.text, label: 'Title'),
+        ParamSchema(name: 'subtitle', type: ParamType.text, label: 'Subtitle'),
+        ParamSchema(name: 'art', type: ParamType.text, label: 'Art asset'),
+      ];
+    case 'mode.card':
+      return const [
+        ParamSchema(name: 'name', type: ParamType.text, label: 'Mode'),
+        ParamSchema(name: 'description', type: ParamType.text, label: 'Description'),
         ParamSchema(name: 'icon', type: ParamType.text, label: 'Icon'),
       ];
     default:

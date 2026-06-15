@@ -11,19 +11,24 @@ import 'package:flutter/material.dart';
 
 import 'model.dart';
 import 'widgets/control_tile.dart';
+import 'widgets/game_poster.dart';
 import 'widgets/gauge_circular.dart';
 import 'widgets/button.dart';
 import 'widgets/gauge_linear.dart';
 import 'widgets/image.dart';
 import 'widgets/label.dart';
 import 'widgets/launcher.dart';
+import 'widgets/list_card.dart';
 import 'widgets/media_card.dart';
 import 'widgets/media_player.dart';
 import 'widgets/metric_tile.dart';
+import 'widgets/mode_card.dart';
 import 'widgets/notification_item.dart';
+import 'widgets/notification_list.dart';
 import 'widgets/page_nav.dart';
 import 'widgets/panel.dart';
 import 'widgets/ring.dart';
+import 'widgets/room_card.dart';
 import 'widgets/section_header.dart';
 import 'widgets/slider.dart';
 import 'widgets/sparkline.dart';
@@ -114,6 +119,13 @@ class RendererRegistry {
     r.register('visualizer', buildVisualizer);
     r.register('ring', buildRing);
     r.register('notification.item', buildNotificationItem);
+    // Wave A composite cards: each renders a WHOLE card as a single node (its own
+    // chrome + all sub-content), so the Designer treats a card as ONE entity.
+    r.register('notification.list', buildNotificationList);
+    r.register('list.card', buildListCard);
+    r.register('room.card', buildRoomCard);
+    r.register('game.poster', buildGamePoster);
+    r.register('mode.card', buildModeCard);
     return r;
   }
 }

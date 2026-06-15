@@ -76,6 +76,7 @@ Widget buildRing(BuildContext context, WidgetRenderContext ctx) {
 
   if (style['card'] == true) {
     body = CardChrome(
+      key: Key('ring-card-${node.id}'),
       accent: accent,
       title: style['title'] as String?,
       padding: const EdgeInsets.all(DeckSpacing.md),

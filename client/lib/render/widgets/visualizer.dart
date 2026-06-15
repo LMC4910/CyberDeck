@@ -37,7 +37,9 @@ Widget buildVisualizer(BuildContext context, WidgetRenderContext ctx) {
 
   if (style['card'] == true) {
     body = CardChrome(
+      key: Key('visualizer-card-${node.id}'),
       accent: accent,
+      title: style['title'] as String?,
       padding: const EdgeInsets.all(DeckSpacing.md),
       child: SizedBox(height: 80, child: body),
     );

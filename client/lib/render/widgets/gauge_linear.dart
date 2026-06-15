@@ -88,8 +88,12 @@ Widget buildLinearGauge(BuildContext context, WidgetRenderContext ctx) {
     );
 
   if (node.appearance.style['card'] == true) {
+    // Titled-card variant: a small-caps header (`style.title`) over the
+    // labelled bar + value, so a linear gauge is a single composite card node.
     return CardChrome(
+      key: Key('gauge-card-${node.id}'),
       accent: accent,
+      title: node.appearance.style['title'] as String?,
       padding: const EdgeInsets.all(DeckSpacing.md),
       child: body,
     );
