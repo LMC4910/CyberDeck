@@ -65,7 +65,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byKey(const Key('gauge-value-dash.cpu.gauge')), findsOneWidget);
+    expect(find.byKey(const Key('gauge-value-dash.cpu.card')), findsOneWidget);
 
     // The Terminal control tile is non-destructive: a single tap gives feedback.
     expect(find.text('Terminal'), findsOneWidget);
