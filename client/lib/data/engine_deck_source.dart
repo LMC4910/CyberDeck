@@ -68,6 +68,10 @@ List<StateUpdate> mapEngineStateDelta(String engineId, Object? value) {
     case 'system.net.tx':
       out.add(StateUpdate('net.upload', bytesPerSecToMbps(value)));
       return out;
+    // Top processes [{name,cpu}] → list-card rows [{label, value:"x.x%"}].
+    case 'system.processes':
+      out.add(StateUpdate('sys.processes', processRows(value)));
+      return out;
   }
   for (final pageId in _engineToPageIds[engineId] ?? const <String>[]) {
     out.add(StateUpdate(pageId, value));
@@ -97,6 +101,21 @@ double bytesPerSecToMbps(Object? v) {
 String formatGiB(Object? v) {
   final b = v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
   return '${(b / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+}
+
+/// Transforms the engine's top-processes list `[{name, cpu}]` into the
+/// list-card row shape `[{label, value:"x.x%"}]`.
+List<Map<String, dynamic>> processRows(Object? v) {
+  if (v is! List) return const [];
+  return [
+    for (final e in v)
+      if (e is Map)
+        {
+          'label': '${e['name'] ?? ''}',
+          'value':
+              '${(e['cpu'] is num ? (e['cpu'] as num).toDouble() : 0.0).toStringAsFixed(1)}%',
+        },
+  ];
 }
 
 /// How often the client pings the engine (keeps the engine reaper happy too).

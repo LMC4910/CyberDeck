@@ -25,12 +25,14 @@ Widget buildListCard(BuildContext context, WidgetRenderContext ctx) {
   final style = node.appearance.style;
   final accent = resolveAccent(style);
   final title = style['title'] as String? ?? node.config['title'] as String?;
-  final items = _items(node.config['items']);
-  // When bound to a map state, a row with a `field` key reads its live value from
-  // the map (falling back to its literal `value` when absent). Lets one card show
-  // live host details (e.g. sys.info {os,cpu,ram,storage}) like media.player.
-  final bound =
+  final configItems = _items(node.config['items']);
+  // A bound LIST drives dynamic rows (e.g. live top-processes); a bound MAP drives
+  // per-row `field` lookups (e.g. system.info {os,cpu,ram,storage}); otherwise the
+  // authored config.items render. Mirrors how media.player binds one map state.
+  final boundList = ctx.value is List ? _items(ctx.value) : null;
+  final boundMap =
       ctx.value is Map ? (ctx.value! as Map).cast<String, dynamic>() : null;
+  final items = boundList ?? configItems;
 
   return CardChrome(
     key: Key('list-card-${node.id}'),
@@ -65,7 +67,7 @@ Widget buildListCard(BuildContext context, WidgetRenderContext ctx) {
                     id: node.id,
                     index: i,
                     item: items[i],
-                    bound: bound,
+                    bound: boundMap,
                     fallbackAccent: accent,
                   ),
                 ],

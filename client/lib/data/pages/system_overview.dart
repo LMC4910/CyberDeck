@@ -182,12 +182,14 @@ LayoutPage systemOverviewPage() {
         placement: at(0, 9, colSpan: 7, rowSpan: 7),
       ),
 
-      // ── Top Processes ── one list card (name + CPU%). ──────────────────────
+      // ── Top Processes ── one list card (name + CPU%). Binds the live
+      // `sys.processes` list (dynamic rows); the items below are the Demo fallback.
       listCard(
         'so-proc',
         title: 'Top Processes',
         color: '#7B2FBE',
         placement: at(7, 9, colSpan: 10, rowSpan: 7),
+        stateBinding: 'sys.processes',
         items: const [
           {'label': 'chrome.exe', 'value': '18.4%', 'color': '#00B4D8'},
           {'label': 'GameClient.exe', 'value': '12.1%', 'color': '#7B2FBE'},

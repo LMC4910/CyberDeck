@@ -73,6 +73,17 @@ void main() {
     test('primary disk percent drives the storage donut', () {
       expect(mapOf('system.disk.percent', 58.0)['sys.storage.usedPct'], 58.0);
     });
+
+    test('top processes transform to list-card rows', () {
+      final rows = mapOf('system.processes', [
+        {'name': 'chrome.exe', 'cpu': 18.42},
+        {'name': 'code.exe', 'cpu': 4.2},
+      ])['sys.processes'] as List;
+      expect(rows.length, 2);
+      expect(rows[0]['label'], 'chrome.exe');
+      expect(rows[0]['value'], '18.4%');
+      expect(rows[1]['value'], '4.2%');
+    });
   });
 
   test('formatUptimeSeconds drops leading zero units', () {

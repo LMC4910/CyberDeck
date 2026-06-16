@@ -31,7 +31,7 @@ func main() {
 	if os.Getenv("CYBERDECK_TELEMETRY_FAST") != "" {
 		// Test/CI mode: tiny cadences so the pipeline can be exercised quickly.
 		fast := 20 * time.Millisecond
-		cad = Cadences{CPU: fast, RAM: fast, Net: fast, Disk: fast, Uptime: fast}
+		cad = Cadences{CPU: fast, RAM: fast, Net: fast, Disk: fast, Uptime: fast, Process: fast}
 		tick = 10 * time.Millisecond
 	}
 	run(os.Stdin, os.Stdout, providers.New(), providers.NewGPU(), cad, tick)
@@ -89,6 +89,27 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadence
 			}
 		}
 	}()
+
+	// Top-processes loop (heavier; its own cadence). Published as a list state.
+	if pp, ok := prov.(processProvider); ok && cad.Process > 0 {
+		go func() {
+			t := time.NewTicker(cad.Process)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-t.C:
+					if procs, ok := pp.TopProcesses(); ok {
+						_ = w.write(ipcproto.Message{
+							Type:  ipcproto.MsgStateUpdate,
+							State: &ipcproto.StatePayload{ID: stateProcesses, Value: procs},
+						})
+					}
+				}
+			}
+		}()
+	}
 
 	// Heartbeat loop (liveness even when no metric is due).
 	go func() {

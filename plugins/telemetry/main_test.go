@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	if os.Getenv("CYBERDECK_TELEMETRY_PLUGIN") != "" {
 		fast := 20 * time.Millisecond
 		run(os.Stdin, os.Stdout, providers.New(), providers.NewGPU(),
-			Cadences{CPU: fast, RAM: fast, Net: fast, Disk: fast, Uptime: fast, GPU: fast},
+			Cadences{CPU: fast, RAM: fast, Net: fast, Disk: fast, Uptime: fast, GPU: fast, Process: fast},
 			10*time.Millisecond)
 		return
 	}
@@ -82,6 +82,13 @@ func TestPluginEndToEndViaHost(t *testing.T) {
 		t.Fatalf("%s never reached the state setter", stateSystemInfo)
 	} else if _, isMap := v.(map[string]any); !isMap {
 		t.Fatalf("%s = %v (%T), want a map", stateSystemInfo, v, v)
+	}
+
+	// system.processes is published periodically as a list of {name,cpu} maps.
+	if v, ok := waitForState(setter, stateProcesses, 5*time.Second); !ok {
+		t.Fatalf("%s never reached the state setter", stateProcesses)
+	} else if _, isList := v.([]any); !isList {
+		t.Fatalf("%s = %v (%T), want a list", stateProcesses, v, v)
 	}
 
 	// system.uptime is reliable on any host; assert it reaches the state setter as

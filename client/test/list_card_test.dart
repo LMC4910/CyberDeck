@@ -47,4 +47,44 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     interp.dispose();
   });
+
+  testWidgets('list.card renders dynamic rows from a bound list (overrides items)',
+      (tester) async {
+    const node = WidgetNode(
+      id: 'lc2',
+      type: 'list.card',
+      placement: Placement(col: 0, row: 0, colSpan: 6, rowSpan: 6),
+      appearance: Appearance(stateBinding: 'sys.processes'),
+      config: {
+        'items': [
+          {'label': 'demo.exe', 'value': '1.0%'}, // Demo fallback
+        ],
+      },
+    );
+    final interp = LayoutInterpreter(registry: RendererRegistry.withBuiltins())
+      ..load(const LayoutPage(
+        id: 'p',
+        grid: GridConfig(columns: 6, rows: 6),
+        widgets: [node],
+      ));
+
+    await tester.pumpWidget(MaterialApp(
+      theme: buildDeckTheme(),
+      home: Scaffold(body: interp.build()),
+    ));
+    await tester.pump();
+    expect(find.text('demo.exe'), findsOneWidget); // fallback before live
+
+    interp.applyState('sys.processes', const [
+      {'label': 'chrome.exe', 'value': '18.4%'},
+      {'label': 'code.exe', 'value': '4.2%'},
+    ]);
+    await tester.pump();
+    expect(find.text('chrome.exe'), findsOneWidget);
+    expect(find.text('code.exe'), findsOneWidget);
+    expect(find.text('demo.exe'), findsNothing); // bound list overrides items
+
+    await tester.pumpWidget(const SizedBox());
+    interp.dispose();
+  });
 }

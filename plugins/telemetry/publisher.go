@@ -41,6 +41,9 @@ const (
 
 	// Static host details, published once at startup as a map (os/cpu/ram/storage).
 	stateSystemInfo = "system.info"
+
+	// Top processes, published periodically as a list of {name, cpu} maps.
+	stateProcesses = "system.processes"
 )
 
 // Per-drive mount points (Windows drive letters). Absent drives report ok=false
@@ -70,6 +73,12 @@ type systemInfoProvider interface {
 	SystemInfo() map[string]any
 }
 
+// processProvider supplies the top processes published periodically as the
+// `system.processes` list. Discovered on the provider by type assertion.
+type processProvider interface {
+	TopProcesses() ([]map[string]any, bool)
+}
+
 // Threshold-crossing event topics (under→over transitions only, no spam).
 const (
 	topicCPUHigh = "system.cpu.high"
@@ -86,30 +95,32 @@ func systemStates() []string {
 		stateGPULoad, stateGPUTemp, stateGPUVRAMUsed, stateGPUVRAMTotal,
 		stateRAMUsed, stateRAMFree, stateRAMTotal, stateNetRx, stateNetTx,
 		stateDiskC, stateDiskD, stateDiskE, stateDiskF,
-		stateSystemInfo,
+		stateSystemInfo, stateProcesses,
 	}
 }
 
 // Cadences is how often each metric is polled/published.
 type Cadences struct {
-	CPU    time.Duration
-	RAM    time.Duration
-	Net    time.Duration
-	Disk   time.Duration
-	Uptime time.Duration
-	GPU    time.Duration
+	CPU     time.Duration
+	RAM     time.Duration
+	Net     time.Duration
+	Disk    time.Duration
+	Uptime  time.Duration
+	GPU     time.Duration
+	Process time.Duration // top-processes list (heavier; polled less often)
 }
 
 // DefaultCadences match 2G: fast gauges at 1s, storage at 10s, uptime at 60s. GPU
 // gauges share the fast 1s cadence.
 func DefaultCadences() Cadences {
 	return Cadences{
-		CPU:    time.Second,
-		RAM:    time.Second,
-		Net:    time.Second,
-		Disk:   10 * time.Second,
-		Uptime: 60 * time.Second,
-		GPU:    time.Second,
+		CPU:     time.Second,
+		RAM:     time.Second,
+		Net:     time.Second,
+		Disk:    10 * time.Second,
+		Uptime:  60 * time.Second,
+		GPU:     time.Second,
+		Process: 3 * time.Second,
 	}
 }
 

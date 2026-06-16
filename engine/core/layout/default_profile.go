@@ -208,6 +208,7 @@ var PublishedTelemetryIDs = []string{
 	"system.disk.e.percent",
 	"system.disk.f.percent",
 	"system.info",
+	"system.processes",
 	"system.volume",
 	"system.muted",
 	"notification.count",
