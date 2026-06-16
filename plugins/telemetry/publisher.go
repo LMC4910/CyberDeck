@@ -25,7 +25,41 @@ const (
 	stateGPUTemp      = "system.gpu.temp"
 	stateGPUVRAMUsed  = "system.gpu.vram.used"
 	stateGPUVRAMTotal = "system.gpu.vram.total"
+
+	// Extended telemetry (gopsutil-backed): RAM byte breakdown, the rx/tx network
+	// split, and per-drive storage. Published only when the provider implements
+	// extendedTelemetry (the real Gopsutil does; test fakes need not).
+	stateRAMUsed  = "system.ram.used"  // bytes
+	stateRAMFree  = "system.ram.free"  // bytes (available)
+	stateRAMTotal = "system.ram.total" // bytes
+	stateNetRx    = "system.net.rx"    // bytes/sec (download)
+	stateNetTx    = "system.net.tx"    // bytes/sec (upload)
+	stateDiskC    = "system.disk.c.percent"
+	stateDiskD    = "system.disk.d.percent"
+	stateDiskE    = "system.disk.e.percent"
+	stateDiskF    = "system.disk.f.percent"
 )
+
+// Per-drive mount points (Windows drive letters). Absent drives report ok=false
+// → that slot shows "--".
+const (
+	diskMountC = "C:\\"
+	diskMountD = "D:\\"
+	diskMountE = "E:\\"
+	diskMountF = "F:\\"
+)
+
+// extendedTelemetry is the optional capability the publisher discovers on the
+// telemetry provider (via type assertion) for the richer metrics above. Keeping
+// it plugin-local avoids touching pal.Telemetry (and its test fakes).
+type extendedTelemetry interface {
+	MemUsedBytes() (float64, bool)
+	MemFreeBytes() (float64, bool)
+	MemTotalBytes() (float64, bool)
+	NetRxBytesPerSec() (float64, bool)
+	NetTxBytesPerSec() (float64, bool)
+	DiskPercentFor(string) (float64, bool)
+}
 
 // Threshold-crossing event topics (under→over transitions only, no spam).
 const (
@@ -41,6 +75,8 @@ func systemStates() []string {
 	return []string{
 		stateCPU, stateRAM, stateNet, stateDisk, stateUptime,
 		stateGPULoad, stateGPUTemp, stateGPUVRAMUsed, stateGPUVRAMTotal,
+		stateRAMUsed, stateRAMFree, stateRAMTotal, stateNetRx, stateNetTx,
+		stateDiskC, stateDiskD, stateDiskE, stateDiskF,
 	}
 }
 
@@ -111,7 +147,7 @@ type Publisher struct {
 // ramWarn and gpuWarn are the high-usage / over-temperature thresholds (e.g. 85, 90
 // and 88). The GPU metrics degrade to "--" (skipped) when the GPU chain is unbound.
 func NewPublisher(t pal.Telemetry, gpu pal.GPU, w *msgWriter, c Cadences, cpuWarn, ramWarn, gpuWarn float64) *Publisher {
-	return &Publisher{
+	p := &Publisher{
 		w: w,
 		metrics: []metric{
 			{id: stateCPU, cadence: c.CPU, read: t.CPUPercent, warnTopic: topicCPUHigh, warnLimit: cpuWarn},
@@ -125,6 +161,22 @@ func NewPublisher(t pal.Telemetry, gpu pal.GPU, w *msgWriter, c Cadences, cpuWar
 			{id: stateGPUVRAMTotal, cadence: c.GPU, read: gpu.VRAMTotal},
 		},
 	}
+
+	// Richer metrics when the provider supports them (the real gopsutil provider).
+	if ext, ok := t.(extendedTelemetry); ok {
+		p.metrics = append(p.metrics,
+			metric{id: stateRAMUsed, cadence: c.RAM, read: ext.MemUsedBytes},
+			metric{id: stateRAMFree, cadence: c.RAM, read: ext.MemFreeBytes},
+			metric{id: stateRAMTotal, cadence: c.RAM, read: ext.MemTotalBytes},
+			metric{id: stateNetRx, cadence: c.Net, read: ext.NetRxBytesPerSec},
+			metric{id: stateNetTx, cadence: c.Net, read: ext.NetTxBytesPerSec},
+			metric{id: stateDiskC, cadence: c.Disk, read: func() (float64, bool) { return ext.DiskPercentFor(diskMountC) }},
+			metric{id: stateDiskD, cadence: c.Disk, read: func() (float64, bool) { return ext.DiskPercentFor(diskMountD) }},
+			metric{id: stateDiskE, cadence: c.Disk, read: func() (float64, bool) { return ext.DiskPercentFor(diskMountE) }},
+			metric{id: stateDiskF, cadence: c.Disk, read: func() (float64, bool) { return ext.DiskPercentFor(diskMountF) }},
+		)
+	}
+	return p
 }
 
 // PublishDue polls and publishes every metric whose cadence has elapsed by now.

@@ -21,9 +21,14 @@ import (
 // (value, ok) convention: ok=false means the metric is unavailable on this host
 // right now (the bound state shows "--"), never a fabricated zero.
 type Gopsutil struct {
-	mu       sync.Mutex
-	lastNet  uint64    // last total bytes (sent+recv) for throughput delta
-	lastTime time.Time // when lastNet was sampled
+	mu sync.Mutex
+	// Net rate sampler: cumulative rx/tx counters + the cached per-second rates
+	// computed from them. Recomputed at most once per ~250ms so the rx, tx, and
+	// throughput reads within one publish tick all share a single sample.
+	lastRx, lastTx uint64
+	lastNetTime    time.Time
+	rxRate, txRate float64
+	netSampled     bool
 }
 
 // New returns a gopsutil-backed telemetry provider.
@@ -50,29 +55,71 @@ func (g *Gopsutil) MemUsedPercent() (float64, bool) {
 	return v.UsedPercent, true
 }
 
-// NetThroughput reports aggregate bytes/sec across all interfaces, computed as a
-// delta between successive calls. The first call establishes a baseline and
-// reports 0 (available, but no rate yet).
-func (g *Gopsutil) NetThroughput() (float64, bool) {
+// sampleNet refreshes the cached rx/tx rates from the cumulative interface
+// counters, computing the delta over the elapsed interval. The first call sets a
+// baseline (rates 0). Reads within ~250ms reuse the cached sample so the rx, tx
+// and throughput metrics published in one tick agree. Returns false if counters
+// are unavailable. (Fixes the prior bug that updated `last` before the delta.)
+func (g *Gopsutil) sampleNet() bool {
 	counters, err := net.IOCounters(false)
 	if err != nil || len(counters) == 0 {
-		return 0, false
+		return false
 	}
-	total := counters[0].BytesSent + counters[0].BytesRecv
+	rx, tx := counters[0].BytesRecv, counters[0].BytesSent
 	now := time.Now()
 
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	if g.lastTime.IsZero() {
-		g.lastNet, g.lastTime = total, now
-		return 0, true
+	if g.lastNetTime.IsZero() {
+		g.lastRx, g.lastTx, g.lastNetTime = rx, tx, now
+		g.rxRate, g.txRate, g.netSampled = 0, 0, true
+		return true
 	}
-	dt := now.Sub(g.lastTime).Seconds()
-	g.lastNet, g.lastTime = total, now
-	if dt <= 0 || total < g.lastNet {
-		return 0, true
+	dt := now.Sub(g.lastNetTime).Seconds()
+	if dt < 0.25 && g.netSampled {
+		return true // reuse the cached rates within the coalescing window
 	}
-	return float64(total-g.lastNet) / dt, true
+	if dt <= 0 {
+		return true
+	}
+	if rx >= g.lastRx {
+		g.rxRate = float64(rx-g.lastRx) / dt
+	}
+	if tx >= g.lastTx {
+		g.txRate = float64(tx-g.lastTx) / dt
+	}
+	g.lastRx, g.lastTx, g.lastNetTime = rx, tx, now
+	g.netSampled = true
+	return true
+}
+
+// NetThroughput reports aggregate bytes/sec (rx+tx) across all interfaces.
+func (g *Gopsutil) NetThroughput() (float64, bool) {
+	if !g.sampleNet() {
+		return 0, false
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.rxRate + g.txRate, true
+}
+
+// NetRxBytesPerSec / NetTxBytesPerSec report download / upload rates (bytes/sec).
+func (g *Gopsutil) NetRxBytesPerSec() (float64, bool) {
+	if !g.sampleNet() {
+		return 0, false
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.rxRate, true
+}
+
+func (g *Gopsutil) NetTxBytesPerSec() (float64, bool) {
+	if !g.sampleNet() {
+		return 0, false
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.txRate, true
 }
 
 // DiskUsedPercent reports used percentage of the primary volume.
@@ -91,6 +138,43 @@ func (g *Gopsutil) UptimeSeconds() (float64, bool) {
 		return 0, false
 	}
 	return float64(up), true
+}
+
+// MemUsedBytes / MemFreeBytes / MemTotalBytes report RAM in bytes. "Free" uses
+// Available (memory reclaimable for new allocations), which matches what a user
+// reads as free far better than the OS's raw free-page count.
+func (g *Gopsutil) MemUsedBytes() (float64, bool) {
+	v, err := mem.VirtualMemory()
+	if err != nil || v == nil {
+		return 0, false
+	}
+	return float64(v.Used), true
+}
+
+func (g *Gopsutil) MemFreeBytes() (float64, bool) {
+	v, err := mem.VirtualMemory()
+	if err != nil || v == nil {
+		return 0, false
+	}
+	return float64(v.Available), true
+}
+
+func (g *Gopsutil) MemTotalBytes() (float64, bool) {
+	v, err := mem.VirtualMemory()
+	if err != nil || v == nil {
+		return 0, false
+	}
+	return float64(v.Total), true
+}
+
+// DiskPercentFor reports the used percentage of the volume at mount, or ok=false
+// when that volume doesn't exist on this host (so an absent drive shows "--").
+func (g *Gopsutil) DiskPercentFor(mount string) (float64, bool) {
+	u, err := disk.Usage(mount)
+	if err != nil || u == nil {
+		return 0, false
+	}
+	return u.UsedPercent, true
 }
 
 // primaryMount is the path whose volume represents "primary storage" per OS.

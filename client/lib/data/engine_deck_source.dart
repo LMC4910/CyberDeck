@@ -30,6 +30,11 @@ const Map<String, List<String>> _engineToPageIds = {
   'system.volume': ['media.volume', 'media.volume.system'],
   'system.muted': ['media.muted'],
   'notification.count': ['notification.count'],
+  // Per-drive storage (renames; absent drives never publish → those slots "--").
+  'system.disk.c.percent': ['storage.c.percent'],
+  'system.disk.d.percent': ['storage.d.percent'],
+  'system.disk.e.percent': ['storage.e.percent'],
+  'system.disk.f.percent': ['storage.f.percent'],
 };
 
 /// Maps one engine state delta to the page binding id(s) it should drive. Emits
@@ -42,8 +47,22 @@ List<StateUpdate> mapEngineStateDelta(String engineId, Object? value) {
     case 'system.uptime':
       out.add(StateUpdate('sys.uptime', formatUptimeSeconds(value)));
       return out;
-    case 'system.net.throughput':
+    // RAM byte breakdown → the "X.X GB" text the stat rows show.
+    case 'system.ram.used':
+      out.add(StateUpdate('sys.ram.used', formatGiB(value)));
+      return out;
+    case 'system.ram.free':
+      out.add(StateUpdate('sys.ram.free', formatGiB(value)));
+      return out;
+    case 'system.ram.total':
+      out.add(StateUpdate('sys.ram.total', formatGiB(value)));
+      return out;
+    // Network split (bytes/s → Mbps). `net.ping` has no engine source → "--".
+    case 'system.net.rx':
       out.add(StateUpdate('net.download', bytesPerSecToMbps(value)));
+      return out;
+    case 'system.net.tx':
+      out.add(StateUpdate('net.upload', bytesPerSecToMbps(value)));
       return out;
   }
   for (final pageId in _engineToPageIds[engineId] ?? const <String>[]) {
@@ -68,6 +87,12 @@ String formatUptimeSeconds(Object? v) {
 double bytesPerSecToMbps(Object? v) {
   final b = v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
   return (b * 8) / 1e6;
+}
+
+/// Formats a byte count as "X.X GB" (GiB) for the RAM stat rows.
+String formatGiB(Object? v) {
+  final b = v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
+  return '${(b / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
 }
 
 /// How often the client pings the engine (keeps the engine reaper happy too).

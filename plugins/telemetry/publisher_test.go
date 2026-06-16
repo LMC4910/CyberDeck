@@ -8,10 +8,17 @@ import (
 	"github.com/shishir/cyberdeck/engine/pluginhost/ipcproto"
 )
 
-// fakeProvider is a pal.Telemetry whose values and availability are set by the test.
+// fakeProvider is a pal.Telemetry + extendedTelemetry whose values and
+// availability are set by the test.
 type fakeProvider struct {
 	cpu, ram, netv, disk, up         float64
 	cpuOK, ramOK, netOK, diskOK, uOK bool
+	// Extended (gopsutil-backed) metrics.
+	memUsed, memFree, memTotal float64
+	rx, tx                     float64
+	diskC, diskD, diskE, diskF float64
+	extOK                      bool // RAM bytes + net rx/tx availability
+	cOK, dOK, eOK, fOK         bool // per-drive availability
 }
 
 func (f *fakeProvider) CPUPercent() (float64, bool)      { return f.cpu, f.cpuOK }
@@ -20,10 +27,32 @@ func (f *fakeProvider) NetThroughput() (float64, bool)   { return f.netv, f.netO
 func (f *fakeProvider) DiskUsedPercent() (float64, bool) { return f.disk, f.diskOK }
 func (f *fakeProvider) UptimeSeconds() (float64, bool)   { return f.up, f.uOK }
 
+func (f *fakeProvider) MemUsedBytes() (float64, bool)     { return f.memUsed, f.extOK }
+func (f *fakeProvider) MemFreeBytes() (float64, bool)     { return f.memFree, f.extOK }
+func (f *fakeProvider) MemTotalBytes() (float64, bool)    { return f.memTotal, f.extOK }
+func (f *fakeProvider) NetRxBytesPerSec() (float64, bool) { return f.rx, f.extOK }
+func (f *fakeProvider) NetTxBytesPerSec() (float64, bool) { return f.tx, f.extOK }
+func (f *fakeProvider) DiskPercentFor(mount string) (float64, bool) {
+	switch mount {
+	case diskMountC:
+		return f.diskC, f.cOK
+	case diskMountD:
+		return f.diskD, f.dOK
+	case diskMountE:
+		return f.diskE, f.eOK
+	case diskMountF:
+		return f.diskF, f.fOK
+	}
+	return 0, false
+}
+
 func allAvailable() *fakeProvider {
 	return &fakeProvider{
 		cpu: 12, ram: 40, netv: 1000, disk: 55, up: 3600,
 		cpuOK: true, ramOK: true, netOK: true, diskOK: true, uOK: true,
+		memUsed: 10 << 30, memFree: 6 << 30, memTotal: 16 << 30, rx: 800, tx: 200,
+		diskC: 58, diskD: 30, diskE: 20, diskF: 10,
+		extOK: true, cOK: true, dOK: true, eOK: true, fOK: true,
 	}
 }
 
@@ -274,6 +303,74 @@ func TestGPUOverTempEmitsThresholdEvent(t *testing.T) {
 	}
 	if topics := eventTopics(decodeMessages(t, &buf)); contains(topics, topicGPUHigh) {
 		t.Fatalf("sustained over-temp re-emitted: %v", topics)
+	}
+}
+
+// TestExtendedMetricsPublish proves the gopsutil-backed extended metrics (RAM
+// byte breakdown, rx/tx split, per-drive storage) flow as typed scalars when the
+// provider supports them.
+func TestExtendedMetricsPublish(t *testing.T) {
+	var buf bytes.Buffer
+	pub := NewPublisher(allAvailable(), allGPU(), newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
+	if err := pub.PublishDue(time.Unix(0, 0)); err != nil {
+		t.Fatal(err)
+	}
+	st := states(decodeMessages(t, &buf))
+	want := map[string]float64{
+		stateRAMUsed: float64(10 << 30), stateRAMFree: float64(6 << 30),
+		stateRAMTotal: float64(16 << 30), stateNetRx: 800, stateNetTx: 200,
+		stateDiskC: 58, stateDiskD: 30,
+	}
+	for id, v := range want {
+		if st[id] != v {
+			t.Errorf("%s = %v, want %v", id, st[id], v)
+		}
+	}
+}
+
+// TestAbsentDriveSkipped proves a drive that doesn't exist (ok=false) is not
+// published, so that storage slot shows "--".
+func TestAbsentDriveSkipped(t *testing.T) {
+	var buf bytes.Buffer
+	prov := allAvailable()
+	prov.dOK = false // D: not present on this host
+	pub := NewPublisher(prov, allGPU(), newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
+	if err := pub.PublishDue(time.Unix(0, 0)); err != nil {
+		t.Fatal(err)
+	}
+	st := states(decodeMessages(t, &buf))
+	if _, ok := st[stateDiskD]; ok {
+		t.Error("absent drive D: must not publish")
+	}
+	if _, ok := st[stateDiskC]; !ok {
+		t.Error("present drive C: should publish")
+	}
+}
+
+// baseProvider implements only pal.Telemetry (NOT extendedTelemetry), proving the
+// publisher skips the extended metrics for providers that don't support them.
+type baseProvider struct{}
+
+func (baseProvider) CPUPercent() (float64, bool)      { return 10, true }
+func (baseProvider) MemUsedPercent() (float64, bool)  { return 40, true }
+func (baseProvider) NetThroughput() (float64, bool)   { return 0, true }
+func (baseProvider) DiskUsedPercent() (float64, bool) { return 50, true }
+func (baseProvider) UptimeSeconds() (float64, bool)   { return 100, true }
+
+func TestBaseProviderSkipsExtendedMetrics(t *testing.T) {
+	var buf bytes.Buffer
+	pub := NewPublisher(baseProvider{}, unavailableGPU{}, newMsgWriter(&buf), DefaultCadences(), 85, 90, 88)
+	if err := pub.PublishDue(time.Unix(0, 0)); err != nil {
+		t.Fatal(err)
+	}
+	st := states(decodeMessages(t, &buf))
+	for _, id := range []string{stateRAMUsed, stateNetRx, stateDiskC} {
+		if _, ok := st[id]; ok {
+			t.Errorf("base-only provider must not publish extended metric %q", id)
+		}
+	}
+	if _, ok := st[stateCPU]; !ok {
+		t.Error("base metric should still publish")
 	}
 }
 

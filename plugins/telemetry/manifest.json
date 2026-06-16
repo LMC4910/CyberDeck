@@ -16,7 +16,16 @@
     "system.gpu.load",
     "system.gpu.temp",
     "system.gpu.vram.used",
-    "system.gpu.vram.total"
+    "system.gpu.vram.total",
+    "system.ram.used",
+    "system.ram.free",
+    "system.ram.total",
+    "system.net.rx",
+    "system.net.tx",
+    "system.disk.c.percent",
+    "system.disk.d.percent",
+    "system.disk.e.percent",
+    "system.disk.f.percent"
   ],
   "contributes": {}
 }

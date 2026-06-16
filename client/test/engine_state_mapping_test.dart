@@ -30,8 +30,12 @@ void main() {
       expect(mapOf('system.uptime', 220952)['sys.uptime'], '2d 13h 22m 32s');
     });
 
-    test('network throughput converts bytes/s → Mbps', () {
-      expect(mapOf('system.net.throughput', 1000000)['net.download'], 8.0);
+    test('aggregate throughput is passthrough-only (rx/tx drive net.*)', () {
+      // net.download/upload now come from system.net.rx/tx; the aggregate
+      // throughput is no longer mapped to a page binding.
+      final m = mapEngineStateDelta('system.net.throughput', 1000000);
+      expect(m.length, 1);
+      expect(m.first.id, 'system.net.throughput');
     });
 
     test('an unmapped engine id only passes through (no page binding)', () {
@@ -39,6 +43,26 @@ void main() {
       final m = mapEngineStateDelta('system.cpu.temp', 50.0);
       expect(m.length, 1);
       expect(m.first.id, 'system.cpu.temp');
+    });
+
+    test('per-drive storage renames to the storage.<letter>.percent slots', () {
+      expect(mapOf('system.disk.c.percent', 58.0)['storage.c.percent'], 58.0);
+      expect(mapOf('system.disk.d.percent', 30.0)['storage.d.percent'], 30.0);
+    });
+
+    test('RAM byte breakdown formats to "X.X GB" text', () {
+      const gib = 1024 * 1024 * 1024;
+      expect(mapOf('system.ram.used', (10 * gib).toDouble())['sys.ram.used'],
+          '10.0 GB');
+      expect(mapOf('system.ram.free', (6 * gib).toDouble())['sys.ram.free'],
+          '6.0 GB');
+      expect(mapOf('system.ram.total', (16 * gib).toDouble())['sys.ram.total'],
+          '16.0 GB');
+    });
+
+    test('network rx/tx split to download/upload Mbps', () {
+      expect(mapOf('system.net.rx', 1000000)['net.download'], 8.0);
+      expect(mapOf('system.net.tx', 500000)['net.upload'], 4.0);
     });
   });
 
