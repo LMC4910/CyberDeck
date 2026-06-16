@@ -38,6 +38,9 @@ const (
 	stateDiskD    = "system.disk.d.percent"
 	stateDiskE    = "system.disk.e.percent"
 	stateDiskF    = "system.disk.f.percent"
+
+	// Static host details, published once at startup as a map (os/cpu/ram/storage).
+	stateSystemInfo = "system.info"
 )
 
 // Per-drive mount points (Windows drive letters). Absent drives report ok=false
@@ -61,6 +64,12 @@ type extendedTelemetry interface {
 	DiskPercentFor(string) (float64, bool)
 }
 
+// systemInfoProvider supplies the (mostly static) host details published once at
+// startup as the `system.info` map. Discovered on the provider by type assertion.
+type systemInfoProvider interface {
+	SystemInfo() map[string]any
+}
+
 // Threshold-crossing event topics (under→over transitions only, no spam).
 const (
 	topicCPUHigh = "system.cpu.high"
@@ -77,6 +86,7 @@ func systemStates() []string {
 		stateGPULoad, stateGPUTemp, stateGPUVRAMUsed, stateGPUVRAMTotal,
 		stateRAMUsed, stateRAMFree, stateRAMTotal, stateNetRx, stateNetTx,
 		stateDiskC, stateDiskD, stateDiskE, stateDiskF,
+		stateSystemInfo,
 	}
 }
 

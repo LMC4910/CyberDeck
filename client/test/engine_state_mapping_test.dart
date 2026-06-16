@@ -64,6 +64,15 @@ void main() {
       expect(mapOf('system.net.rx', 1000000)['net.download'], 8.0);
       expect(mapOf('system.net.tx', 500000)['net.upload'], 4.0);
     });
+
+    test('system.info map renames to sys.info (passthrough)', () {
+      final info = {'os': 'Windows 11', 'cpu': 'Ryzen 9', 'ram': '16 GB'};
+      expect(mapOf('system.info', info)['sys.info'], info);
+    });
+
+    test('primary disk percent drives the storage donut', () {
+      expect(mapOf('system.disk.percent', 58.0)['sys.storage.usedPct'], 58.0);
+    });
   });
 
   test('formatUptimeSeconds drops leading zero units', () {

@@ -130,6 +130,9 @@ func TestPublishDueEmitsAllMetricsFirstTick(t *testing.T) {
 	}
 	st := states(decodeMessages(t, &buf))
 	for _, id := range systemStates() {
+		if id == stateSystemInfo {
+			continue // published once at startup (run()), not via the cadence loop
+		}
 		if _, ok := st[id]; !ok {
 			t.Errorf("missing state %q on first tick", id)
 		}

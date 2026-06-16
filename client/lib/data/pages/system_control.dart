@@ -323,14 +323,17 @@ LayoutPage systemControlPage() {
 
     // ════════════════════════ SYSTEM INFORMATION (one card) ═════════════════
     // The spec list collapses from a panel + stat rows into ONE list.card.
+    // Binds the live `sys.info` map (os/cpu real); rows without a `field`
+    // (Motherboard / GPU / CPU Temp) keep their authored literal.
     listCard(
       'sc.sysinfo',
       placement: at(8, 11, colSpan: 5, rowSpan: 6),
       title: 'System Information',
       color: _purple,
+      stateBinding: 'sys.info',
       items: const [
-        {'label': 'Operating System', 'value': 'Windows 11 Pro'},
-        {'label': 'Processor', 'value': 'Core i9-13900K'},
+        {'label': 'Operating System', 'field': 'os', 'value': 'Windows 11 Pro'},
+        {'label': 'Processor', 'field': 'cpu', 'value': 'Core i9-13900K'},
         {'label': 'Motherboard', 'value': 'ROG Z790 Hero'},
         {'label': 'GPU', 'value': 'RTX 4090'},
         {'label': 'CPU Temp', 'value': '42°C', 'color': _ok},

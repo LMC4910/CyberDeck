@@ -76,19 +76,32 @@ func TestPluginEndToEndViaHost(t *testing.T) {
 		t.Fatal("plugin did not register")
 	}
 
+	// system.info is published once at startup as a map of host details; assert it
+	// reaches the setter through the real subprocess→IPC→host→store path.
+	if v, ok := waitForState(setter, stateSystemInfo, 5*time.Second); !ok {
+		t.Fatalf("%s never reached the state setter", stateSystemInfo)
+	} else if _, isMap := v.(map[string]any); !isMap {
+		t.Fatalf("%s = %v (%T), want a map", stateSystemInfo, v, v)
+	}
+
 	// system.uptime is reliable on any host; assert it reaches the state setter as
 	// a positive number through the real subprocess→IPC→host→store path.
-	deadline := time.Now().Add(5 * time.Second)
+	if v, ok := waitForState(setter, stateUptime, 5*time.Second); !ok {
+		t.Fatalf("%s never reached the state setter", stateUptime)
+	} else if f, isNum := v.(float64); !isNum || f <= 0 {
+		t.Fatalf("%s = %v (%T), want positive number", stateUptime, v, v)
+	}
+}
+
+// waitForState polls the setter until id appears or the timeout elapses.
+func waitForState(s *recordingSetter, id string, timeout time.Duration) (any, bool) {
+	deadline := time.Now().Add(timeout)
 	for {
-		if v, ok := setter.get(stateUptime); ok {
-			f, isNum := v.(float64)
-			if !isNum || f <= 0 {
-				t.Fatalf("%s = %v (%T), want positive number", stateUptime, v, v)
-			}
-			return
+		if v, ok := s.get(id); ok {
+			return v, true
 		}
 		if time.Now().After(deadline) {
-			t.Fatalf("%s never reached the state setter", stateUptime)
+			return nil, false
 		}
 		time.Sleep(20 * time.Millisecond)
 	}

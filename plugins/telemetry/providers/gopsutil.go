@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"fmt"
 	"runtime"
 	"sync"
 	"time"
@@ -175,6 +176,31 @@ func (g *Gopsutil) DiskPercentFor(mount string) (float64, bool) {
 		return 0, false
 	}
 	return u.UsedPercent, true
+}
+
+// SystemInfo returns a best-effort snapshot of static host details for the
+// "Detailed System Info" card: OS, CPU model, total RAM, and primary-disk size.
+// Missing pieces are omitted so the card row keeps its authored literal.
+func (g *Gopsutil) SystemInfo() map[string]any {
+	out := map[string]any{}
+	if h, err := host.Info(); err == nil && h != nil && h.Platform != "" {
+		out["os"] = h.Platform
+	}
+	if ci, err := cpu.Info(); err == nil && len(ci) > 0 && ci[0].ModelName != "" {
+		out["cpu"] = ci[0].ModelName
+	}
+	if v, err := mem.VirtualMemory(); err == nil && v != nil && v.Total > 0 {
+		out["ram"] = fmt.Sprintf("%.0f GB", float64(v.Total)/(1<<30))
+	}
+	if u, err := disk.Usage(primaryMount()); err == nil && u != nil && u.Total > 0 {
+		total := float64(u.Total)
+		if total >= (1 << 40) {
+			out["storage"] = fmt.Sprintf("%.1f TB", total/(1<<40))
+		} else {
+			out["storage"] = fmt.Sprintf("%.0f GB", total/(1<<30))
+		}
+	}
+	return out
 }
 
 // primaryMount is the path whose volume represents "primary storage" per OS.

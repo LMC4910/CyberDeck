@@ -143,18 +143,20 @@ LayoutPage systemOverviewPage() {
         valueRules: utilRules,
       ),
 
-      // ── Detailed System Info ── one list card (OS / CPU / GPU / RAM rows). ──
+      // ── Detailed System Info ── one list card (OS / CPU / GPU / RAM rows).
+      // Binds the live `sys.info` map; each row's literal is the Demo fallback.
       listCard(
         'so-info',
         title: 'Detailed System Info',
         color: '#7B2FBE',
         placement: at(9, 3, colSpan: 8, rowSpan: 6),
+        stateBinding: 'sys.info',
         items: const [
-          {'leading': 'os', 'label': 'Operating System', 'value': 'Windows 11 Pro'},
-          {'leading': 'cpu', 'label': 'Processor', 'value': 'Ryzen 9 7950X'},
-          {'leading': 'gpu', 'label': 'Graphics', 'value': 'RTX 4090'},
-          {'leading': 'ram', 'label': 'Memory', 'value': '64 GB DDR5'},
-          {'leading': 'storage', 'label': 'Storage', 'value': '4 TB NVMe'},
+          {'leading': 'os', 'label': 'Operating System', 'field': 'os', 'value': 'Windows 11 Pro'},
+          {'leading': 'cpu', 'label': 'Processor', 'field': 'cpu', 'value': 'Ryzen 9 7950X'},
+          {'leading': 'gpu', 'label': 'Graphics', 'field': 'gpu', 'value': 'RTX 4090'},
+          {'leading': 'ram', 'label': 'Memory', 'field': 'ram', 'value': '64 GB DDR5'},
+          {'leading': 'storage', 'label': 'Storage', 'field': 'storage', 'value': '4 TB NVMe'},
         ],
       ),
 

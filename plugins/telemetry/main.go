@@ -60,6 +60,17 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadence
 		return
 	}
 
+	// Publish the (mostly static) host details once so the "Detailed System Info"
+	// card shows real data on connect (separate from the cadenced float metrics).
+	if si, ok := prov.(systemInfoProvider); ok {
+		if info := si.SystemInfo(); len(info) > 0 {
+			_ = w.write(ipcproto.Message{
+				Type:  ipcproto.MsgStateUpdate,
+				State: &ipcproto.StatePayload{ID: stateSystemInfo, Value: info},
+			})
+		}
+	}
+
 	pub := NewPublisher(prov, gpu, w, cad, cpuWarnPercent, ramWarnPercent, gpuWarnTempC)
 
 	ctx, cancel := context.WithCancel(context.Background())

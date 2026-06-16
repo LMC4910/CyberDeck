@@ -30,6 +30,10 @@ const Map<String, List<String>> _engineToPageIds = {
   'system.volume': ['media.volume', 'media.volume.system'],
   'system.muted': ['media.muted'],
   'notification.count': ['notification.count'],
+  // Static host details map → the "Detailed System Info" card binding.
+  'system.info': ['sys.info'],
+  // Primary-disk usage → the Storage Overview donut (a %, not the TB tile).
+  'system.disk.percent': ['sys.storage.usedPct'],
   // Per-drive storage (renames; absent drives never publish → those slots "--").
   'system.disk.c.percent': ['storage.c.percent'],
   'system.disk.d.percent': ['storage.d.percent'],

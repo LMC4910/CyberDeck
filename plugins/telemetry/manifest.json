@@ -25,7 +25,8 @@
     "system.disk.c.percent",
     "system.disk.d.percent",
     "system.disk.e.percent",
-    "system.disk.f.percent"
+    "system.disk.f.percent",
+    "system.info"
   ],
   "contributes": {}
 }

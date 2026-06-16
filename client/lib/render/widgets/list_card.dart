@@ -26,6 +26,11 @@ Widget buildListCard(BuildContext context, WidgetRenderContext ctx) {
   final accent = resolveAccent(style);
   final title = style['title'] as String? ?? node.config['title'] as String?;
   final items = _items(node.config['items']);
+  // When bound to a map state, a row with a `field` key reads its live value from
+  // the map (falling back to its literal `value` when absent). Lets one card show
+  // live host details (e.g. sys.info {os,cpu,ram,storage}) like media.player.
+  final bound =
+      ctx.value is Map ? (ctx.value! as Map).cast<String, dynamic>() : null;
 
   return CardChrome(
     key: Key('list-card-${node.id}'),
@@ -60,6 +65,7 @@ Widget buildListCard(BuildContext context, WidgetRenderContext ctx) {
                     id: node.id,
                     index: i,
                     item: items[i],
+                    bound: bound,
                     fallbackAccent: accent,
                   ),
                 ],
@@ -83,18 +89,25 @@ class _ListRow extends StatelessWidget {
     required this.id,
     required this.index,
     required this.item,
+    required this.bound,
     required this.fallbackAccent,
   });
 
   final String id;
   final int index;
   final Map<String, dynamic> item;
+
+  /// The bound map state (when the card binds one), for live `field` lookups.
+  final Map<String, dynamic>? bound;
   final Color fallbackAccent;
 
   @override
   Widget build(BuildContext context) {
     final label = '${item['label'] ?? ''}';
-    final value = item['value'];
+    // A live value (from the bound map's `field`) wins over the authored literal.
+    final field = item['field'] as String?;
+    final live = (field != null && bound != null) ? bound![field] : null;
+    final value = live ?? item['value'];
     final leading = item['leading'] as String?;
     final trailing = item['trailing'] as String?;
     final valueColor = resolveAccent(item, fallback: fallbackAccent);
