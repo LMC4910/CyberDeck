@@ -60,47 +60,20 @@ SeedDeck _deck(String id, String title, String subtitle, LayoutPage page) =>
     );
 
 // ---------------------------------------------------------------------------
-// Interaction wiring (Wave 2 bridge)
+// Deck id pinning
 // ---------------------------------------------------------------------------
 
-/// Re-ids [page] to [deckId] and rewrites every widget's interaction slots from the
-/// Wave 0 builder shape (`{action, confirm?}`) into the shape the gesture seam +
-/// 2-tap confirm understand (`{target:'action', ref}` + `config.confirm`). Slots
-/// already in `{target, ref}` form pass through unchanged.
+/// Pins the deck id onto the page so the deck id stays authoritative regardless
+/// of the page function's own id. No interaction rewriting: the gesture seam
+/// (`InteractionTarget.fromMap`) reads the builders' `{action, confirm?}` shape
+/// natively, so Demo Mode, the live engine, and Designer-edited decks all
+/// dispatch through the same path.
 LayoutPage _wirePage(String deckId, LayoutPage page) => LayoutPage(
       id: deckId,
       grid: page.grid,
       version: page.version,
-      widgets: [for (final w in page.widgets) _wireNode(w)],
+      widgets: page.widgets,
     );
-
-WidgetNode _wireNode(WidgetNode node) {
-  if (node.interaction.isEmpty) return node;
-  final wired = <String, dynamic>{};
-  var confirm = node.config['confirm'] == true;
-  node.interaction.forEach((slot, raw) {
-    if (raw is! Map) {
-      wired[slot] = raw;
-      return;
-    }
-    final m = raw.cast<String, dynamic>();
-    final ref = (m['ref'] ?? m['action']) as String?;
-    if (ref == null || ref.isEmpty) {
-      wired[slot] = m;
-      return;
-    }
-    if (m['confirm'] == true) confirm = true;
-    wired[slot] = {
-      'target': (m['target'] as String?) ?? 'action',
-      'ref': ref,
-      if (m['param'] != null) 'param': m['param'],
-    };
-  });
-  return node.copyWith(
-    interaction: wired,
-    config: confirm ? {...node.config, 'confirm': true} : node.config,
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Initial mock state — EVERY id the seven pages bind, with believable values.

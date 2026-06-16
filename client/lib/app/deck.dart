@@ -81,7 +81,10 @@ class DeckScreenState extends State<DeckScreen> {
   void _onInteraction(WidgetNode node, String slot, {Object? value}) {
     final target = interactionFor(node, slot);
     if (target == null || target.isNone || target.kind != 'action') return;
-    if (node.config['confirm'] == true && !_confirmed(node.id, target.ref)) return;
+    // Destructive either via the slot (`interaction.tap.confirm`) or the legacy
+    // `config.confirm` flag — both require the 2-tap confirm.
+    final needsConfirm = node.config['confirm'] == true || target.confirm;
+    if (needsConfirm && !_confirmed(node.id, target.ref)) return;
     unawaited(_invoke(target.ref, value, target.param));
   }
 

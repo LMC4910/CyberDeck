@@ -26,21 +26,53 @@ abstract final class Slots {
 
 /// What a gesture slot does: an action / flow / navigate target (or none).
 class InteractionTarget {
-  const InteractionTarget({required this.kind, required this.ref, this.param});
+  const InteractionTarget({
+    required this.kind,
+    required this.ref,
+    this.param,
+    this.confirm = false,
+  });
 
   /// `action` | `flow` | `navigate` | `none`.
   final String kind;
   final String ref;
   final String? param;
 
+  /// True when the slot itself marks the action destructive (`confirm: true`),
+  /// requiring the 2-tap confirm (PROJ-187) regardless of `config.confirm`.
+  final bool confirm;
+
   bool get isNone => kind == 'none' || ref.isEmpty;
 
+  /// Parses a slot map in either form:
+  ///   * explicit: `{target: <kind>, ref: <id>, param?, confirm?}`
+  ///   * shorthand (what the page builders author): `{action: <id>}`,
+  ///     `{navigate: <target>}`, or `{flow: <id>}` — the key names the kind and
+  ///     carries the ref; `param`/`confirm` ride alongside.
+  /// Both forms are supported so Demo Mode, the live engine, and Designer-edited
+  /// decks all dispatch identically (no registration-time rewrite needed).
   static InteractionTarget? fromMap(Map<String, dynamic>? m) {
     if (m == null) return null;
+    String kind;
+    String ref;
+    if (m['action'] is String) {
+      kind = 'action';
+      ref = m['action'] as String;
+    } else if (m['navigate'] is String) {
+      kind = 'navigate';
+      ref = m['navigate'] as String;
+    } else if (m['flow'] is String) {
+      kind = 'flow';
+      ref = m['flow'] as String;
+    } else {
+      kind = m['target'] as String? ?? 'action';
+      ref = m['ref'] as String? ?? '';
+    }
     return InteractionTarget(
-      kind: m['target'] as String? ?? 'action',
-      ref: m['ref'] as String? ?? '',
+      kind: kind,
+      ref: ref,
       param: m['param'] as String?,
+      confirm: m['confirm'] == true,
     );
   }
 }

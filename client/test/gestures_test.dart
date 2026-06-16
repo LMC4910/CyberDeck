@@ -21,6 +21,35 @@ void main() {
       expect(interactionFor(node, Slots.longPress)!.kind, 'flow');
       expect(interactionFor(node, Slots.doubleTap), isNull);
     });
+
+    test('parses the builder shorthand shapes + slot confirm', () {
+      const node = WidgetNode(
+        id: 'w2',
+        type: 'control.tile',
+        placement: Placement(col: 0, row: 0),
+        interaction: {
+          'tap': {'action': 'app.launch.terminal'},
+          'longPress': {'action': 'system.lock', 'confirm': true},
+          'swipeUp': {'navigate': 'overview'},
+          'doubleTap': {'flow': 'flow_night'},
+        },
+      );
+      final tap = interactionFor(node, Slots.tap)!;
+      expect(tap.kind, 'action');
+      expect(tap.ref, 'app.launch.terminal');
+      expect(tap.confirm, isFalse);
+      expect(tap.isNone, isFalse);
+
+      final lp = interactionFor(node, Slots.longPress)!;
+      expect(lp.kind, 'action');
+      expect(lp.ref, 'system.lock');
+      expect(lp.confirm, isTrue); // destructive marked on the slot
+
+      final nav = interactionFor(node, Slots.swipeUp)!;
+      expect(nav.kind, 'navigate');
+      expect(nav.ref, 'overview');
+      expect(interactionFor(node, Slots.doubleTap)!.kind, 'flow');
+    });
   });
 
   group('TwoTapConfirmer', () {
