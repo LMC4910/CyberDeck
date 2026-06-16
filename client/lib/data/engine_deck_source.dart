@@ -15,6 +15,60 @@ import '../net/connection_manager.dart';
 import '../net/envelope.dart';
 import '../render/model.dart';
 import 'deck_source.dart';
+import 'seed_decks.dart';
+
+/// Maps an engine `system.*` telemetry id to the page binding id(s) the authored
+/// pages use, so the client's own 7 pages light up with real engine data. Ids
+/// the engine doesn't publish (CPU temp, fans, FPS, smart-home, …) are absent
+/// here and their widgets render "--" live. `system.uptime` / `system.net.*` are
+/// value-transformed in [_mapDelta] rather than a plain rename.
+const Map<String, List<String>> _engineToPageIds = {
+  'system.cpu.percent': ['sys.cpu.load'],
+  'system.ram.percent': ['sys.ram'],
+  'system.gpu.load': ['sys.gpu.load'],
+  'system.gpu.temp': ['sys.gpu.temp'],
+  'system.volume': ['media.volume', 'media.volume.system'],
+  'system.muted': ['media.muted'],
+  'notification.count': ['notification.count'],
+};
+
+/// Maps one engine state delta to the page binding id(s) it should drive. Emits
+/// the original id too (so a widget binding the engine id directly still works),
+/// then any mapped ids — with value transforms for uptime (seconds → text) and
+/// network throughput (bytes/s → Mbps). Top-level + pure so it's unit-testable.
+List<StateUpdate> mapEngineStateDelta(String engineId, Object? value) {
+  final out = <StateUpdate>[StateUpdate(engineId, value)];
+  switch (engineId) {
+    case 'system.uptime':
+      out.add(StateUpdate('sys.uptime', formatUptimeSeconds(value)));
+      return out;
+    case 'system.net.throughput':
+      out.add(StateUpdate('net.download', bytesPerSecToMbps(value)));
+      return out;
+  }
+  for (final pageId in _engineToPageIds[engineId] ?? const <String>[]) {
+    out.add(StateUpdate(pageId, value));
+  }
+  return out;
+}
+
+/// Formats engine uptime seconds as "Dd Hh Mm Ss" (drops leading zero units).
+String formatUptimeSeconds(Object? v) {
+  final total = v is num ? v.toInt() : int.tryParse('$v') ?? 0;
+  final d = total ~/ 86400;
+  final h = (total % 86400) ~/ 3600;
+  final m = (total % 3600) ~/ 60;
+  final s = total % 60;
+  if (d > 0) return '${d}d ${h}h ${m}m ${s}s';
+  if (h > 0) return '${h}h ${m}m ${s}s';
+  return '${m}m ${s}s';
+}
+
+/// Converts bytes/sec → Mbps for the network readout.
+double bytesPerSecToMbps(Object? v) {
+  final b = v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
+  return (b * 8) / 1e6;
+}
 
 /// How often the client pings the engine (keeps the engine reaper happy too).
 const _pingInterval = Duration(seconds: 5);
@@ -28,6 +82,9 @@ class EngineDeckSource implements DeckSource {
       : _reconnect = reconnect {
     _bind();
     _startTimers();
+    // The client owns the layouts (its 7 authored pages), so the deck is
+    // renderable immediately — no need to wait for an engine layout snapshot.
+    if (!_readyC.isCompleted) _readyC.complete();
   }
 
   EngineConnection _conn;
@@ -37,7 +94,12 @@ class EngineDeckSource implements DeckSource {
   final _ctrl = StreamController<StateUpdate>.broadcast();
   final _readyC = Completer<void>();
   final Map<String, Object?> _snapshotState = {};
-  LayoutPage _live = const LayoutPage(id: 'live');
+
+  // The client renders its OWN authored pages live (same as Demo Mode); the
+  // engine drives them via real telemetry. `_overrides` holds session-local
+  // Designer edits (engine-side persistence is a follow-up).
+  final List<SeedDeck> _seed = seedDecks();
+  final Map<String, LayoutPage> _overrides = {};
 
   List<StreamSubscription<Envelope>> _subs = [];
   Timer? _pingTimer;
@@ -56,11 +118,15 @@ class EngineDeckSource implements DeckSource {
   ValueListenable<ConnStatus> get status => _statusN;
 
   @override
-  List<DeckSummary> decks() =>
-      [DeckSummary(id: 'live', title: 'Live Deck', subtitle: _conn.engineUuid)];
+  List<DeckSummary> decks() => [for (final d in _seed) d.summary];
 
   @override
-  LayoutPage layout(String deckId) => _live;
+  LayoutPage layout(String deckId) =>
+      _overrides[deckId] ??
+      _seed
+          .firstWhere((d) => d.summary.id == deckId,
+              orElse: () => _seed.first)
+          .page;
 
   @override
   Stream<StateUpdate> states() async* {
@@ -83,7 +149,7 @@ class EngineDeckSource implements DeckSource {
 
   @override
   void saveDeck(String deckId, LayoutPage page) {
-    _live = page; // local preview; engine-side persistence is a follow-up.
+    _overrides[deckId] = page; // session-local preview; engine persistence is a follow-up.
   }
 
   @override
@@ -141,27 +207,27 @@ class EngineDeckSource implements DeckSource {
 
   void _onControl(Envelope env) => _lastInbound = DateTime.now(); // pong / etc.
 
-  void _onLayout(Envelope env) {
-    _lastInbound = DateTime.now();
-    if (env.type != 'layout.snapshot') return; // incremental ops: follow-up
-    try {
-      final m = jsonDecode(utf8.decode(env.payload)) as Map<String, dynamic>;
-      _live = LayoutPage.fromJson(m);
-      if (!_readyC.isCompleted) _readyC.complete();
-    } catch (_) {}
-  }
+  // The client renders its own authored pages, so engine layout snapshots/ops are
+  // ignored for layout; we only note inbound traffic to keep the watchdog happy.
+  void _onLayout(Envelope env) => _lastInbound = DateTime.now();
 
   void _onState(Envelope env) {
     _lastInbound = DateTime.now();
     try {
       final m = jsonDecode(utf8.decode(env.payload)) as Map<String, dynamic>;
       final id = m['id'] as String?;
-      if (id != null) {
-        _snapshotState[id] = m['value'];
-        if (!_ctrl.isClosed) _ctrl.add(StateUpdate(id, m['value']));
+      if (id == null) return;
+      // Translate the engine's `system.*` telemetry into the page binding ids
+      // (+ passthrough), so the authored pages light up with real data.
+      for (final u in _mapDelta(id, m['value'])) {
+        _snapshotState[u.id] = u.value;
+        if (!_ctrl.isClosed) _ctrl.add(u);
       }
     } catch (_) {}
   }
+
+  Iterable<StateUpdate> _mapDelta(String engineId, Object? value) =>
+      mapEngineStateDelta(engineId, value);
 
   // The link dropped (stream closed / watchdog / send error) → try to reconnect.
   void _onDropped() {

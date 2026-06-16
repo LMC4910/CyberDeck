@@ -184,19 +184,45 @@ func DefaultProfile() *Profile {
 	return &Profile{Version: 1, Pages: []Page{page}}
 }
 
-// StateBindings returns the distinct state ids the profile's widgets bind, in
-// first-seen order. The session manager uses this to build a device's subscription
-// filter (fan-out only sends a session the states its layout actually shows).
+// PublishedTelemetryIDs are the state ids the bundled first-party plugins emit
+// (keep in sync with their manifests). The session subscribes to ALL of them, not
+// just what the engine's own default layout shows, so a client rendering its own
+// pages still receives every live metric it can bind.
+var PublishedTelemetryIDs = []string{
+	"system.cpu.percent",
+	"system.ram.percent",
+	"system.disk.percent",
+	"system.net.throughput",
+	"system.uptime",
+	"system.gpu.load",
+	"system.gpu.temp",
+	"system.gpu.vram.used",
+	"system.gpu.vram.total",
+	"system.volume",
+	"system.muted",
+	"notification.count",
+}
+
+// StateBindings returns the distinct state ids a device's session subscribes to:
+// the full published-telemetry set (so any client layout receives live data)
+// unioned with the profile's own widget bindings, in first-seen order. The session
+// manager builds the fan-out subscription filter from this.
 func (p *Profile) StateBindings() []string {
 	seen := map[string]bool{}
 	var out []string
+	add := func(id string) {
+		if id != "" && !seen[id] {
+			seen[id] = true
+			out = append(out, id)
+		}
+	}
+	for _, id := range PublishedTelemetryIDs {
+		add(id)
+	}
 	for _, page := range p.Pages {
 		for _, w := range page.Widgets {
 			binding, _ := w.Appearance["stateBinding"].(string)
-			if binding != "" && !seen[binding] {
-				seen[binding] = true
-				out = append(out, binding)
-			}
+			add(binding)
 		}
 	}
 	return out
