@@ -620,6 +620,9 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		"media.transport.playPause": d("media.transport.playPause", "Play/Pause", "media", "media", false),
 		"media.transport.next":      d("media.transport.next", "Next Track", "media", "media", false),
 		"media.transport.previous":  d("media.transport.previous", "Previous Track", "media", "media", false),
+		"media.screenshot":          d("media.screenshot", "Screenshot", "media", "media", false),
+		"media.record":              d("media.record", "Record", "media", "media", false),
+		"media.cast":                d("media.cast", "Cast", "media", "media", false),
 		// system utilities (plugins/system)
 		"performance.setMode.silent":      d("performance.setMode.silent", "Silent Mode", "performance", "system", false),
 		"performance.setMode.balanced":    d("performance.setMode.balanced", "Balanced Mode", "performance", "system", false),

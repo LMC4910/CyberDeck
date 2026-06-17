@@ -107,6 +107,9 @@ func contributes() json.RawMessage {
 		{ID: actPlayPause, Label: "Play/Pause", Category: "media"},
 		{ID: actNext, Label: "Next Track", Category: "media"},
 		{ID: actPrevious, Label: "Previous Track", Category: "media"},
+		{ID: actScreenshot, Label: "Screenshot", Category: "media"},
+		{ID: actRecord, Label: "Record", Category: "media"},
+		{ID: actCast, Label: "Cast", Category: "media"},
 	}})
 	return b
 }

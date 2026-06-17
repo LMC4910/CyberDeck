@@ -21,6 +21,14 @@ const (
 	vkMediaPrev      = 0xB1 // VK_MEDIA_PREV_TRACK
 	vkMediaPlayPause = 0xB3 // VK_MEDIA_PLAY_PAUSE
 	keyUp            = 0x0002
+
+	// Modifier + letter VK codes for the capture/cast shortcuts.
+	vkLWin  = 0x5B // VK_LWIN
+	vkShift = 0x10 // VK_SHIFT
+	vkMenu  = 0x12 // VK_MENU (Alt)
+	vkS     = 0x53 // 'S'
+	vkR     = 0x52 // 'R'
+	vkK     = 0x4B // 'K'
 )
 
 var (
@@ -131,6 +139,15 @@ func (*winMedia) PlayPause() error { pressMediaKey(vkMediaPlayPause); return nil
 func (*winMedia) Next() error      { pressMediaKey(vkMediaNext); return nil }
 func (*winMedia) Previous() error  { pressMediaKey(vkMediaPrev); return nil }
 
+// Screenshot fires Win+Shift+S (Snip & Sketch region capture).
+func (m *winMedia) Screenshot() error { m.pressCombo([]uintptr{vkLWin, vkShift}, vkS); return nil }
+
+// Record fires Win+Alt+R (Xbox Game Bar start/stop recording).
+func (m *winMedia) Record() error { m.pressCombo([]uintptr{vkLWin, vkMenu}, vkR); return nil }
+
+// Cast fires Win+K (Cast/Connect device flyout).
+func (m *winMedia) Cast() error { m.pressCombo([]uintptr{vkLWin}, vkK); return nil }
+
 // Close terminates the SMTC PowerShell reader so it doesn't orphan on shutdown.
 func (m *winMedia) Close() error {
 	m.mu.Lock()
@@ -147,4 +164,19 @@ func pressMediaKey(vk uintptr) {
 	// result is intentionally discarded for this fire-and-forget media key press.
 	_, _, _ = procKeybdEvt.Call(vk, 0, 0, 0)     // key down
 	_, _, _ = procKeybdEvt.Call(vk, 0, keyUp, 0) // key up
+}
+
+// pressCombo emulates a modifier+key chord: it presses each modifier down (in
+// order), taps the key (down then up), then releases the modifiers in reverse so
+// the chord is balanced. Pointer receiver: winMedia holds a sync.Mutex, so a value
+// receiver would copy the lock (govet copylocks).
+func (*winMedia) pressCombo(mods []uintptr, key uintptr) {
+	for _, mk := range mods {
+		_, _, _ = procKeybdEvt.Call(mk, 0, 0, 0) // modifier down
+	}
+	_, _, _ = procKeybdEvt.Call(key, 0, 0, 0)     // key down
+	_, _, _ = procKeybdEvt.Call(key, 0, keyUp, 0) // key up
+	for i := len(mods) - 1; i >= 0; i-- {
+		_, _, _ = procKeybdEvt.Call(mods[i], 0, keyUp, 0) // modifier up
+	}
 }
