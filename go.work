@@ -10,4 +10,5 @@ use (
 	./plugins/launchers
 	./plugins/volume
 	./plugins/notifications
+	./plugins/media
 )

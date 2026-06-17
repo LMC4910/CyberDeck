@@ -88,15 +88,16 @@ tasks:
   # --- run / dev targets (the testable slice) ---
 
   dist:engine:
-    desc: "Build the host engine + all five bundled plugins into run/ (engine exe + plugins/*)"
+    desc: "Build the host engine + all bundled plugins into run/ (engine exe + plugins/*)"
     cmds:
-      - mkdir -p run/plugins/telemetry run/plugins/power run/plugins/volume run/plugins/launchers run/plugins/notifications
+      - mkdir -p run/plugins/telemetry run/plugins/power run/plugins/volume run/plugins/launchers run/plugins/notifications run/plugins/media
       - cd engine && go build -o ../run/cyberdeck.exe ./cmd/cyberdeck
       - cd plugins/telemetry && go build -o ../../run/plugins/telemetry/telemetry.exe .
       - cd plugins/power && go build -o ../../run/plugins/power/power.exe .
       - cd plugins/volume && go build -o ../../run/plugins/volume/volume.exe .
       - cd plugins/launchers && go build -o ../../run/plugins/launchers/launchers.exe .
       - cd plugins/notifications && go build -o ../../run/plugins/notifications/notifications.exe .
+      - cd plugins/media && go build -o ../../run/plugins/media/media.exe .
 
   # --- distribution: per-OS release bundles (engine + plugins + desktop client) ---
   # Each dist:<os> cross-compiles the Go engine + ALL five bundled plugins for that
@@ -148,13 +149,14 @@ tasks:
       GOOS: "{{.GOOS}}"
       GOARCH: "{{.GOARCH}}"
     cmds:
-      - mkdir -p dist/{{.OS}}/plugins/telemetry dist/{{.OS}}/plugins/power dist/{{.OS}}/plugins/volume dist/{{.OS}}/plugins/launchers dist/{{.OS}}/plugins/notifications
+      - mkdir -p dist/{{.OS}}/plugins/telemetry dist/{{.OS}}/plugins/power dist/{{.OS}}/plugins/volume dist/{{.OS}}/plugins/launchers dist/{{.OS}}/plugins/notifications dist/{{.OS}}/plugins/media
       - cd engine && go build -o ../dist/{{.OS}}/cyberdeck{{.EXT}} ./cmd/cyberdeck
       - cd plugins/telemetry && go build -o ../../dist/{{.OS}}/plugins/telemetry/telemetry{{.EXT}} .
       - cd plugins/power && go build -o ../../dist/{{.OS}}/plugins/power/power{{.EXT}} .
       - cd plugins/volume && go build -o ../../dist/{{.OS}}/plugins/volume/volume{{.EXT}} .
       - cd plugins/launchers && go build -o ../../dist/{{.OS}}/plugins/launchers/launchers{{.EXT}} .
       - cd plugins/notifications && go build -o ../../dist/{{.OS}}/plugins/notifications/notifications{{.EXT}} .
+      - cd plugins/media && go build -o ../../dist/{{.OS}}/plugins/media/media{{.EXT}} .
 
   # dist:client:windows builds the Flutter Windows desktop client (native, on
   # Windows) and copies the runner bundle into the release dir. It no-ops gracefully

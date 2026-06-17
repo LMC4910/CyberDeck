@@ -78,9 +78,9 @@ LayoutPage dashboardPage() {
     // Left 2×2 control tiles (Pause / Previous / Lock System / Terminal) — each a
     // single control node.
     controlTile('dash.ctl.pause',
-        label: 'Pause',
+        label: 'Play/Pause',
         icon: 'pause',
-        action: 'media.transport.pause',
+        action: 'media.transport.playPause',
         placement: at(0, 4, colSpan: 2, rowSpan: 2)),
     controlTile('dash.ctl.previous',
         label: 'Previous',

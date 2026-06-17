@@ -29,6 +29,9 @@ const Map<String, List<String>> _engineToPageIds = {
   'system.gpu.temp': ['sys.gpu.temp'],
   'system.volume': ['media.volume', 'media.volume.system'],
   'system.muted': ['media.muted'],
+  // Now-playing map from the media plugin → the media.player card's `media` binding
+  // (media.playing passes through to the visualizer via its own engine id).
+  'media.nowplaying': ['media'],
   'notification.count': ['notification.count'],
   // Static host details map → the "Detailed System Info" card binding.
   'system.info': ['sys.info'],

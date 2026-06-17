@@ -128,11 +128,9 @@ func DefaultProfile() *Profile {
 					"style":        map[string]any{"track": "Blinding Lights", "artist": "The Weeknd"},
 				},
 				Interaction: map[string]any{
-					"previous":  map[string]any{"target": "action", "ref": "media.previous"},
-					"playPause": map[string]any{"target": "action", "ref": "media.play"},
-					"next":      map[string]any{"target": "action", "ref": "media.next"},
-					"shuffle":   map[string]any{"target": "action", "ref": "media.shuffle"},
-					"repeat":    map[string]any{"target": "action", "ref": "media.repeat"},
+					"previous":  map[string]any{"target": "action", "ref": "media.transport.previous"},
+					"playPause": map[string]any{"target": "action", "ref": "media.transport.playPause"},
+					"next":      map[string]any{"target": "action", "ref": "media.transport.next"},
 				},
 			},
 
@@ -212,6 +210,8 @@ var PublishedTelemetryIDs = []string{
 	"system.volume",
 	"system.muted",
 	"notification.count",
+	"media.nowplaying",
+	"media.playing",
 }
 
 // StateBindings returns the distinct state ids a device's session subscribes to:

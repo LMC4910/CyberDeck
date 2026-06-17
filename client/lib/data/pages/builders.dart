@@ -269,6 +269,13 @@ WidgetNode mediaPlayer(
           'color': ?color,
         },
       ),
+      // The transport buttons drive the real media plugin (OS media keys); the
+      // widget emits these slots and the engine routes them.
+      interaction: const {
+        'playPause': {'action': 'media.transport.playPause'},
+        'next': {'action': 'media.transport.next'},
+        'previous': {'action': 'media.transport.previous'},
+      },
     );
 
 /// A decorative animated VISUALIZER. As a titled COMPOSITE CARD (default

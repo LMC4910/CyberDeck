@@ -22,6 +22,11 @@ void main() {
     'system.lock',
     'system.logoff',
   };
+  const liveMedia = {
+    'media.transport.playPause',
+    'media.transport.next',
+    'media.transport.previous',
+  };
 
   group('builders carry an action param', () {
     test('launcher emits {action, param} and interactionFor surfaces it', () {
@@ -70,17 +75,23 @@ void main() {
             expect(liveVolume.contains(t.ref), isTrue,
                 reason: '${node.id} uses unknown volume id "${t.ref}"');
           }
+          if (t.ref.startsWith('media.transport.')) {
+            expect(liveMedia.contains(t.ref), isTrue,
+                reason: '${node.id} uses unknown media transport id "${t.ref}"');
+          }
         }
       }
     }
 
     // Sanity: the wiring actually happened — both launch forms, both volume
-    // actions, and all six power actions are present across the deck.
+    // actions, all six power actions, and the media transport set are present.
     expect(seen.containsAll(liveLaunch), isTrue,
         reason: 'expected both launch.url and launch.app to be wired');
     expect(seen.containsAll(liveVolume), isTrue,
         reason: 'expected both volume.set and volume.mute to be wired');
     expect(seen.containsAll(livePower), isTrue,
         reason: 'expected all six power actions to be wired');
+    expect(seen.containsAll(liveMedia), isTrue,
+        reason: 'expected media transport (playPause/next/previous) to be wired');
   });
 }

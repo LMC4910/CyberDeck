@@ -1,0 +1,18 @@
+{
+  "id": "com.shishir.cyberdeck.media",
+  "name": "Media Controls",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["media"],
+    "network": "none",
+    "filesystem": "none"
+  },
+  "contributes": {
+    "states": ["media.nowplaying", "media.playing"],
+    "actions": [
+      {"id": "media.transport.playPause", "label": "Play/Pause", "category": "media"},
+      {"id": "media.transport.next", "label": "Next Track", "category": "media"},
+      {"id": "media.transport.previous", "label": "Previous Track", "category": "media"}
+    ]
+  }
+}

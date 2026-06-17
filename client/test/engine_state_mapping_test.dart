@@ -74,6 +74,11 @@ void main() {
       expect(mapOf('system.disk.percent', 58.0)['sys.storage.usedPct'], 58.0);
     });
 
+    test('now-playing map renames to the media binding', () {
+      final np = {'track': 'Starboy', 'artist': 'The Weeknd', 'playing': true};
+      expect(mapOf('media.nowplaying', np)['media'], np);
+    });
+
     test('top processes transform to list-card rows', () {
       final rows = mapOf('system.processes', [
         {'name': 'chrome.exe', 'cpu': 18.42},

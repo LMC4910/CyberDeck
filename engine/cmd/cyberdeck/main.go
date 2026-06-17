@@ -316,6 +316,8 @@ func (h *hostService) Start(context.Context) error {
 	h.eng.launchPlugin("power", envIf(dryRun, "CYBERDECK_POWER_DRYRUN=1"))
 	h.eng.launchPlugin("volume", envIf(dryRun, "CYBERDECK_VOLUME_DRYRUN=1"))
 	h.eng.launchPlugin("launchers", envIf(dryRun, "CYBERDECK_LAUNCH_DRYRUN=1"))
+	// media controls transport via OS media keys (dry-run skips the real key presses).
+	h.eng.launchPlugin("media", envIf(dryRun, "CYBERDECK_MEDIA_DRYRUN=1"))
 	// notifications is read-only (publishes notification.count; no actions).
 	h.eng.launchPlugin("notifications", nil)
 	return nil
@@ -612,6 +614,10 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		// launchers (plugins/launchers)
 		"launch.app": d("launch.app", "Launch App", "launch", "launchers", false),
 		"launch.url": d("launch.url", "Open URL", "launch", "launchers", false),
+		// media (plugins/media)
+		"media.transport.playPause": d("media.transport.playPause", "Play/Pause", "media", "media", false),
+		"media.transport.next":      d("media.transport.next", "Next Track", "media", "media", false),
+		"media.transport.previous":  d("media.transport.previous", "Previous Track", "media", "media", false),
 	}
 }()}
 
