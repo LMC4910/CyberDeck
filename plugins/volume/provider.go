@@ -1,19 +1,15 @@
 // Command volume is the first-party CyberDeck system-volume plugin (PROJ-174). It
 // publishes system.volume (0–100) + system.muted and handles volume.set / volume.mute.
-// State is authoritative + published so a slider reflects it end-to-end; the per-OS
-// apply hook actually drives the OS volume where a clean CLI exists (Linux amixer,
-// macOS osascript). On Windows it is stateful-only in V1 (real WASAPI control is a
-// follow-up). Commands are mockable so tests never touch the real mixer.
+// State is authoritative + published so a slider reflects it end-to-end; an injected
+// per-OS [osVolume] controller drives the real OS volume (Windows WASAPI; Linux
+// amixer; macOS osascript) and reads it back so the slider mirrors external changes.
+// The controller is mockable so tests never touch the real mixer.
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"runtime"
 	"sync"
-
-	"os/exec"
 )
 
 // Volume action IDs.
@@ -22,26 +18,34 @@ const (
 	actVolumeMute = "volume.mute"
 )
 
-// runner executes an OS command (injectable for tests).
-type runner func(ctx context.Context, name string, args ...string) error
-
-func execRunner(ctx context.Context, name string, args ...string) error {
-	return exec.CommandContext(ctx, name, args...).Run()
+// osVolume drives and reads the OS master volume. Injectable so tests use a fake
+// and each platform supplies its real controller via newOSVolume().
+type osVolume interface {
+	SetVolume(v float64) error               // v in 0..100 (best-effort)
+	SetMute(muted bool) error                // best-effort
+	Get() (vol float64, muted bool, ok bool) // real read-back; ok=false where unsupported
 }
+
+// noopVolume is the dry-run / unsupported controller: state-only, no OS calls.
+type noopVolume struct{}
+
+func (noopVolume) SetVolume(float64) error   { return nil }
+func (noopVolume) SetMute(bool) error        { return nil }
+func (noopVolume) Get() (float64, bool, bool) { return 0, false, false }
 
 // provider holds the authoritative volume/mute state and applies changes best-effort.
 type provider struct {
 	mu     sync.Mutex
 	volume float64 // 0..100
 	muted  bool
-	run    runner
+	ctrl   osVolume
 }
 
-func newProvider(r runner) *provider {
-	if r == nil {
-		r = execRunner
+func newProvider(c osVolume) *provider {
+	if c == nil {
+		c = noopVolume{}
 	}
-	return &provider{volume: 50, run: r}
+	return &provider{volume: 50, ctrl: c}
 }
 
 // snapshot returns the current volume + mute (for publishing).
@@ -51,72 +55,53 @@ func (p *provider) snapshot() (float64, bool) {
 	return p.volume, p.muted
 }
 
+// syncFromOS refreshes the authoritative state from the real OS volume so the
+// slider mirrors changes made by other apps. No-op where Get() is unsupported.
+func (p *provider) syncFromOS() {
+	v, muted, ok := p.ctrl.Get()
+	if !ok {
+		return
+	}
+	p.mu.Lock()
+	p.volume = clamp(v, 0, 100)
+	p.muted = muted
+	p.mu.Unlock()
+}
+
 // execute applies a volume action, returning an error only for an unknown action
 // (a failed OS apply is best-effort — the state still updates so the UI stays live).
-func (p *provider) execute(ctx context.Context, actionID string, params json.RawMessage) error {
+func (p *provider) execute(actionID string, params json.RawMessage) error {
 	switch actionID {
 	case actVolumeSet:
 		var a struct {
 			Value float64 `json:"value"`
 		}
 		_ = json.Unmarshal(params, &a)
-		p.set(ctx, a.Value)
+		p.set(a.Value)
 	case actVolumeMute:
-		p.toggleMute(ctx)
+		p.toggleMute()
 	default:
 		return fmt.Errorf("volume: unknown action %q", actionID)
 	}
 	return nil
 }
 
-func (p *provider) set(ctx context.Context, v float64) {
+func (p *provider) set(v float64) {
 	v = clamp(v, 0, 100)
 	p.mu.Lock()
 	p.volume = v
 	p.mu.Unlock()
-	if name, args, ok := setVolumeCommand(v); ok {
-		_ = p.run(ctx, name, args...)
-	}
+	_ = p.ctrl.SetVolume(v) // best-effort
 }
 
-func (p *provider) toggleMute(ctx context.Context) {
+func (p *provider) toggleMute() {
 	p.mu.Lock()
 	p.muted = !p.muted
 	muted := p.muted
 	p.mu.Unlock()
-	if name, args, ok := setMuteCommand(muted); ok {
-		_ = p.run(ctx, name, args...)
-	}
+	_ = p.ctrl.SetMute(muted) // best-effort
 }
 
 func clamp(v, lo, hi float64) float64 {
 	return min(max(v, lo), hi)
-}
-
-// setVolumeCommand returns the per-OS command to set master volume to v% (ok=false
-// where there is no clean built-in CLI — Windows in V1).
-func setVolumeCommand(v float64) (name string, args []string, ok bool) {
-	switch runtime.GOOS {
-	case "linux":
-		return "amixer", []string{"-q", "sset", "Master", fmt.Sprintf("%d%%", int(v))}, true
-	case "darwin":
-		return "osascript", []string{"-e", fmt.Sprintf("set volume output volume %d", int(v))}, true
-	default:
-		return "", nil, false
-	}
-}
-
-func setMuteCommand(muted bool) (name string, args []string, ok bool) {
-	switch runtime.GOOS {
-	case "linux":
-		state := "unmute"
-		if muted {
-			state = "mute"
-		}
-		return "amixer", []string{"-q", "sset", "Master", state}, true
-	case "darwin":
-		return "osascript", []string{"-e", fmt.Sprintf("set volume output muted %t", muted)}, true
-	default:
-		return "", nil, false
-	}
 }

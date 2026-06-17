@@ -19,11 +19,13 @@ const (
 )
 
 func main() {
-	var r runner // nil → real execRunner
+	var c osVolume // dry-run → no OS calls; otherwise the real per-OS controller
 	if os.Getenv("CYBERDECK_VOLUME_DRYRUN") != "" {
-		r = func(context.Context, string, ...string) error { return nil }
+		c = noopVolume{}
+	} else {
+		c = newOSVolume()
 	}
-	run(os.Stdin, os.Stdout, newProvider(r))
+	run(os.Stdin, os.Stdout, newProvider(c))
 }
 
 // run executes the plugin lifecycle: register states + actions, publish the current
@@ -61,7 +63,7 @@ func run(in *os.File, out *os.File, prov *provider) {
 }
 
 func handleAction(w *msgWriter, prov *provider, a ipcproto.ActionPayload) {
-	err := prov.execute(context.Background(), a.ActionID, a.Params)
+	err := prov.execute(a.ActionID, a.Params)
 	res := ipcproto.ActionResultPayload{CallID: a.CallID, OK: err == nil}
 	if err != nil {
 		res.Error = err.Error()
@@ -70,17 +72,20 @@ func handleAction(w *msgWriter, prov *provider, a ipcproto.ActionPayload) {
 	publish(w, prov) // reflect the change immediately
 }
 
-// publishLoop publishes the current volume/mute periodically (so reconnecting devices
-// and the engine state pump always have fresh values) + a heartbeat.
+// publishLoop refreshes state from the real OS volume then publishes the current
+// volume/mute periodically (so reconnecting devices and the engine state pump always
+// have fresh values, and the slider tracks changes made by other apps) + a heartbeat.
 func publishLoop(w *msgWriter, prov *provider, ctx context.Context) {
 	t := time.NewTicker(time.Second)
 	defer t.Stop()
+	prov.syncFromOS()
 	publish(w, prov)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-t.C:
+			prov.syncFromOS()
 			w.write(ipcproto.Message{Type: ipcproto.MsgHeartbeat})
 			publish(w, prov)
 		}
