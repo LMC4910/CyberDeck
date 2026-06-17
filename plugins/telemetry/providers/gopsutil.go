@@ -178,6 +178,44 @@ func (g *Gopsutil) DiskPercentFor(mount string) (float64, bool) {
 	return u.UsedPercent, true
 }
 
+// NetworkStatus reports "Connected" when any non-loopback interface is up with an
+// address, else "Disconnected". ok=false only when interfaces can't be read.
+func (g *Gopsutil) NetworkStatus() (string, bool) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", false
+	}
+	for _, ifc := range ifaces {
+		up, loopback := false, false
+		for _, f := range ifc.Flags {
+			switch f {
+			case "up":
+				up = true
+			case "loopback":
+				loopback = true
+			}
+		}
+		if up && !loopback && len(ifc.Addrs) > 0 {
+			return "Connected", true
+		}
+	}
+	return "Disconnected", true
+}
+
+// StorageFree reports the primary volume's free space as a display string
+// ("X GB Free" / "X.X TB Free").
+func (g *Gopsutil) StorageFree() (string, bool) {
+	u, err := disk.Usage(primaryMount())
+	if err != nil || u == nil || u.Total == 0 {
+		return "", false
+	}
+	free := float64(u.Free)
+	if free >= (1 << 40) {
+		return fmt.Sprintf("%.1f TB Free", free/(1<<40)), true
+	}
+	return fmt.Sprintf("%.0f GB Free", free/(1<<30)), true
+}
+
 // SystemInfo returns a best-effort snapshot of static host details for the
 // "Detailed System Info" card: OS, CPU model, total RAM, and primary-disk size.
 // Missing pieces are omitted so the card row keeps its authored literal.

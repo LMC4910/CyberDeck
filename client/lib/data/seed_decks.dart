@@ -121,6 +121,13 @@ Map<String, Object?> seedInitialState() => {
       'sys.storage.free': '512 GB Free',
       'sys.storage.used': 58.0,
       'sys.uptime': '2d 14h 36m 52s',
+      // Dashboard status card (bound map; live on a connected engine via system.status).
+      'sys.status': const {
+        'powerPlan': 'Balanced',
+        'network': 'Connected',
+        'storage': '512 GB Free',
+        'uptime': '2d 14h 36m',
+      },
       'sys.clock': '10:30 AM',
       'sys.info.os': 'Windows 11 Pro',
       'sys.info.cpu': 'AMD Ryzen 9 7900X',

@@ -39,10 +39,10 @@ void main() {
     });
 
     test('an unmapped engine id only passes through (no page binding)', () {
-      // No engine publishes CPU temperature → sys.cpu.temp has no source → "--".
-      final m = mapEngineStateDelta('system.cpu.temp', 50.0);
+      // No engine publishes fan speeds yet → no page binding → the widget shows "--".
+      final m = mapEngineStateDelta('system.fan.cpu', 50.0);
       expect(m.length, 1);
-      expect(m.first.id, 'system.cpu.temp');
+      expect(m.first.id, 'system.fan.cpu');
     });
 
     test('per-drive storage renames to the storage.<letter>.percent slots', () {
@@ -77,6 +77,12 @@ void main() {
     test('now-playing map renames to the media binding', () {
       final np = {'track': 'Starboy', 'artist': 'The Weeknd', 'playing': true};
       expect(mapOf('media.nowplaying', np)['media'], np);
+    });
+
+    test('cpu temp + status map rename to their dashboard bindings', () {
+      expect(mapOf('system.cpu.temp', 54.0)['sys.cpu.temp'], 54.0);
+      final st = {'powerPlan': 'Balanced', 'network': 'Connected'};
+      expect(mapOf('system.status', st)['sys.status'], st);
     });
 
     test('top processes transform to list-card rows', () {

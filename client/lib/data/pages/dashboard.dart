@@ -204,18 +204,22 @@ LayoutPage dashboardPage() {
     // ── System Status (right column) — one composite status-list card ─────────
     sectionHeader('dash.status.header',
         title: 'System Status', placement: at(18, 8, colSpan: 6, rowSpan: 1)),
-    statusList('dash.status.card',
+    // Bound to the live `sys.status` map (powerPlan/network/storage/uptime); each
+    // row reads its `field` from that map and falls back to the literal in Demo.
+    listCard('dash.status.card',
         color: _kBlue,
+        stateBinding: 'sys.status',
         items: const [
-          {'icon': 'bolt', 'label': 'Power Plan', 'value': 'Balanced'},
+          {'leading': 'bolt', 'label': 'Power Plan', 'field': 'powerPlan', 'value': 'Balanced'},
           {
-            'icon': 'wifi',
+            'leading': 'wifi',
             'label': 'Network',
+            'field': 'network',
             'value': 'Connected',
             'color': 'success',
           },
-          {'icon': 'storage', 'label': 'Storage', 'value': '512 GB Free'},
-          {'icon': 'clock', 'label': 'Uptime', 'value': '02:45:33'},
+          {'leading': 'storage', 'label': 'Storage', 'field': 'storage', 'value': '512 GB Free'},
+          {'leading': 'clock', 'label': 'Uptime', 'field': 'uptime', 'value': '--'},
         ],
         placement: at(18, 9, colSpan: 6, rowSpan: 7)),
   ];

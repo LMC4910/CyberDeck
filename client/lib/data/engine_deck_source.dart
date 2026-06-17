@@ -32,6 +32,10 @@ const Map<String, List<String>> _engineToPageIds = {
   // Now-playing map from the media plugin → the media.player card's `media` binding
   // (media.playing passes through to the visualizer via its own engine id).
   'media.nowplaying': ['media'],
+  // CPU temperature (sensor source, e.g. LibreHardwareMonitor) → the CPU temp gauge.
+  'system.cpu.temp': ['sys.cpu.temp'],
+  // Composed status map (powerPlan/network/storage/uptime) → the status card.
+  'system.status': ['sys.status'],
   'notification.count': ['notification.count'],
   // Static host details map → the "Detailed System Info" card binding.
   'system.info': ['sys.info'],

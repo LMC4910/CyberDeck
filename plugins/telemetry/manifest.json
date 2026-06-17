@@ -27,7 +27,9 @@
     "system.disk.e.percent",
     "system.disk.f.percent",
     "system.info",
-    "system.processes"
+    "system.processes",
+    "system.status",
+    "system.cpu.temp"
   ],
   "contributes": {}
 }

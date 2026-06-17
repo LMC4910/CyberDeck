@@ -212,6 +212,8 @@ var PublishedTelemetryIDs = []string{
 	"notification.count",
 	"media.nowplaying",
 	"media.playing",
+	"system.cpu.temp",
+	"system.status",
 }
 
 // StateBindings returns the distinct state ids a device's session subscribes to:

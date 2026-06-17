@@ -44,6 +44,12 @@ const (
 
 	// Top processes, published periodically as a list of {name, cpu} maps.
 	stateProcesses = "system.processes"
+
+	// System status map (powerPlan/network/storage/uptime) for the dashboard status
+	// card, and CPU temperature (°C) when a sensor source (LibreHardwareMonitor) is
+	// present. Both published from their own goroutines (string/map + slow sensor).
+	stateStatus  = "system.status"
+	stateCPUTemp = "system.cpu.temp"
 )
 
 // Per-drive mount points (Windows drive letters). Absent drives report ok=false
@@ -79,6 +85,20 @@ type processProvider interface {
 	TopProcesses() ([]map[string]any, bool)
 }
 
+// statusProvider supplies the dashboard status fields (power plan, network status,
+// free storage) composed into the `system.status` map. Discovered by type assertion.
+type statusProvider interface {
+	PowerPlan() (string, bool)
+	NetworkStatus() (string, bool)
+	StorageFree() (string, bool)
+}
+
+// cpuTempProvider supplies CPU temperature (°C) from a sensor source (LHM on
+// Windows). Discovered by type assertion; absent → the temp gauge stays "--".
+type cpuTempProvider interface {
+	CPUTemp() (float64, bool)
+}
+
 // Threshold-crossing event topics (under→over transitions only, no spam).
 const (
 	topicCPUHigh = "system.cpu.high"
@@ -95,7 +115,7 @@ func systemStates() []string {
 		stateGPULoad, stateGPUTemp, stateGPUVRAMUsed, stateGPUVRAMTotal,
 		stateRAMUsed, stateRAMFree, stateRAMTotal, stateNetRx, stateNetTx,
 		stateDiskC, stateDiskD, stateDiskE, stateDiskF,
-		stateSystemInfo, stateProcesses,
+		stateSystemInfo, stateProcesses, stateStatus, stateCPUTemp,
 	}
 }
 
@@ -108,6 +128,8 @@ type Cadences struct {
 	Uptime  time.Duration
 	GPU     time.Duration
 	Process time.Duration // top-processes list (heavier; polled less often)
+	Status  time.Duration // system.status map (power plan / network / storage / uptime)
+	CPUTemp time.Duration // CPU temperature sensor (LHM; shells out, polled slowly)
 }
 
 // DefaultCadences match 2G: fast gauges at 1s, storage at 10s, uptime at 60s. GPU
@@ -121,6 +143,8 @@ func DefaultCadences() Cadences {
 		Uptime:  60 * time.Second,
 		GPU:     time.Second,
 		Process: 3 * time.Second,
+		Status:  10 * time.Second,
+		CPUTemp: 5 * time.Second,
 	}
 }
 

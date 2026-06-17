@@ -8,6 +8,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -111,6 +112,66 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadence
 		}()
 	}
 
+	// System status map (power plan / network / storage / uptime) for the dashboard
+	// status card. Composed string fields → its own goroutine (not the float loop).
+	if sp, ok := prov.(statusProvider); ok && cad.Status > 0 {
+		go func() {
+			emit := func() {
+				m := map[string]any{}
+				if v, ok := sp.PowerPlan(); ok {
+					m["powerPlan"] = v
+				}
+				if v, ok := sp.NetworkStatus(); ok {
+					m["network"] = v
+				}
+				if v, ok := sp.StorageFree(); ok {
+					m["storage"] = v
+				}
+				if s, ok := prov.UptimeSeconds(); ok {
+					m["uptime"] = formatUptime(s)
+				}
+				if len(m) > 0 {
+					_ = w.write(ipcproto.Message{
+						Type:  ipcproto.MsgStateUpdate,
+						State: &ipcproto.StatePayload{ID: stateStatus, Value: m},
+					})
+				}
+			}
+			emit() // once at startup so the card fills in immediately
+			t := time.NewTicker(cad.Status)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-t.C:
+					emit()
+				}
+			}
+		}()
+	}
+
+	// CPU temperature loop (sensor source shells out; its own slow cadence).
+	if ctp, ok := prov.(cpuTempProvider); ok && cad.CPUTemp > 0 {
+		go func() {
+			t := time.NewTicker(cad.CPUTemp)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-t.C:
+					if temp, ok := ctp.CPUTemp(); ok {
+						_ = w.write(ipcproto.Message{
+							Type:  ipcproto.MsgStateUpdate,
+							State: &ipcproto.StatePayload{ID: stateCPUTemp, Value: temp},
+						})
+					}
+				}
+			}
+		}()
+	}
+
 	// Heartbeat loop (liveness even when no metric is due).
 	go func() {
 		t := time.NewTicker(time.Second)
@@ -127,5 +188,22 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadence
 
 	// Drain stdin; loop ends when the host closes it.
 	for sc.Scan() {
+	}
+}
+
+// formatUptime renders uptime seconds as "Dd Hh Mm" (dropping leading zero units)
+// for the dashboard status card.
+func formatUptime(seconds float64) string {
+	total := int(seconds)
+	d := total / 86400
+	h := (total % 86400) / 3600
+	m := (total % 3600) / 60
+	switch {
+	case d > 0:
+		return fmt.Sprintf("%dd %dh %dm", d, h, m)
+	case h > 0:
+		return fmt.Sprintf("%dh %dm", h, m)
+	default:
+		return fmt.Sprintf("%dm", m)
 	}
 }
