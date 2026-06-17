@@ -252,7 +252,9 @@ LayoutPage mediaCenterPage() {
       placement: at(0, 11, colSpan: 3, rowSpan: 5),
       title: 'Starboy',
       subtitle: 'The Weeknd',
-      action: 'media.play.recent1',
+      // Opens the track via a YouTube search (real launch).
+      action: 'launch.url',
+      param: 'https://www.youtube.com/results?search_query=Starboy+The+Weeknd',
       color: _cyan,
     ),
     gamePoster(
@@ -260,7 +262,8 @@ LayoutPage mediaCenterPage() {
       placement: at(3, 11, colSpan: 3, rowSpan: 5),
       title: 'After Hours',
       subtitle: 'The Weeknd',
-      action: 'media.play.recent2',
+      action: 'launch.url',
+      param: 'https://www.youtube.com/results?search_query=After+Hours+The+Weeknd',
       color: _purple,
     ),
     gamePoster(
@@ -268,7 +271,8 @@ LayoutPage mediaCenterPage() {
       placement: at(6, 11, colSpan: 3, rowSpan: 5),
       title: 'Dawn FM',
       subtitle: 'The Weeknd',
-      action: 'media.play.recent3',
+      action: 'launch.url',
+      param: 'https://www.youtube.com/results?search_query=Dawn+FM+The+Weeknd',
       color: _spotify,
     ),
     gamePoster(
@@ -276,7 +280,8 @@ LayoutPage mediaCenterPage() {
       placement: at(9, 11, colSpan: 3, rowSpan: 5),
       title: 'Nightcall',
       subtitle: 'Kavinsky',
-      action: 'media.play.recent4',
+      action: 'launch.url',
+      param: 'https://www.youtube.com/results?search_query=Nightcall+Kavinsky',
       color: '#FF5252',
     ),
     gamePoster(
@@ -284,7 +289,8 @@ LayoutPage mediaCenterPage() {
       placement: at(12, 11, colSpan: 3, rowSpan: 5),
       title: 'Midnight City',
       subtitle: 'M83',
-      action: 'media.play.recent5',
+      action: 'launch.url',
+      param: 'https://www.youtube.com/results?search_query=Midnight+City+M83',
       color: _cyan,
     ),
     gamePoster(
@@ -292,7 +298,8 @@ LayoutPage mediaCenterPage() {
       placement: at(15, 11, colSpan: 3, rowSpan: 5),
       title: 'Random Access',
       subtitle: 'Daft Punk',
-      action: 'media.play.recent6',
+      action: 'launch.url',
+      param: 'https://www.youtube.com/results?search_query=Random+Access+Daft+Punk',
       color: '#F2D900',
     ),
   ];
