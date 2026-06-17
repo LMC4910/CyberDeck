@@ -11,4 +11,5 @@ use (
 	./plugins/volume
 	./plugins/notifications
 	./plugins/media
+	./plugins/system
 )

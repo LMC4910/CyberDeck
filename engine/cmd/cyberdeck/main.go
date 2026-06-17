@@ -318,6 +318,8 @@ func (h *hostService) Start(context.Context) error {
 	h.eng.launchPlugin("launchers", envIf(dryRun, "CYBERDECK_LAUNCH_DRYRUN=1"))
 	// media controls transport via OS media keys (dry-run skips the real key presses).
 	h.eng.launchPlugin("media", envIf(dryRun, "CYBERDECK_MEDIA_DRYRUN=1"))
+	// system: performance modes + maintenance utilities + fan local-state.
+	h.eng.launchPlugin("system", envIf(dryRun, "CYBERDECK_SYSTEM_DRYRUN=1"))
 	// notifications is read-only (publishes notification.count; no actions).
 	h.eng.launchPlugin("notifications", nil)
 	return nil
@@ -618,6 +620,16 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		"media.transport.playPause": d("media.transport.playPause", "Play/Pause", "media", "media", false),
 		"media.transport.next":      d("media.transport.next", "Next Track", "media", "media", false),
 		"media.transport.previous":  d("media.transport.previous", "Previous Track", "media", "media", false),
+		// system utilities (plugins/system)
+		"performance.setMode.silent":      d("performance.setMode.silent", "Silent Mode", "performance", "system", false),
+		"performance.setMode.balanced":    d("performance.setMode.balanced", "Balanced Mode", "performance", "system", false),
+		"performance.setMode.performance": d("performance.setMode.performance", "Performance Mode", "performance", "system", false),
+		"performance.setMode.turbo":       d("performance.setMode.turbo", "Turbo Mode", "performance", "system", false),
+		"system.clearCache":               d("system.clearCache", "Clear Cache", "system", "system", true),
+		"system.emptyRecycleBin":          d("system.emptyRecycleBin", "Empty Recycle Bin", "system", "system", true),
+		"fan.setSpeed.cpu":                d("fan.setSpeed.cpu", "CPU Fan Speed", "fan", "system", false),
+		"fan.setSpeed.case1":              d("fan.setSpeed.case1", "Case Fan Speed", "fan", "system", false),
+		"fan.toggleAuto":                  d("fan.toggleAuto", "Auto Fan Control", "fan", "system", false),
 	}
 }()}
 

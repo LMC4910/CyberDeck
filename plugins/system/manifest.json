@@ -1,0 +1,32 @@
+{
+  "id": "com.shishir.cyberdeck.system",
+  "name": "System Utilities",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["performance", "system", "fan"],
+    "network": "none",
+    "filesystem": "user-temp"
+  },
+  "contributes": {
+    "states": [
+      "performance.mode.silent",
+      "performance.mode.balanced",
+      "performance.mode.performance",
+      "performance.mode.turbo",
+      "fan.cpu.percent",
+      "fan.case1.percent",
+      "fan.auto"
+    ],
+    "actions": [
+      {"id": "performance.setMode.silent", "label": "Silent Mode", "category": "performance"},
+      {"id": "performance.setMode.balanced", "label": "Balanced Mode", "category": "performance"},
+      {"id": "performance.setMode.performance", "label": "Performance Mode", "category": "performance"},
+      {"id": "performance.setMode.turbo", "label": "Turbo Mode", "category": "performance"},
+      {"id": "system.clearCache", "label": "Clear Cache", "category": "system"},
+      {"id": "system.emptyRecycleBin", "label": "Empty Recycle Bin", "category": "system"},
+      {"id": "fan.setSpeed.cpu", "label": "CPU Fan Speed", "category": "fan", "params": [{"name": "value", "type": "int"}]},
+      {"id": "fan.setSpeed.case1", "label": "Case Fan Speed", "category": "fan", "params": [{"name": "value", "type": "int"}]},
+      {"id": "fan.toggleAuto", "label": "Auto Fan Control", "category": "fan"}
+    ]
+  }
+}

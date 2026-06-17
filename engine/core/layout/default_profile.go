@@ -214,6 +214,15 @@ var PublishedTelemetryIDs = []string{
 	"media.playing",
 	"system.cpu.temp",
 	"system.status",
+	"performance.mode.silent",
+	"performance.mode.balanced",
+	"performance.mode.performance",
+	"performance.mode.turbo",
+	"fan.cpu.percent",
+	"fan.case1.percent",
+	"fan.auto",
+	"system.net.ping",
+	"system.net",
 }
 
 // StateBindings returns the distinct state ids a device's session subscribes to:
