@@ -13,7 +13,7 @@ void main() {
   // The action ids the engine registry actually routes to a real plugin
   // (engine/cmd/cyberdeck/main.go builtinLookup).
   const liveLaunch = {'launch.url', 'launch.app'};
-  const liveVolume = {'volume.set', 'volume.mute'};
+  const liveVolume = {'volume.set', 'volume.mute', 'volume.app.set'};
   const livePower = {
     'system.shutdown',
     'system.restart',

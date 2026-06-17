@@ -18,6 +18,9 @@ const (
 	stMuted  = "system.muted"
 )
 
+// appStateID is the published state id for a per-app channel (e.g. media.volume.spotify).
+func appStateID(channel string) string { return "media.volume." + channel }
+
 func main() {
 	var c osVolume // dry-run → no OS calls; otherwise the real per-OS controller
 	if os.Getenv("CYBERDECK_VOLUME_DRYRUN") != "" {
@@ -31,6 +34,7 @@ func main() {
 // run executes the plugin lifecycle: register states + actions, publish the current
 // volume/mute on a cadence, and handle volume actions until stdin closes.
 func run(in *os.File, out *os.File, prov *provider) {
+	defer func() { _ = prov.close() }() // release the app-volume helper on shutdown
 	w := &msgWriter{w: out}
 
 	sc := bufio.NewScanner(in)
@@ -39,10 +43,14 @@ func run(in *os.File, out *os.File, prov *provider) {
 		return
 	}
 
+	states := []string{stVolume, stMuted}
+	for _, ch := range appChannels {
+		states = append(states, appStateID(ch))
+	}
 	w.write(ipcproto.Message{
 		Type: ipcproto.MsgRegister,
 		Register: &ipcproto.RegisterPayload{
-			States:      []string{stVolume, stMuted},
+			States:      states,
 			Contributes: contributes(),
 		},
 	})
@@ -98,6 +106,10 @@ func publish(w *msgWriter, prov *provider) {
 		State: &ipcproto.StatePayload{ID: stVolume, Value: vol}})
 	w.write(ipcproto.Message{Type: ipcproto.MsgStateUpdate,
 		State: &ipcproto.StatePayload{ID: stMuted, Value: muted}})
+	for ch, v := range prov.appSnapshot() {
+		w.write(ipcproto.Message{Type: ipcproto.MsgStateUpdate,
+			State: &ipcproto.StatePayload{ID: appStateID(ch), Value: v}})
+	}
 }
 
 func contributes() json.RawMessage {
@@ -105,6 +117,8 @@ func contributes() json.RawMessage {
 		{ID: actVolumeSet, Label: "Set Volume", Category: "volume",
 			Params: []registry.Param{{Name: "value", Type: registry.ParamInt}}},
 		{ID: actVolumeMute, Label: "Toggle Mute", Category: "volume"},
+		{ID: actAppVolumeSet, Label: "Set App Volume", Category: "volume",
+			Params: []registry.Param{{Name: "value", Type: registry.ParamInt}}},
 	}})
 	return b
 }

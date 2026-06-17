@@ -14,30 +14,42 @@ import (
 
 // Volume action IDs.
 const (
-	actVolumeSet  = "volume.set"
-	actVolumeMute = "volume.mute"
+	actVolumeSet    = "volume.set"
+	actVolumeMute   = "volume.mute"
+	actAppVolumeSet = "volume.app.set"
 )
 
-// osVolume drives and reads the OS master volume. Injectable so tests use a fake
-// and each platform supplies its real controller via newOSVolume().
+// appChannels are the per-application mixer channels the page exposes; each is
+// published as media.volume.<channel> and applied to the matching app's audio
+// session (Windows WASAPI).
+var appChannels = []string{"spotify", "browser", "discord"}
+
+// osVolume drives and reads the OS master volume + per-app session volume.
+// Injectable so tests use a fake and each platform supplies its real controller.
 type osVolume interface {
-	SetVolume(v float64) error               // v in 0..100 (best-effort)
+	SetVolume(v float64) error               // master; v in 0..100 (best-effort)
 	SetMute(muted bool) error                // best-effort
 	Get() (vol float64, muted bool, ok bool) // real read-back; ok=false where unsupported
+	SetAppVolume(channel string, v float64) error // per-app session volume (best-effort)
+	Close() error                            // release any helper resources
 }
 
 // noopVolume is the dry-run / unsupported controller: state-only, no OS calls.
 type noopVolume struct{}
 
-func (noopVolume) SetVolume(float64) error   { return nil }
-func (noopVolume) SetMute(bool) error        { return nil }
-func (noopVolume) Get() (float64, bool, bool) { return 0, false, false }
+func (noopVolume) SetVolume(float64) error            { return nil }
+func (noopVolume) SetMute(bool) error                 { return nil }
+func (noopVolume) Get() (float64, bool, bool)         { return 0, false, false }
+func (noopVolume) SetAppVolume(string, float64) error { return nil }
+func (noopVolume) Close() error                       { return nil }
 
-// provider holds the authoritative volume/mute state and applies changes best-effort.
+// provider holds the authoritative volume/mute + per-app state and applies changes
+// best-effort.
 type provider struct {
 	mu     sync.Mutex
 	volume float64 // 0..100
 	muted  bool
+	appVol map[string]float64 // per-app channel → 0..100
 	ctrl   osVolume
 }
 
@@ -45,7 +57,25 @@ func newProvider(c osVolume) *provider {
 	if c == nil {
 		c = noopVolume{}
 	}
-	return &provider{volume: 50, ctrl: c}
+	app := make(map[string]float64, len(appChannels))
+	for _, ch := range appChannels {
+		app[ch] = 50
+	}
+	return &provider{volume: 50, appVol: app, ctrl: c}
+}
+
+// close releases the controller's helper resources (e.g. the app-volume subprocess).
+func (p *provider) close() error { return p.ctrl.Close() }
+
+// appSnapshot returns a copy of the per-app channel levels (for publishing).
+func (p *provider) appSnapshot() map[string]float64 {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	out := make(map[string]float64, len(p.appVol))
+	for k, v := range p.appVol {
+		out[k] = v
+	}
+	return out
 }
 
 // snapshot returns the current volume + mute (for publishing).
@@ -80,10 +110,28 @@ func (p *provider) execute(actionID string, params json.RawMessage) error {
 		p.set(a.Value)
 	case actVolumeMute:
 		p.toggleMute()
+	case actAppVolumeSet:
+		var a struct {
+			Value  float64 `json:"value"`
+			Target string  `json:"target"` // the app channel (spotify/browser/discord)
+		}
+		_ = json.Unmarshal(params, &a)
+		p.setApp(a.Target, a.Value)
 	default:
 		return fmt.Errorf("volume: unknown action %q", actionID)
 	}
 	return nil
+}
+
+func (p *provider) setApp(channel string, v float64) {
+	if channel == "" {
+		return
+	}
+	v = clamp(v, 0, 100)
+	p.mu.Lock()
+	p.appVol[channel] = v
+	p.mu.Unlock()
+	_ = p.ctrl.SetAppVolume(channel, v) // best-effort
 }
 
 func (p *provider) set(v float64) {

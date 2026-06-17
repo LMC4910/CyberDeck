@@ -106,6 +106,13 @@ class MockDeckSource implements DeckSource {
       _set('media.muted', muted);
       return ActionOutcome.success(muted ? 'Muted' : 'Unmuted');
     }
+    // Per-app volume — the channel rides in params.target; reflect it locally.
+    if (actionId == 'volume.app.set') {
+      final ch = params?['target'];
+      final v = params?['value'];
+      if (ch != null && v != null) _set('media.volume.$ch', v);
+      return const ActionOutcome.success('Volume set');
+    }
     // Performance modes — flip the active `performance.mode.*` booleans.
     if (actionId.startsWith('performance.setMode.')) {
       final mode = actionId.substring('performance.setMode.'.length);

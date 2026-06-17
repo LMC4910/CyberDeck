@@ -223,6 +223,9 @@ var PublishedTelemetryIDs = []string{
 	"fan.auto",
 	"system.net.ping",
 	"system.net",
+	"media.volume.spotify",
+	"media.volume.browser",
+	"media.volume.discord",
 }
 
 // StateBindings returns the distinct state ids a device's session subscribes to:

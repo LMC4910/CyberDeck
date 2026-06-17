@@ -35,6 +35,12 @@ func (cliVolume) SetMute(muted bool) error {
 // Get reports unsupported — no clean cross-distro read-back CLI.
 func (cliVolume) Get() (float64, bool, bool) { return 0, false, false }
 
+// SetAppVolume is a no-op here (no portable per-app session control); the slider
+// still persists its value via the published state.
+func (cliVolume) SetAppVolume(string, float64) error { return nil }
+
+func (cliVolume) Close() error { return nil }
+
 // setVolumeCommand returns the per-OS command to set master volume to v%
 // (ok=false where there is no clean built-in CLI).
 func setVolumeCommand(v float64) (name string, args []string, ok bool) {

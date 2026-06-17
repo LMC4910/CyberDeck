@@ -611,8 +611,9 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		"system.lock":      d("system.lock", "Lock", "power", "power", false),
 		"system.logoff":    d("system.logoff", "Log Off", "power", "power", true),
 		// volume (plugins/volume)
-		"volume.set":  d("volume.set", "Set Volume", "volume", "volume", false),
-		"volume.mute": d("volume.mute", "Toggle Mute", "volume", "volume", false),
+		"volume.set":     d("volume.set", "Set Volume", "volume", "volume", false),
+		"volume.mute":    d("volume.mute", "Toggle Mute", "volume", "volume", false),
+		"volume.app.set": d("volume.app.set", "Set App Volume", "volume", "volume", false),
 		// launchers (plugins/launchers)
 		"launch.app": d("launch.app", "Launch App", "launch", "launchers", false),
 		"launch.url": d("launch.url", "Open URL", "launch", "launchers", false),

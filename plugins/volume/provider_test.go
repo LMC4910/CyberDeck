@@ -15,11 +15,23 @@ type fakeVol struct {
 	getVol   float64
 	getMuted bool
 	getOK    bool
+
+	appCh  string
+	appVal float64
+	appN   int
+	closeN int
 }
 
-func (f *fakeVol) SetVolume(v float64) error { f.setVol = v; f.setN++; return nil }
-func (f *fakeVol) SetMute(m bool) error      { f.muteVal = m; f.muteN++; return nil }
+func (f *fakeVol) SetVolume(v float64) error  { f.setVol = v; f.setN++; return nil }
+func (f *fakeVol) SetMute(m bool) error       { f.muteVal = m; f.muteN++; return nil }
 func (f *fakeVol) Get() (float64, bool, bool) { return f.getVol, f.getMuted, f.getOK }
+func (f *fakeVol) SetAppVolume(ch string, v float64) error {
+	f.appCh = ch
+	f.appVal = v
+	f.appN++
+	return nil
+}
+func (f *fakeVol) Close() error { f.closeN++; return nil }
 
 func testProvider() (*provider, *fakeVol) {
 	f := &fakeVol{}
@@ -74,6 +86,30 @@ func TestVolumeUnknownAction(t *testing.T) {
 	p, _ := testProvider()
 	if err := p.execute("volume.bogus", nil); err == nil {
 		t.Error("unknown action should error")
+	}
+}
+
+func TestAppVolumeSetsChannelStateAndController(t *testing.T) {
+	p, f := testProvider()
+	if err := p.execute(actAppVolumeSet,
+		json.RawMessage(`{"value":35,"target":"spotify"}`)); err != nil {
+		t.Fatal(err)
+	}
+	if got := p.appSnapshot()["spotify"]; got != 35 {
+		t.Errorf("spotify channel state = %v, want 35", got)
+	}
+	if f.appN != 1 || f.appCh != "spotify" || f.appVal != 35 {
+		t.Errorf("controller SetAppVolume = (%d, %q, %v), want (1, spotify, 35)",
+			f.appN, f.appCh, f.appVal)
+	}
+	// Over-range clamps; empty channel is ignored.
+	_ = p.execute(actAppVolumeSet, json.RawMessage(`{"value":150,"target":"discord"}`))
+	if got := p.appSnapshot()["discord"]; got != 100 {
+		t.Errorf("discord clamp = %v, want 100", got)
+	}
+	_ = p.execute(actAppVolumeSet, json.RawMessage(`{"value":10,"target":""}`))
+	if f.appN != 2 {
+		t.Errorf("empty channel should not reach controller (appN=%d, want 2)", f.appN)
 	}
 }
 

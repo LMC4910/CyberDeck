@@ -8,10 +8,11 @@
     "filesystem": "none"
   },
   "contributes": {
-    "states": ["system.volume", "system.muted"],
+    "states": ["system.volume", "system.muted", "media.volume.spotify", "media.volume.browser", "media.volume.discord"],
     "actions": [
       {"id": "volume.set", "label": "Set Volume", "category": "volume", "params": [{"name": "value", "type": "int"}]},
-      {"id": "volume.mute", "label": "Toggle Mute", "category": "volume"}
+      {"id": "volume.mute", "label": "Toggle Mute", "category": "volume"},
+      {"id": "volume.app.set", "label": "Set App Volume", "category": "volume", "params": [{"name": "value", "type": "int"}]}
     ]
   }
 }
