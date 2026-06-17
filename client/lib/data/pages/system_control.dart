@@ -131,7 +131,9 @@ LayoutPage systemControlPage() {
       'sc.power.kill',
       label: 'Kill Process',
       icon: 'alert',
-      action: 'system.killProcess',
+      // Picking a PID needs UI → open Task Manager (the real Windows path to kill).
+      action: 'launch.app',
+      param: 'taskmgr.exe',
       placement: at(5, 5, colSpan: 2, rowSpan: 2),
       color: _err,
     ),
@@ -152,6 +154,7 @@ LayoutPage systemControlPage() {
       action: 'system.clearCache',
       placement: at(1, 7, colSpan: 2, rowSpan: 2),
       color: _purple,
+      confirm: true,
     ),
     controlTile(
       'sc.power.diskcleanup',
@@ -247,33 +250,40 @@ LayoutPage systemControlPage() {
     // ════════════════════════ NETWORKS (one card) ══════════════════════════
     // The down/up/ping readout collapses from a panel + stat rows + sparklines
     // into ONE list.card; each row is icon + label + live value.
+    // Bound to the live `sys.net` map (download/upload/ping/status); each row reads
+    // its `field` and falls back to the literal in Demo.
     listCard(
       'sc.net',
       placement: at(16, 8, colSpan: 8, rowSpan: 6),
       title: 'Networks',
       color: _cyan,
+      stateBinding: 'sys.net',
       items: const [
         {
           'leading': 'download',
           'label': 'Download',
+          'field': 'download',
           'value': '125.6 Mbps',
           'color': _cyan,
         },
         {
           'leading': 'upload',
           'label': 'Upload',
+          'field': 'upload',
           'value': '23.4 Mbps',
           'color': _purple,
         },
         {
           'leading': 'wifi',
           'label': 'Ping',
+          'field': 'ping',
           'value': '8 ms',
           'color': _ok,
         },
         {
           'leading': 'network',
           'label': 'Status',
+          'field': 'status',
           'value': 'Connected',
           'color': _ok,
         },
@@ -389,13 +399,15 @@ LayoutPage systemControlPage() {
     // The uptime readout collapses from a panel + icon + label into ONE
     // list.card row (live value bound via the row's value/stateKey is seeded by
     // the host; here a representative readout keeps the card cohesive).
+    // Uptime row bound to the live `sys.status.uptime`; Last Boot keeps its literal.
     listCard(
       'sc.uptime',
       placement: at(16, 14, colSpan: 8, rowSpan: 4),
       title: 'System Uptime',
       color: _purple,
+      stateBinding: 'sys.status',
       items: const [
-        {'leading': 'clock', 'label': 'Uptime', 'value': '2d 14h 36m', 'color': _cyan},
+        {'leading': 'clock', 'label': 'Uptime', 'field': 'uptime', 'value': '2d 14h 36m', 'color': _cyan},
         {'leading': 'power', 'label': 'Last Boot', 'value': 'Today, 06:14', 'color': _purple},
       ],
     ),

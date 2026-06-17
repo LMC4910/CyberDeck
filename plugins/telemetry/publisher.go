@@ -50,6 +50,11 @@ const (
 	// present. Both published from their own goroutines (string/map + slow sensor).
 	stateStatus  = "system.status"
 	stateCPUTemp = "system.cpu.temp"
+
+	// Network latency (ms) + a composed summary map {download,upload,ping,status}
+	// for the Networks card. Published from the net goroutine (ping shells out).
+	stateNetPing    = "system.net.ping"
+	stateNetSummary = "system.net"
 )
 
 // Per-drive mount points (Windows drive letters). Absent drives report ok=false
@@ -99,6 +104,11 @@ type cpuTempProvider interface {
 	CPUTemp() (float64, bool)
 }
 
+// pingProvider supplies network round-trip latency (ms). Discovered by type assertion.
+type pingProvider interface {
+	Ping() (float64, bool)
+}
+
 // Threshold-crossing event topics (under→over transitions only, no spam).
 const (
 	topicCPUHigh = "system.cpu.high"
@@ -116,6 +126,7 @@ func systemStates() []string {
 		stateRAMUsed, stateRAMFree, stateRAMTotal, stateNetRx, stateNetTx,
 		stateDiskC, stateDiskD, stateDiskE, stateDiskF,
 		stateSystemInfo, stateProcesses, stateStatus, stateCPUTemp,
+		stateNetPing, stateNetSummary,
 	}
 }
 
@@ -130,6 +141,7 @@ type Cadences struct {
 	Process time.Duration // top-processes list (heavier; polled less often)
 	Status  time.Duration // system.status map (power plan / network / storage / uptime)
 	CPUTemp time.Duration // CPU temperature sensor (LHM; shells out, polled slowly)
+	Ping    time.Duration // network latency + summary map (ping shells out)
 }
 
 // DefaultCadences match 2G: fast gauges at 1s, storage at 10s, uptime at 60s. GPU
@@ -145,6 +157,7 @@ func DefaultCadences() Cadences {
 		Process: 3 * time.Second,
 		Status:  10 * time.Second,
 		CPUTemp: 5 * time.Second,
+		Ping:    3 * time.Second,
 	}
 }
 

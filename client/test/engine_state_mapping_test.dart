@@ -85,6 +85,12 @@ void main() {
       expect(mapOf('system.status', st)['sys.status'], st);
     });
 
+    test('network summary + ping rename to System Control bindings', () {
+      final net = {'download': '125 Mbps', 'ping': '8 ms', 'status': 'Connected'};
+      expect(mapOf('system.net', net)['sys.net'], net);
+      expect(mapOf('system.net.ping', 8.0)['net.ping'], 8.0);
+    });
+
     test('top processes transform to list-card rows', () {
       final rows = mapOf('system.processes', [
         {'name': 'chrome.exe', 'cpu': 18.42},

@@ -106,6 +106,32 @@ class MockDeckSource implements DeckSource {
       _set('media.muted', muted);
       return ActionOutcome.success(muted ? 'Muted' : 'Unmuted');
     }
+    // Performance modes — flip the active `performance.mode.*` booleans.
+    if (actionId.startsWith('performance.setMode.')) {
+      final mode = actionId.substring('performance.setMode.'.length);
+      for (final m in const ['silent', 'balanced', 'performance', 'turbo']) {
+        _set('performance.mode.$m', m == mode);
+      }
+      return ActionOutcome.success('${_titleCase(mode)} mode');
+    }
+    // Fan controls (local state in Demo, mirroring the system plugin).
+    if (actionId == 'fan.setSpeed.cpu' || actionId == 'fan.setSpeed.case1') {
+      final id = actionId == 'fan.setSpeed.cpu' ? 'fan.cpu.percent' : 'fan.case1.percent';
+      final v = params?['value'];
+      if (v != null) _set(id, v);
+      return const ActionOutcome.success('Fan speed set');
+    }
+    if (actionId == 'fan.toggleAuto') {
+      final next = !(_state['fan.auto'] == true);
+      _set('fan.auto', next);
+      return ActionOutcome.success(next ? 'Auto fan on' : 'Auto fan off');
+    }
+    if (actionId == 'system.clearCache') {
+      return const ActionOutcome.success('Cache cleared');
+    }
+    if (actionId == 'system.emptyRecycleBin') {
+      return const ActionOutcome.success('Recycle bin emptied');
+    }
     return ActionOutcome.success(_friendly(actionId));
   }
 

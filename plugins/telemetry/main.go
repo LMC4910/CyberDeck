@@ -172,6 +172,57 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadence
 		}()
 	}
 
+	// Network loop: latency (ping) + a composed summary map for the Networks card.
+	if np, ok := prov.(pingProvider); ok && cad.Ping > 0 {
+		ext, _ := prov.(extendedTelemetry)
+		sp, _ := prov.(statusProvider)
+		go func() {
+			emit := func() {
+				ping, pok := np.Ping()
+				if pok {
+					_ = w.write(ipcproto.Message{
+						Type:  ipcproto.MsgStateUpdate,
+						State: &ipcproto.StatePayload{ID: stateNetPing, Value: ping},
+					})
+				}
+				m := map[string]any{}
+				if ext != nil {
+					if rx, ok := ext.NetRxBytesPerSec(); ok {
+						m["download"] = fmt.Sprintf("%.1f Mbps", rx*8/1e6)
+					}
+					if tx, ok := ext.NetTxBytesPerSec(); ok {
+						m["upload"] = fmt.Sprintf("%.1f Mbps", tx*8/1e6)
+					}
+				}
+				if pok {
+					m["ping"] = fmt.Sprintf("%.0f ms", ping)
+				}
+				if sp != nil {
+					if s, ok := sp.NetworkStatus(); ok {
+						m["status"] = s
+					}
+				}
+				if len(m) > 0 {
+					_ = w.write(ipcproto.Message{
+						Type:  ipcproto.MsgStateUpdate,
+						State: &ipcproto.StatePayload{ID: stateNetSummary, Value: m},
+					})
+				}
+			}
+			emit()
+			t := time.NewTicker(cad.Ping)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-t.C:
+					emit()
+				}
+			}
+		}()
+	}
+
 	// Heartbeat loop (liveness even when no metric is due).
 	go func() {
 		t := time.NewTicker(time.Second)

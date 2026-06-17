@@ -5,7 +5,10 @@ package providers
 
 import (
 	"fmt"
+	"os/exec"
 	"runtime"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -176,6 +179,42 @@ func (g *Gopsutil) DiskPercentFor(mount string) (float64, bool) {
 		return 0, false
 	}
 	return u.UsedPercent, true
+}
+
+// Ping reports the round-trip latency (ms) to 1.1.1.1 via the system ping tool
+// (no raw socket / admin needed). ok=false on timeout / unreachable.
+func (g *Gopsutil) Ping() (float64, bool) {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("ping", "-n", "1", "-w", "1000", "1.1.1.1")
+	} else {
+		cmd = exec.Command("ping", "-c", "1", "-W", "1", "1.1.1.1")
+	}
+	out, _ := cmd.Output() // non-zero exit on loss; parse whatever came back
+	return parsePingMs(string(out))
+}
+
+// parsePingMs extracts the latency from ping output ("time=12ms" / "time<1ms" /
+// "time=12.3 ms").
+func parsePingMs(s string) (float64, bool) {
+	for _, key := range []string{"time=", "time<"} {
+		i := strings.Index(s, key)
+		if i < 0 {
+			continue
+		}
+		rest := s[i+len(key):]
+		j := 0
+		for j < len(rest) && (rest[j] == '.' || (rest[j] >= '0' && rest[j] <= '9')) {
+			j++
+		}
+		if j == 0 {
+			continue
+		}
+		if v, err := strconv.ParseFloat(rest[:j], 64); err == nil {
+			return v, true
+		}
+	}
+	return 0, false
 }
 
 // NetworkStatus reports "Connected" when any non-loopback interface is up with an

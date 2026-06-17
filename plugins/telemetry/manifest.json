@@ -29,7 +29,9 @@
     "system.info",
     "system.processes",
     "system.status",
-    "system.cpu.temp"
+    "system.cpu.temp",
+    "system.net.ping",
+    "system.net"
   ],
   "contributes": {}
 }

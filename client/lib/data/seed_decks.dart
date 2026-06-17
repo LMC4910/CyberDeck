@@ -167,6 +167,17 @@ Map<String, Object?> seedInitialState() => {
       'fan.cpu.percent': 45.0,
       'fan.case1.percent': 38.0,
       'fan.auto': true,
+      // Performance modes (Balanced active by default) + the Networks card map.
+      'performance.mode.silent': false,
+      'performance.mode.balanced': true,
+      'performance.mode.performance': false,
+      'performance.mode.turbo': false,
+      'sys.net': const {
+        'download': '125.6 Mbps',
+        'upload': '23.4 Mbps',
+        'ping': '8 ms',
+        'status': 'Connected',
+      },
 
       // ── Gaming Hub live metrics + optimization toggles ──────────────────────
       'game.fps': 144.0,

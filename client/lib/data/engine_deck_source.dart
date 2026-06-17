@@ -36,6 +36,11 @@ const Map<String, List<String>> _engineToPageIds = {
   'system.cpu.temp': ['sys.cpu.temp'],
   // Composed status map (powerPlan/network/storage/uptime) → the status card.
   'system.status': ['sys.status'],
+  // Composed network map (download/upload/ping/status) → the Networks card; the
+  // ping scalar also drives any net.ping gauge/label. performance.mode.* and fan.*
+  // are published with ids that match their page bindings (handled by passthrough).
+  'system.net': ['sys.net'],
+  'system.net.ping': ['net.ping'],
   'notification.count': ['notification.count'],
   // Static host details map → the "Detailed System Info" card binding.
   'system.info': ['sys.info'],
