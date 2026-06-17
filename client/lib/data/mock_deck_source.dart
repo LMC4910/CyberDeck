@@ -90,6 +90,22 @@ class MockDeckSource implements DeckSource {
       }
       return const ActionOutcome.success('Paused');
     }
+    // Real generic launcher/volume ids the live engine routes to plugins; Demo
+    // Mode mirrors them so the same wired tiles give feedback offline.
+    if (actionId == 'launch.app' || actionId == 'launch.url') {
+      return ActionOutcome.success(
+          'Launching ${_launchName(params?['target'] as String?)}');
+    }
+    if (actionId == 'volume.set') {
+      final v = params?['value'];
+      if (v != null) _set('media.volume', v);
+      return const ActionOutcome.success('Volume set');
+    }
+    if (actionId == 'volume.mute') {
+      final muted = !(_state['media.muted'] == true);
+      _set('media.muted', muted);
+      return ActionOutcome.success(muted ? 'Muted' : 'Unmuted');
+    }
     return ActionOutcome.success(_friendly(actionId));
   }
 
@@ -233,6 +249,18 @@ class MockDeckSource implements DeckSource {
     if (actionId.startsWith('game.profile.set.')) return '$name profile';
     if (actionId.startsWith('mock.scene.')) return '$name scene activated';
     return name;
+  }
+
+  /// A short, readable name for a launch target (URL or app path) for Demo-Mode
+  /// feedback — drops the scheme, leading `www.`, and any trailing slash.
+  String _launchName(String? target) {
+    if (target == null || target.isEmpty) return 'app';
+    var t = target.trim();
+    final scheme = t.indexOf('://');
+    if (scheme >= 0) t = t.substring(scheme + 3);
+    if (t.startsWith('www.')) t = t.substring(4);
+    if (t.endsWith('/')) t = t.substring(0, t.length - 1);
+    return t.isEmpty ? 'app' : t;
   }
 
   String _titleCase(String s) {

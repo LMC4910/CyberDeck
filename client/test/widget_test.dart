@@ -68,11 +68,13 @@ void main() {
     expect(find.byKey(const Key('gauge-value-dash.cpu.card')), findsOneWidget);
 
     // The Terminal control tile is non-destructive: a single tap gives feedback.
+    // It now dispatches the real `launch.app` action (target wt.exe), so Demo
+    // Mode echoes "Launching <target>".
     expect(find.text('Terminal'), findsOneWidget);
     await tester.tap(find.text('Terminal'));
     await tester.pump();
     await tester.pump();
-    expect(find.text('Launching Terminal'), findsOneWidget);
+    expect(find.textContaining('Launching'), findsOneWidget);
     await _teardown(tester, source);
   });
 

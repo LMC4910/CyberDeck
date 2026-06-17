@@ -51,13 +51,15 @@ LayoutPage gamingHubPage() {
 // labels the row (a between-cards header, not a card).
 // ──────────────────────────────────────────────────────────────────────────
 List<WidgetNode> _favoriteGames() {
+  // `steam` is a Steam deep link — `launch.url` opens it, which launches the game
+  // via Steam if installed, else opens Steam to it (best-effort real launch).
   final posters = <Map<String, String>>[
-    {'id': 'cyberpunk', 'label': 'Cyberpunk 2077', 'sub': 'Last played 2h ago', 'color': '#F2D900'},
-    {'id': 'forza', 'label': 'Forza Horizon', 'sub': 'Last played today', 'color': '#3BA7FF'},
-    {'id': 'elden', 'label': 'Elden Ring', 'sub': 'Last played 3d ago', 'color': '#C9A24B'},
-    {'id': 'rdr2', 'label': 'Red Dead 2', 'sub': 'Last played 1w ago', 'color': '#C0392B'},
-    {'id': 'cod', 'label': 'Call of Duty', 'sub': 'Last played today', 'color': '#5DAE3A'},
-    {'id': 'baldurs', 'label': "Baldur's Gate 3", 'sub': 'Last played 5d ago', 'color': '#B5651D'},
+    {'id': 'cyberpunk', 'label': 'Cyberpunk 2077', 'sub': 'Last played 2h ago', 'color': '#F2D900', 'steam': 'steam://rungameid/1091500'},
+    {'id': 'forza', 'label': 'Forza Horizon', 'sub': 'Last played today', 'color': '#3BA7FF', 'steam': 'steam://rungameid/1551360'},
+    {'id': 'elden', 'label': 'Elden Ring', 'sub': 'Last played 3d ago', 'color': '#C9A24B', 'steam': 'steam://rungameid/1245620'},
+    {'id': 'rdr2', 'label': 'Red Dead 2', 'sub': 'Last played 1w ago', 'color': '#C0392B', 'steam': 'steam://rungameid/1174180'},
+    {'id': 'cod', 'label': 'Call of Duty', 'sub': 'Last played today', 'color': '#5DAE3A', 'steam': 'steam://rungameid/1938090'},
+    {'id': 'baldurs', 'label': "Baldur's Gate 3", 'sub': 'Last played 5d ago', 'color': '#B5651D', 'steam': 'steam://rungameid/1086940'},
   ];
 
   return [
@@ -72,7 +74,8 @@ List<WidgetNode> _favoriteGames() {
           title: posters[i]['label']!,
           subtitle: posters[i]['sub'],
           color: posters[i]['color'],
-          action: 'game.launch.${posters[i]['id']}'),
+          action: 'launch.url',
+          param: posters[i]['steam']),
   ];
 }
 

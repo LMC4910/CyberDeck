@@ -57,7 +57,7 @@ LayoutPage mediaCenterPage() {
       'mc.vol.system',
       placement: at(10, 0, colSpan: 2, rowSpan: 6),
       stateBinding: 'media.volume.system',
-      action: 'media.volume.set',
+      action: 'volume.set',
       vertical: true,
       title: 'System',
       color: _cyan,
@@ -142,7 +142,8 @@ LayoutPage mediaCenterPage() {
       placement: at(0, 7, colSpan: 2, rowSpan: 3),
       label: 'Spotify',
       icon: 'play',
-      action: 'launch.spotify',
+      action: 'launch.url',
+      param: 'https://open.spotify.com',
       color: _spotify,
     ),
     launcher(
@@ -150,7 +151,8 @@ LayoutPage mediaCenterPage() {
       placement: at(2, 7, colSpan: 2, rowSpan: 3),
       label: 'YouTube',
       icon: 'browser',
-      action: 'launch.youtube',
+      action: 'launch.url',
+      param: 'https://www.youtube.com',
       color: '#FF0000',
     ),
     launcher(
@@ -158,7 +160,8 @@ LayoutPage mediaCenterPage() {
       placement: at(4, 7, colSpan: 2, rowSpan: 3),
       label: 'Netflix',
       icon: 'camera',
-      action: 'launch.netflix',
+      action: 'launch.url',
+      param: 'https://www.netflix.com',
       color: '#E50914',
     ),
     launcher(
@@ -166,7 +169,8 @@ LayoutPage mediaCenterPage() {
       placement: at(6, 7, colSpan: 2, rowSpan: 3),
       label: 'Twitch',
       icon: 'game',
-      action: 'launch.twitch',
+      action: 'launch.url',
+      param: 'https://www.twitch.tv',
       color: _purple,
     ),
     launcher(
@@ -174,7 +178,8 @@ LayoutPage mediaCenterPage() {
       placement: at(8, 7, colSpan: 2, rowSpan: 3),
       label: 'Apple Music',
       icon: 'play',
-      action: 'launch.apple',
+      action: 'launch.url',
+      param: 'https://music.apple.com',
       color: '#FA57C1',
     ),
 
@@ -215,7 +220,7 @@ LayoutPage mediaCenterPage() {
       placement: at(16, 7, colSpan: 2, rowSpan: 3),
       label: 'Mute',
       icon: 'mute',
-      action: 'media.mute',
+      action: 'volume.mute',
       color: _purple,
     ),
 

@@ -191,6 +191,7 @@ WidgetNode controlTile(
   required String action,
   required Placement placement,
   String? color,
+  String? param,
   bool confirm = false,
 }) =>
     WidgetNode(
@@ -205,6 +206,7 @@ WidgetNode controlTile(
       interaction: {
         'tap': {
           'action': action,
+          'param': ?param,
           if (confirm) 'confirm': true,
         },
       },
@@ -220,6 +222,7 @@ WidgetNode launcher(
   String? icon,
   String? asset,
   String? action,
+  String? param,
   String? color,
 }) =>
     WidgetNode(
@@ -233,7 +236,8 @@ WidgetNode launcher(
         'color': ?color,
       }),
       interaction: {
-        if (action != null) 'tap': {'action': action},
+        if (action != null)
+          'tap': {'action': action, 'param': ?param},
       },
     );
 
@@ -386,6 +390,7 @@ WidgetNode iconButton(
   required Placement placement,
   String? label,
   String? action,
+  String? param,
   String? color,
 }) =>
     WidgetNode(
@@ -398,7 +403,8 @@ WidgetNode iconButton(
         'color': ?color,
       }),
       interaction: {
-        if (action != null) 'tap': {'action': action},
+        if (action != null)
+          'tap': {'action': action, 'param': ?param},
       },
     );
 
@@ -458,6 +464,7 @@ WidgetNode toggle(
   String? stateBinding,
   String? label,
   String? action,
+  String? param,
   String? color,
 }) =>
     WidgetNode(
@@ -472,7 +479,8 @@ WidgetNode toggle(
         },
       ),
       interaction: {
-        if (action != null) 'tap': {'action': action},
+        if (action != null)
+          'tap': {'action': action, 'param': ?param},
       },
     );
 
@@ -489,6 +497,7 @@ WidgetNode slider(
   bool vertical = false,
   String? title,
   String? action,
+  String? param,
   String? color,
 }) =>
     WidgetNode(
@@ -505,7 +514,8 @@ WidgetNode slider(
       ),
       config: {'min': min, 'max': max},
       interaction: {
-        if (action != null) 'dragValue': {'action': action},
+        if (action != null)
+          'dragValue': {'action': action, 'param': ?param},
       },
     );
 
@@ -571,6 +581,7 @@ WidgetNode roomCard(
   String? temp,
   String? stateBinding,
   String? action,
+  String? param,
   String? color,
   List<Map<String, dynamic>> valueRules = const [],
 }) =>
@@ -589,7 +600,8 @@ WidgetNode roomCard(
         },
       ),
       interaction: {
-        if (action != null) 'tap': {'action': action},
+        if (action != null)
+          'tap': {'action': action, 'param': ?param},
       },
     );
 
@@ -603,6 +615,7 @@ WidgetNode gamePoster(
   String? subtitle,
   String? art,
   String? action,
+  String? param,
   String? color,
 }) =>
     WidgetNode(
@@ -616,7 +629,8 @@ WidgetNode gamePoster(
         'color': ?color,
       }),
       interaction: {
-        if (action != null) 'tap': {'action': action},
+        if (action != null)
+          'tap': {'action': action, 'param': ?param},
       },
     );
 
@@ -632,6 +646,7 @@ WidgetNode modeCard(
   String? icon,
   String? stateBinding,
   String? action,
+  String? param,
   String? color,
 }) =>
     WidgetNode(
@@ -648,6 +663,7 @@ WidgetNode modeCard(
         },
       ),
       interaction: {
-        if (action != null) 'tap': {'action': action},
+        if (action != null)
+          'tap': {'action': action, 'param': ?param},
       },
     );
