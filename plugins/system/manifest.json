@@ -15,7 +15,15 @@
       "performance.mode.turbo",
       "fan.cpu.percent",
       "fan.case1.percent",
-      "fan.auto"
+      "fan.auto",
+      "game.opt.performance",
+      "game.opt.networkBoost",
+      "game.opt.gpuOverclock",
+      "game.opt.tempControl",
+      "game.profile.competitive",
+      "game.profile.aaa",
+      "game.profile.streaming",
+      "game.profile.balanced"
     ],
     "actions": [
       {"id": "performance.setMode.silent", "label": "Silent Mode", "category": "performance"},
@@ -26,7 +34,15 @@
       {"id": "system.emptyRecycleBin", "label": "Empty Recycle Bin", "category": "system"},
       {"id": "fan.setSpeed.cpu", "label": "CPU Fan Speed", "category": "fan", "params": [{"name": "value", "type": "int"}]},
       {"id": "fan.setSpeed.case1", "label": "Case Fan Speed", "category": "fan", "params": [{"name": "value", "type": "int"}]},
-      {"id": "fan.toggleAuto", "label": "Auto Fan Control", "category": "fan"}
+      {"id": "fan.toggleAuto", "label": "Auto Fan Control", "category": "fan"},
+      {"id": "game.opt.toggle.perf", "label": "Performance Mode", "category": "game"},
+      {"id": "game.opt.toggle.boost", "label": "Network Boost", "category": "game"},
+      {"id": "game.opt.toggle.gpu", "label": "GPU Overclock", "category": "game"},
+      {"id": "game.opt.toggle.temp", "label": "Temperature Control", "category": "game"},
+      {"id": "game.profile.set.competitive", "label": "Competitive Profile", "category": "game"},
+      {"id": "game.profile.set.aaa", "label": "AAA Profile", "category": "game"},
+      {"id": "game.profile.set.streaming", "label": "Streaming Profile", "category": "game"},
+      {"id": "game.profile.set.balanced", "label": "Balanced Profile", "category": "game"}
     ]
   }
 }

@@ -226,6 +226,14 @@ var PublishedTelemetryIDs = []string{
 	"media.volume.spotify",
 	"media.volume.browser",
 	"media.volume.discord",
+	"game.opt.performance",
+	"game.opt.networkBoost",
+	"game.opt.gpuOverclock",
+	"game.opt.tempControl",
+	"game.profile.competitive",
+	"game.profile.aaa",
+	"game.profile.streaming",
+	"game.profile.balanced",
 }
 
 // StateBindings returns the distinct state ids a device's session subscribes to:

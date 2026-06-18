@@ -182,6 +182,11 @@ Map<String, Object?> seedInitialState() => {
       // ── Gaming Hub live metrics + optimization toggles ──────────────────────
       'game.fps': 144.0,
       'game.profile.active': 'Competitive',
+      // Per-profile active flags the mode cards bind (Competitive active).
+      'game.profile.competitive': true,
+      'game.profile.aaa': false,
+      'game.profile.streaming': false,
+      'game.profile.balanced': false,
       'game.opt.performance': true,
       'game.opt.networkBoost': false,
       'game.opt.gpuOverclock': false,

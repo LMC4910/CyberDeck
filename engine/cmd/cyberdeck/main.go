@@ -635,6 +635,15 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		"fan.setSpeed.cpu":                d("fan.setSpeed.cpu", "CPU Fan Speed", "fan", "system", false),
 		"fan.setSpeed.case1":              d("fan.setSpeed.case1", "Case Fan Speed", "fan", "system", false),
 		"fan.toggleAuto":                  d("fan.toggleAuto", "Auto Fan Control", "fan", "system", false),
+		// game optimization + profiles (plugins/system — persistent local state)
+		"game.opt.toggle.perf":          d("game.opt.toggle.perf", "Performance Mode", "game", "system", false),
+		"game.opt.toggle.boost":         d("game.opt.toggle.boost", "Network Boost", "game", "system", false),
+		"game.opt.toggle.gpu":           d("game.opt.toggle.gpu", "GPU Overclock", "game", "system", false),
+		"game.opt.toggle.temp":          d("game.opt.toggle.temp", "Temperature Control", "game", "system", false),
+		"game.profile.set.competitive":  d("game.profile.set.competitive", "Competitive Profile", "game", "system", false),
+		"game.profile.set.aaa":          d("game.profile.set.aaa", "AAA Profile", "game", "system", false),
+		"game.profile.set.streaming":    d("game.profile.set.streaming", "Streaming Profile", "game", "system", false),
+		"game.profile.set.balanced":     d("game.profile.set.balanced", "Balanced Profile", "game", "system", false),
 	}
 }()}
 

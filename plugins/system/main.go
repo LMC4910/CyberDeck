@@ -23,6 +23,10 @@ const (
 // perfModeState returns the state id reflecting whether mode is active.
 func perfModeState(mode string) string { return "performance.mode." + mode }
 
+// gameOptState / gameProfileState are the published state ids for the game families.
+func gameOptState(key string) string     { return "game.opt." + key }
+func gameProfileState(id string) string  { return "game.profile." + id }
+
 func main() {
 	var c sysControl // dry-run → no real OS ops; otherwise the per-OS controller
 	if os.Getenv("CYBERDECK_SYSTEM_DRYRUN") != "" {
@@ -45,6 +49,12 @@ func run(in *os.File, out *os.File, prov *provider) {
 	states := []string{stFanCPU, stFanCase1, stFanAuto}
 	for _, m := range perfModes {
 		states = append(states, perfModeState(m))
+	}
+	for _, k := range gameOptKeys {
+		states = append(states, gameOptState(k))
+	}
+	for _, id := range gameProfiles {
+		states = append(states, gameProfileState(id))
 	}
 	w.write(ipcproto.Message{
 		Type:     ipcproto.MsgRegister,
@@ -107,6 +117,17 @@ func publish(w *msgWriter, prov *provider) {
 				State: &ipcproto.StatePayload{ID: perfModeState(m), Value: m == active}})
 		}
 	}
+
+	// Game optimization toggles + the active game profile (persistent local state).
+	for k, on := range prov.gameOptSnapshot() {
+		w.write(ipcproto.Message{Type: ipcproto.MsgStateUpdate,
+			State: &ipcproto.StatePayload{ID: gameOptState(k), Value: on}})
+	}
+	activeProfile := prov.activeProfile()
+	for _, id := range gameProfiles {
+		w.write(ipcproto.Message{Type: ipcproto.MsgStateUpdate,
+			State: &ipcproto.StatePayload{ID: gameProfileState(id), Value: id == activeProfile}})
+	}
 }
 
 func contributes() json.RawMessage {
@@ -120,6 +141,14 @@ func contributes() json.RawMessage {
 		{ID: actFanSetCPU, Label: "CPU Fan Speed", Category: "fan", Params: []registry.Param{{Name: "value", Type: registry.ParamInt}}},
 		{ID: actFanSetCase1, Label: "Case Fan Speed", Category: "fan", Params: []registry.Param{{Name: "value", Type: registry.ParamInt}}},
 		{ID: actFanToggleAuto, Label: "Auto Fan Control", Category: "fan"},
+		{ID: "game.opt.toggle.perf", Label: "Performance Mode", Category: "game"},
+		{ID: "game.opt.toggle.boost", Label: "Network Boost", Category: "game"},
+		{ID: "game.opt.toggle.gpu", Label: "GPU Overclock", Category: "game"},
+		{ID: "game.opt.toggle.temp", Label: "Temperature Control", Category: "game"},
+		{ID: "game.profile.set.competitive", Label: "Competitive Profile", Category: "game"},
+		{ID: "game.profile.set.aaa", Label: "AAA Profile", Category: "game"},
+		{ID: "game.profile.set.streaming", Label: "Streaming Profile", Category: "game"},
+		{ID: "game.profile.set.balanced", Label: "Balanced Profile", Category: "game"},
 	}})
 	return b
 }

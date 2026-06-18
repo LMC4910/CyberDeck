@@ -73,3 +73,27 @@ func TestUnknownActionErrors(t *testing.T) {
 		t.Error("unknown action should error")
 	}
 }
+
+func TestGameOptToggleFlips(t *testing.T) {
+	p := newProvider(&fakeControl{})
+	before := p.gameOptSnapshot()["gpuOverclock"]
+	if err := p.execute("game.opt.toggle.gpu", nil); err != nil {
+		t.Fatal(err)
+	}
+	if p.gameOptSnapshot()["gpuOverclock"] == before {
+		t.Error("game.opt.toggle.gpu did not flip gpuOverclock")
+	}
+	if err := p.execute("game.opt.toggle.bogus", nil); err == nil {
+		t.Error("unknown game toggle should error")
+	}
+}
+
+func TestGameProfileSelects(t *testing.T) {
+	p := newProvider(&fakeControl{})
+	if err := p.execute("game.profile.set.streaming", nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := p.activeProfile(); got != "streaming" {
+		t.Errorf("active profile = %q, want streaming", got)
+	}
+}

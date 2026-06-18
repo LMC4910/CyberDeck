@@ -9,6 +9,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -23,7 +24,25 @@ const (
 	actFanSetCPU       = "fan.setSpeed.cpu"
 	actFanSetCase1     = "fan.setSpeed.case1"
 	actFanToggleAuto   = "fan.toggleAuto"
+
+	// Game optimization toggles + profile selection are persistent local state
+	// (no portable real backend for GPU overclock / network boost / per-game
+	// profiles), reflected live so the UI flips and sticks.
+	actGameOptPrefix     = "game.opt.toggle."
+	actGameProfilePrefix = "game.profile.set."
 )
+
+// optKeyFor maps a toggle id (the action suffix) to its game.opt.<key> state suffix.
+var optKeyFor = map[string]string{
+	"perf":  "performance",
+	"boost": "networkBoost",
+	"gpu":   "gpuOverclock",
+	"temp":  "tempControl",
+}
+
+// gameOptKeys / gameProfiles are the published state suffixes for each family.
+var gameOptKeys = []string{"performance", "networkBoost", "gpuOverclock", "tempControl"}
+var gameProfiles = []string{"competitive", "aaa", "streaming", "balanced"}
 
 // Performance mode keys (also the suffix of performance.mode.<key> state ids).
 const (
@@ -55,17 +74,49 @@ func (noopControl) ClearCache() error          { return nil }
 type provider struct {
 	ctrl sysControl
 
-	mu       sync.Mutex
-	fanCPU   float64
-	fanCase1 float64
-	fanAuto  bool
+	mu          sync.Mutex
+	fanCPU      float64
+	fanCase1    float64
+	fanAuto     bool
+	gameOpt     map[string]bool // game.opt.<key> → on/off
+	gameProfile string          // active game.profile.<id>
 }
 
 func newProvider(c sysControl) *provider {
 	if c == nil {
 		c = noopControl{}
 	}
-	return &provider{ctrl: c, fanCPU: 50, fanCase1: 50, fanAuto: true}
+	return &provider{
+		ctrl:     c,
+		fanCPU:   50,
+		fanCase1: 50,
+		fanAuto:  true,
+		gameOpt: map[string]bool{
+			"performance":  true,
+			"networkBoost": false,
+			"gpuOverclock": false,
+			"tempControl":  true,
+		},
+		gameProfile: "balanced",
+	}
+}
+
+// gameOptSnapshot returns a copy of the game-optimization toggle state.
+func (p *provider) gameOptSnapshot() map[string]bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	out := make(map[string]bool, len(p.gameOpt))
+	for k, v := range p.gameOpt {
+		out[k] = v
+	}
+	return out
+}
+
+// activeProfile returns the active game profile id.
+func (p *provider) activeProfile() string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.gameProfile
 }
 
 // fanSnapshot returns the current fan local-state (for publishing).
@@ -108,7 +159,23 @@ func (p *provider) execute(actionID string, params json.RawMessage) error {
 		p.fanAuto = !p.fanAuto
 		p.mu.Unlock()
 	default:
-		return fmt.Errorf("system: unknown action %q", actionID)
+		// Game optimization toggles + profile selection (prefix-matched).
+		switch {
+		case strings.HasPrefix(actionID, actGameOptPrefix):
+			key := optKeyFor[strings.TrimPrefix(actionID, actGameOptPrefix)]
+			if key == "" {
+				return fmt.Errorf("system: unknown game toggle %q", actionID)
+			}
+			p.mu.Lock()
+			p.gameOpt[key] = !p.gameOpt[key]
+			p.mu.Unlock()
+		case strings.HasPrefix(actionID, actGameProfilePrefix):
+			p.mu.Lock()
+			p.gameProfile = strings.TrimPrefix(actionID, actGameProfilePrefix)
+			p.mu.Unlock()
+		default:
+			return fmt.Errorf("system: unknown action %q", actionID)
+		}
 	}
 	return nil
 }

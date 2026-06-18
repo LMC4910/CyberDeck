@@ -139,6 +139,29 @@ class MockDeckSource implements DeckSource {
     if (actionId == 'system.emptyRecycleBin') {
       return const ActionOutcome.success('Recycle bin emptied');
     }
+    // Game optimization toggles — flip the bound game.opt.<key> boolean.
+    if (actionId.startsWith('game.opt.toggle.')) {
+      const keys = {
+        'perf': 'performance',
+        'boost': 'networkBoost',
+        'gpu': 'gpuOverclock',
+        'temp': 'tempControl',
+      };
+      final key = keys[actionId.substring('game.opt.toggle.'.length)];
+      if (key != null) {
+        final id = 'game.opt.$key';
+        _set(id, !(_state[id] == true));
+      }
+      return const ActionOutcome.success('Toggled');
+    }
+    // Game profiles — set the active profile boolean (others off).
+    if (actionId.startsWith('game.profile.set.')) {
+      final id = actionId.substring('game.profile.set.'.length);
+      for (final p in const ['competitive', 'aaa', 'streaming', 'balanced']) {
+        _set('game.profile.$p', p == id);
+      }
+      return ActionOutcome.success('${_titleCase(id)} profile');
+    }
     return ActionOutcome.success(_friendly(actionId));
   }
 
