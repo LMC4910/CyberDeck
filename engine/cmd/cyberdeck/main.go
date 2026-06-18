@@ -624,6 +624,7 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		"media.screenshot":          d("media.screenshot", "Screenshot", "media", "media", false),
 		"media.record":              d("media.record", "Record", "media", "media", false),
 		"media.cast":                d("media.cast", "Cast", "media", "media", false),
+		"media.gamebar":             d("media.gamebar", "Game Bar", "media", "media", false),
 		// system utilities (plugins/system)
 		"performance.setMode.silent":      d("performance.setMode.silent", "Silent Mode", "performance", "system", false),
 		"performance.setMode.balanced":    d("performance.setMode.balanced", "Balanced Mode", "performance", "system", false),

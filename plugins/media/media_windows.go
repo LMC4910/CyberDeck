@@ -29,6 +29,7 @@ const (
 	vkS     = 0x53 // 'S'
 	vkR     = 0x52 // 'R'
 	vkK     = 0x4B // 'K'
+	vkG     = 0x47 // 'G'
 )
 
 var (
@@ -147,6 +148,9 @@ func (m *winMedia) Record() error { m.pressCombo([]uintptr{vkLWin, vkMenu}, vkR)
 
 // Cast fires Win+K (Cast/Connect device flyout).
 func (m *winMedia) Cast() error { m.pressCombo([]uintptr{vkLWin}, vkK); return nil }
+
+// Gamebar fires Win+G (Xbox Game Bar overlay — FPS counter, capture widgets).
+func (m *winMedia) Gamebar() error { m.pressCombo([]uintptr{vkLWin}, vkG); return nil }
 
 // Close terminates the SMTC PowerShell reader so it doesn't orphan on shutdown.
 func (m *winMedia) Close() error {

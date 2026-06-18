@@ -10,6 +10,7 @@ type fakeMedia struct {
 	screenshot int
 	record     int
 	cast       int
+	gamebar    int
 	np         map[string]any
 	ok         bool
 }
@@ -20,6 +21,7 @@ func (f *fakeMedia) Previous() error                    { f.prev++; return nil }
 func (f *fakeMedia) Screenshot() error                  { f.screenshot++; return nil }
 func (f *fakeMedia) Record() error                      { f.record++; return nil }
 func (f *fakeMedia) Cast() error                        { f.cast++; return nil }
+func (f *fakeMedia) Gamebar() error                     { f.gamebar++; return nil }
 func (f *fakeMedia) NowPlaying() (map[string]any, bool) { return f.np, f.ok }
 func (f *fakeMedia) Close() error                       { return nil }
 
@@ -38,14 +40,14 @@ func TestExecuteDispatchesTransport(t *testing.T) {
 
 func TestExecuteDispatchesCapture(t *testing.T) {
 	f := &fakeMedia{}
-	for _, id := range []string{actScreenshot, actRecord, actCast} {
+	for _, id := range []string{actScreenshot, actRecord, actCast, actGamebar} {
 		if err := execute(f, id); err != nil {
 			t.Fatalf("execute(%q): %v", id, err)
 		}
 	}
-	if f.screenshot != 1 || f.record != 1 || f.cast != 1 {
-		t.Errorf("dispatch = screenshot %d / record %d / cast %d, want 1/1/1",
-			f.screenshot, f.record, f.cast)
+	if f.screenshot != 1 || f.record != 1 || f.cast != 1 || f.gamebar != 1 {
+		t.Errorf("dispatch = screenshot %d / record %d / cast %d / gamebar %d, want 1/1/1/1",
+			f.screenshot, f.record, f.cast, f.gamebar)
 	}
 }
 

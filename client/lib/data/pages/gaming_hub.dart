@@ -133,13 +133,15 @@ List<WidgetNode> _gameOptimization() {
 // ──────────────────────────────────────────────────────────────────────────
 List<WidgetNode> _quickActions() {
   const accent = 'accent-cyan';
+  // Each quick action maps to a real plugin action (reusing media capture / Game Bar,
+  // volume mute, and the launchers); `param` carries a launch target where needed.
   final actions = <Map<String, String>>[
-    {'id': 'record', 'label': 'Record', 'icon': 'camera'},
-    {'id': 'screenshot', 'label': 'Screenshot', 'icon': 'camera'},
-    {'id': 'discord', 'label': 'Discord', 'icon': 'mic'},
-    {'id': 'overlay', 'label': 'Overlay', 'icon': 'info'},
-    {'id': 'fps', 'label': 'FPS Counter', 'icon': 'bolt'},
-    {'id': 'mute', 'label': 'Mute', 'icon': 'mute'},
+    {'id': 'record', 'label': 'Record', 'icon': 'camera', 'action': 'media.record'},
+    {'id': 'screenshot', 'label': 'Screenshot', 'icon': 'camera', 'action': 'media.screenshot'},
+    {'id': 'discord', 'label': 'Discord', 'icon': 'mic', 'action': 'launch.app', 'param': 'discord'},
+    {'id': 'overlay', 'label': 'Overlay', 'icon': 'info', 'action': 'media.gamebar'},
+    {'id': 'fps', 'label': 'FPS Counter', 'icon': 'bolt', 'action': 'media.gamebar'},
+    {'id': 'mute', 'label': 'Mute', 'icon': 'mute', 'action': 'volume.mute'},
   ];
 
   return [
@@ -152,7 +154,8 @@ List<WidgetNode> _quickActions() {
           placement: at(18 + (i % 3) * 2, 9 + (i ~/ 3) * 2, colSpan: 2, rowSpan: 2),
           label: actions[i]['label']!,
           icon: actions[i]['icon']!,
-          action: 'game.action.${actions[i]['id']}',
+          action: actions[i]['action']!,
+          param: actions[i]['param'],
           color: accent),
   ];
 }

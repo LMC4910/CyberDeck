@@ -15,7 +15,8 @@
       {"id": "media.transport.previous", "label": "Previous Track", "category": "media"},
       {"id": "media.screenshot", "label": "Screenshot", "category": "media"},
       {"id": "media.record", "label": "Record", "category": "media"},
-      {"id": "media.cast", "label": "Cast", "category": "media"}
+      {"id": "media.cast", "label": "Cast", "category": "media"},
+      {"id": "media.gamebar", "label": "Game Bar", "category": "media"}
     ]
   }
 }
