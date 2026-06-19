@@ -4,6 +4,7 @@
 // the registry never knew (which silently audited `interaction.rejected`). A walk
 // over all 7 seed pages asserts every action in the backed namespaces resolves, so
 // a future typo or a half-wired tile fails the build instead of failing silently.
+import 'package:cyberdeck_client/data/mock_deck_source.dart';
 import 'package:cyberdeck_client/data/pages/builders.dart';
 import 'package:cyberdeck_client/data/seed_decks.dart';
 import 'package:cyberdeck_client/gestures/slots.dart';
@@ -26,6 +27,29 @@ void main() {
     'media.transport.playPause',
     'media.transport.next',
     'media.transport.previous',
+  };
+  // Smart Home actions handled locally in Demo + by the live home.* plugin.
+  const liveHomeToggle = {
+    'home.room.living.toggle',
+    'home.room.bedroom.toggle',
+    'home.room.kitchen.toggle',
+    'home.room.office.toggle',
+    'home.room.bathroom.toggle',
+    'home.lights.ceiling.toggle',
+    'home.lights.floor.toggle',
+    'home.tv.toggle',
+    'home.speaker.toggle',
+    'home.ac.toggle',
+    'home.coffee.toggle',
+    'home.auto.sunset.toggle',
+  };
+  const liveHomeScene = {
+    'home.scene.goodnight',
+    'home.scene.movie',
+    'home.scene.party',
+    'home.scene.focus',
+    'home.scene.morning',
+    'home.scene.away',
   };
 
   group('builders carry an action param', () {
@@ -79,6 +103,14 @@ void main() {
             expect(liveMedia.contains(t.ref), isTrue,
                 reason: '${node.id} uses unknown media transport id "${t.ref}"');
           }
+          if (t.ref.startsWith('home.') && t.ref.endsWith('.toggle')) {
+            expect(liveHomeToggle.contains(t.ref), isTrue,
+                reason: '${node.id} uses unknown home toggle id "${t.ref}"');
+          }
+          if (t.ref.startsWith('home.scene.')) {
+            expect(liveHomeScene.contains(t.ref), isTrue,
+                reason: '${node.id} uses unknown home scene id "${t.ref}"');
+          }
         }
       }
     }
@@ -93,5 +125,68 @@ void main() {
         reason: 'expected all six power actions to be wired');
     expect(seen.containsAll(liveMedia), isTrue,
         reason: 'expected media transport (playPause/next/previous) to be wired');
+    expect(seen.containsAll(liveHomeToggle), isTrue,
+        reason: 'expected all Smart Home toggle actions to be wired');
+    expect(seen.containsAll(liveHomeScene), isTrue,
+        reason: 'expected all Smart Home scene actions to be wired');
+  });
+
+  group('Smart Home Demo wiring', () {
+    test('seedInitialState carries the room + device booleans', () {
+      final s = seedInitialState();
+      for (final id in const [
+        'home.room.living',
+        'home.room.bedroom',
+        'home.room.kitchen',
+        'home.room.office',
+        'home.room.bathroom',
+      ]) {
+        expect(s.containsKey(id), isTrue, reason: '$id must be seeded');
+        expect(s[id], isA<bool>(), reason: '$id must be a boolean');
+      }
+      // Room defaults match the contract (living/kitchen/office on; others off).
+      expect(s['home.room.living'], true);
+      expect(s['home.room.bedroom'], false);
+      expect(s['home.room.kitchen'], true);
+      expect(s['home.room.office'], true);
+      expect(s['home.room.bathroom'], false);
+      // Device booleans were already seeded — keep them honest too.
+      for (final id in const [
+        'home.lights.ceiling',
+        'home.lights.floor',
+        'home.tv',
+        'home.speaker',
+        'home.ac',
+        'home.coffee',
+        'home.auto.sunset',
+      ]) {
+        expect(s[id], isA<bool>(), reason: '$id must be a seeded boolean');
+      }
+    });
+
+    test('dispatching a home.*.toggle flips the bound boolean in Demo', () async {
+      final src = MockDeckSource();
+      addTearDown(src.dispose);
+
+      // home.lights.ceiling seeds true → toggling flips it to false. The mock
+      // emits every _set as a StateUpdate; track the latest value for the id.
+      Object? ceiling;
+      final sub = src.states().listen((u) {
+        if (u.id == 'home.lights.ceiling') ceiling = u.value;
+      });
+      addTearDown(sub.cancel);
+
+      // Let the snapshot burst (seeded `true`) flush to the listener first.
+      await Future<void>.delayed(Duration.zero);
+      expect(ceiling, true);
+
+      await src.invoke('home.lights.ceiling.toggle');
+      await Future<void>.delayed(Duration.zero);
+      expect(ceiling, false);
+
+      await src.invoke('home.lights.ceiling.toggle');
+      await Future<void>.delayed(Duration.zero);
+      expect(ceiling, true);
+    });
   });
 }

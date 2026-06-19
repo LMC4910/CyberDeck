@@ -162,6 +162,12 @@ class MockDeckSource implements DeckSource {
       }
       return ActionOutcome.success('${_titleCase(id)} profile');
     }
+    // Smart Home toggles — flip the bound boolean so the switch reflects state.
+    if (actionId.startsWith('home.') && actionId.endsWith('.toggle')) {
+      final id = actionId.substring(0, actionId.length - '.toggle'.length);
+      _set(id, !(_state[id] == true));
+      return const ActionOutcome.success('Toggled');
+    }
     return ActionOutcome.success(_friendly(actionId));
   }
 

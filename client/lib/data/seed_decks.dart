@@ -207,6 +207,12 @@ Map<String, Object?> seedInitialState() => {
       'sh.room.kitchen.temp': 23.0,
       'sh.room.office.temp': 21.5,
       'sh.room.bathroom.temp': 24.0,
+      // Room on/off booleans the room cards bind (home.room.<key>).
+      'home.room.living': true,
+      'home.room.bedroom': false,
+      'home.room.kitchen': true,
+      'home.room.office': true,
+      'home.room.bathroom': false,
       'home.lights.ceiling': true,
       'home.lights.floor': false,
       'home.tv': false,
