@@ -1,0 +1,46 @@
+{
+  "id": "com.shishir.cyberdeck.smarthome",
+  "name": "Smart Home",
+  "apiVersion": "1.0",
+  "permissions": {
+    "categories": ["home"],
+    "network": "outbound"
+  },
+  "contributes": {
+    "states": [
+      "home.room.living",
+      "home.room.bedroom",
+      "home.room.kitchen",
+      "home.room.office",
+      "home.room.bathroom",
+      "home.lights.ceiling",
+      "home.lights.floor",
+      "home.tv",
+      "home.speaker",
+      "home.ac",
+      "home.coffee",
+      "home.auto.sunset",
+      "home.energy.now"
+    ],
+    "actions": [
+      {"id": "home.room.living.toggle", "label": "Living Room", "category": "home"},
+      {"id": "home.room.bedroom.toggle", "label": "Bedroom", "category": "home"},
+      {"id": "home.room.kitchen.toggle", "label": "Kitchen", "category": "home"},
+      {"id": "home.room.office.toggle", "label": "Office", "category": "home"},
+      {"id": "home.room.bathroom.toggle", "label": "Bathroom", "category": "home"},
+      {"id": "home.lights.ceiling.toggle", "label": "Ceiling Lights", "category": "home"},
+      {"id": "home.lights.floor.toggle", "label": "Floor Lamp", "category": "home"},
+      {"id": "home.tv.toggle", "label": "TV", "category": "home"},
+      {"id": "home.speaker.toggle", "label": "Speaker", "category": "home"},
+      {"id": "home.ac.toggle", "label": "Air Conditioner", "category": "home"},
+      {"id": "home.coffee.toggle", "label": "Coffee Maker", "category": "home"},
+      {"id": "home.auto.sunset.toggle", "label": "Sunset Automation", "category": "home"},
+      {"id": "home.scene.goodnight", "label": "Goodnight Scene", "category": "home"},
+      {"id": "home.scene.movie", "label": "Movie Scene", "category": "home"},
+      {"id": "home.scene.party", "label": "Party Scene", "category": "home"},
+      {"id": "home.scene.focus", "label": "Focus Scene", "category": "home"},
+      {"id": "home.scene.morning", "label": "Morning Scene", "category": "home"},
+      {"id": "home.scene.away", "label": "Away Scene", "category": "home"}
+    ]
+  }
+}
