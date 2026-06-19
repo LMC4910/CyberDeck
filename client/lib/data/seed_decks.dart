@@ -119,7 +119,7 @@ Map<String, Object?> seedInitialState() => {
       'sys.power.plan': 'Balanced',
       'sys.network': 'Connected',
       'sys.storage.free': '512 GB Free',
-      'sys.storage.used': 58.0,
+      'sys.storage.used': 1.1, // TB used (System Overview Storage tile; unit is TB)
       'sys.uptime': '2d 14h 36m 52s',
       // Dashboard status card (bound map; live on a connected engine via system.status).
       'sys.status': const {

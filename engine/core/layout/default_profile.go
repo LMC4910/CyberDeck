@@ -214,6 +214,8 @@ var PublishedTelemetryIDs = []string{
 	"media.playing",
 	"system.cpu.temp",
 	"system.status",
+	"system.health.score",
+	"system.storage.used.tb",
 	"performance.mode.silent",
 	"performance.mode.balanced",
 	"performance.mode.performance",

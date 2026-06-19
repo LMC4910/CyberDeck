@@ -91,6 +91,12 @@ void main() {
       expect(mapOf('system.net.ping', 8.0)['net.ping'], 8.0);
     });
 
+    test('health score + storage-used TB rename to System Overview bindings', () {
+      expect(mapOf('system.health.score', 92.0)['sys.health.score'], 92.0);
+      // TB value is rounded to one decimal for the Storage tile (unit appended there).
+      expect(mapOf('system.storage.used.tb', 1.1834)['sys.storage.used'], 1.2);
+    });
+
     test('top processes transform to list-card rows', () {
       final rows = mapOf('system.processes', [
         {'name': 'chrome.exe', 'cpu': 18.42},

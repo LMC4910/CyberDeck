@@ -46,6 +46,8 @@ const Map<String, List<String>> _engineToPageIds = {
   'system.info': ['sys.info'],
   // Primary-disk usage → the Storage Overview donut (a %, not the TB tile).
   'system.disk.percent': ['sys.storage.usedPct'],
+  // Derived 0–100 system-health score → the System Health ring.
+  'system.health.score': ['sys.health.score'],
   // Per-drive storage (renames; absent drives never publish → those slots "--").
   'system.disk.c.percent': ['storage.c.percent'],
   'system.disk.d.percent': ['storage.d.percent'],
@@ -84,6 +86,11 @@ List<StateUpdate> mapEngineStateDelta(String engineId, Object? value) {
     case 'system.processes':
       out.add(StateUpdate('sys.processes', processRows(value)));
       return out;
+    // Primary-volume used space (TB) → the Storage metric tile (1-decimal number;
+    // the tile appends its own "TB" unit).
+    case 'system.storage.used.tb':
+      out.add(StateUpdate('sys.storage.used', roundTo1(value)));
+      return out;
   }
   for (final pageId in _engineToPageIds[engineId] ?? const <String>[]) {
     out.add(StateUpdate(pageId, value));
@@ -107,6 +114,12 @@ String formatUptimeSeconds(Object? v) {
 double bytesPerSecToMbps(Object? v) {
   final b = v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
   return (b * 8) / 1e6;
+}
+
+/// Rounds a numeric value to one decimal place (e.g. storage TB for the tile).
+double roundTo1(Object? v) {
+  final n = v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
+  return (n * 10).round() / 10;
 }
 
 /// Formats a byte count as "X.X GB" (GiB) for the RAM stat rows.
