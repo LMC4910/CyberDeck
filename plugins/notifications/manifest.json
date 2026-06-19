@@ -1,14 +1,21 @@
 {
   "id": "com.shishir.cyberdeck.notifications",
-  "name": "Notification Count",
+  "name": "Notifications",
   "apiVersion": "1.0",
   "permissions": {
-    "categories": ["notifications"],
+    "categories": ["notification"],
     "network": "none",
     "filesystem": "none"
   },
   "contributes": {
-    "states": ["notification.count"],
-    "actions": []
+    "states": ["notification.count", "notification.feed"],
+    "actions": [
+      {"id": "notifications.markAllRead", "label": "Mark All Read", "category": "notification"},
+      {"id": "notifications.filter.all", "label": "All Notifications", "category": "notification"},
+      {"id": "notifications.filter.apps", "label": "App Notifications", "category": "notification"},
+      {"id": "notifications.filter.system", "label": "System Notifications", "category": "notification"},
+      {"id": "notifications.filter.alerts", "label": "Alerts", "category": "notification"},
+      {"id": "notifications.history", "label": "History", "category": "notification"}
+    ]
   }
 }

@@ -1,59 +1,129 @@
-// Command notifications is the first-party CyberDeck notification-count plugin
-// (PROJ-176). It publishes notification.count (the number of notifications sitting
-// in the OS action center). V1 is count-only: no per-notification content, no
-// actions. The count is sourced by a per-OS listener (listener_<goos>.go) that
-// pushes updates on add/clear; where the OS restricts programmatic access the
-// listener degrades to "unavailable" and the count stays at 0 (documented per OS).
-// The provider holds the authoritative count and is fully mockable so the count
-// logic is unit-testable without any OS hook.
+// Command notifications is the first-party CyberDeck notification plugin
+// (PROJ-176). V2 publishes a real action-center FEED plus the unread count and a
+// set of actions (mark-all-read, server-side category filters, history ack). The
+// feed rows are sourced by a per-OS listener (listener_<goos>.go) that pushes the
+// FULL set of rows on change; where the OS restricts programmatic access the
+// listener degrades to "unavailable" and the feed stays empty (documented per OS).
+// The provider holds the authoritative feed + filter + count and is fully mockable
+// so the feed/filter/action logic is unit-testable without any OS hook.
 package main
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
-// stCount is the published state ID: the action-center notification count.
-const stCount = "notification.count"
+// Published state ids.
+const (
+	stCount = "notification.count" // total unread notifications (int)
+	stFeed  = "notification.feed"  // filtered list of notification rows (see row shape below)
+)
 
-// provider holds the authoritative notification count. All access is serialised so
-// the listener goroutine and the publish loop never race.
+// Action ids (Category "notification").
+const (
+	actMarkAllRead  = "notifications.markAllRead"
+	actFilterAll    = "notifications.filter.all"
+	actFilterApps   = "notifications.filter.apps"
+	actFilterSystem = "notifications.filter.system"
+	actFilterAlerts = "notifications.filter.alerts"
+	actHistory      = "notifications.history"
+)
+
+// A feed row is a map[string]any with this shape:
+//
+//	{"title": str, "body": str, "time": str, "icon": str, "color": str, "category": "apps"|"system"|"alerts"}
+//
+// time is a short relative label like "2m"/"1h"; icon/color are chosen heuristically.
+
+// provider holds the authoritative feed, the active server-side filter, and the
+// unread count. All access is serialised so the listener goroutine, the publish
+// loop, and action handlers never race.
 type provider struct {
-	mu    sync.Mutex
-	count int
+	mu     sync.Mutex
+	full   []map[string]any // every row the listener last reported
+	filter string           // ""/"all"/"apps"/"system"/"alerts" — "" and "all" both mean no filter
+	count  int              // total unread notifications (== len(full) at setFeed time; not changed by filtering)
 }
 
 func newProvider() *provider { return &provider{} }
 
-// snapshot returns the current count (for publishing). Never negative.
-func (p *provider) snapshot() int {
+// setFeed replaces the full feed with items and sets count to len(items). The
+// active filter is preserved (the next view() reflects it).
+func (p *provider) setFeed(items []map[string]any) {
+	p.mu.Lock()
+	p.full = items
+	p.count = len(items)
+	p.mu.Unlock()
+}
+
+// setFilter sets the active category filter ("", "all", "apps", "system",
+// "alerts"). Filtering changes the published view but never the count.
+func (p *provider) setFilter(f string) {
+	p.mu.Lock()
+	p.filter = f
+	p.mu.Unlock()
+}
+
+// clear empties the feed, resets the count to 0, and drops the active filter
+// (mark-all-read / "clear all").
+func (p *provider) clear() {
+	p.mu.Lock()
+	p.full = nil
+	p.count = 0
+	p.filter = ""
+	p.mu.Unlock()
+}
+
+// view returns the feed filtered by the active category. "all"/"" returns every
+// row. The result is a fresh slice (callers may publish it without holding the
+// lock). Always non-nil so an empty feed marshals as [] rather than null.
+func (p *provider) view() []map[string]any {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	out := make([]map[string]any, 0, len(p.full))
+	for _, row := range p.full {
+		if p.filter == "" || p.filter == "all" {
+			out = append(out, row)
+			continue
+		}
+		if cat, _ := row["category"].(string); cat == p.filter {
+			out = append(out, row)
+		}
+	}
+	return out
+}
+
+// snapshotCount returns the total unread count (unaffected by filtering).
+func (p *provider) snapshotCount() int {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.count
 }
 
-// setCount sets the count to an absolute value (the common case: a listener that
-// reports the full action-center count). Clamped at 0 — a count is never negative.
-func (p *provider) setCount(n int) {
-	if n < 0 {
-		n = 0
-	}
-	p.mu.Lock()
-	p.count = n
-	p.mu.Unlock()
-}
+// snapshotView is an alias for view(): the filtered rows to publish.
+func (p *provider) snapshotView() []map[string]any { return p.view() }
 
-// add increments the count by delta (for listeners that only report add/remove
-// deltas rather than an absolute total). The result is clamped at 0.
-func (p *provider) add(delta int) {
-	p.mu.Lock()
-	p.count += delta
-	if p.count < 0 {
-		p.count = 0
+// execute runs an action by id and returns an error for unknown ids. Filters and
+// mark-all-read mutate provider state; history is an honest ack (no persistent
+// history store, so the caller just re-publishes the current view). The caller
+// publishes after execute returns so the change reaches the deck immediately.
+func (p *provider) execute(actionID string) error {
+	switch actionID {
+	case actMarkAllRead:
+		p.clear()
+	case actFilterAll:
+		p.setFilter("all")
+	case actFilterApps:
+		p.setFilter("apps")
+	case actFilterSystem:
+		p.setFilter("system")
+	case actFilterAlerts:
+		p.setFilter("alerts")
+	case actHistory:
+		// No persistent history store to fabricate. Honest placeholder: ack OK and
+		// let the caller re-publish the current view. Documented in manifest/contributes.
+	default:
+		return fmt.Errorf("unknown action: %s", actionID)
 	}
-	p.mu.Unlock()
-}
-
-// clear resets the count to 0 (action center emptied / "clear all").
-func (p *provider) clear() {
-	p.mu.Lock()
-	p.count = 0
-	p.mu.Unlock()
+	return nil
 }

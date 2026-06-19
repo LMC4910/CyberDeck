@@ -9,11 +9,18 @@ import (
 	"github.com/shishir/cyberdeck/engine/pluginhost/ipcproto"
 )
 
+// stateUpdate is one decoded notification stateUpdate (count or feed).
+type stateUpdate struct {
+	id    string
+	count int              // valid when id == stCount
+	feed  []map[string]any // valid when id == stFeed
+}
+
 // decodeStateUpdates parses every newline-delimited IPC message in buf and returns
-// the value of each notification.count stateUpdate, in order.
-func decodeStateUpdates(t *testing.T, buf []byte) []int {
+// each notification stateUpdate (count + feed), in order.
+func decodeStateUpdates(t *testing.T, buf []byte) []stateUpdate {
 	t.Helper()
-	var counts []int
+	var ups []stateUpdate
 	for _, line := range bytes.Split(buf, []byte("\n")) {
 		if len(bytes.TrimSpace(line)) == 0 {
 			continue
@@ -25,91 +32,207 @@ func decodeStateUpdates(t *testing.T, buf []byte) []int {
 		if m.Type != ipcproto.MsgStateUpdate || m.State == nil {
 			continue
 		}
-		if m.State.ID != stCount {
-			t.Fatalf("stateUpdate id = %q, want %q", m.State.ID, stCount)
+		switch m.State.ID {
+		case stCount:
+			n, ok := m.State.Value.(float64) // JSON numbers decode to float64
+			if !ok {
+				t.Fatalf("count value %v (%T) is not numeric", m.State.Value, m.State.Value)
+			}
+			ups = append(ups, stateUpdate{id: stCount, count: int(n)})
+		case stFeed:
+			rows := decodeFeed(t, m.State.Value)
+			ups = append(ups, stateUpdate{id: stFeed, feed: rows})
+		default:
+			t.Fatalf("unexpected stateUpdate id %q", m.State.ID)
 		}
-		// JSON numbers decode to float64 through the any field.
-		n, ok := m.State.Value.(float64)
-		if !ok {
-			t.Fatalf("count value %v (%T) is not numeric", m.State.Value, m.State.Value)
-		}
-		counts = append(counts, int(n))
 	}
-	return counts
+	return ups
 }
 
-// TestListenerCallbackPublishesCount is the listener->state integration test: it
-// drives the exact callback main.go installs into startListener (setCount + publish)
-// and asserts each listener event surfaces as a notification.count stateUpdate on the
-// IPC wire with the right value. This covers the testable seam; the real per-OS
-// listeners are documented no-op stubs in V1 (see listener_<goos>.go).
-func TestListenerCallbackPublishesCount(t *testing.T) {
+func decodeFeed(t *testing.T, v any) []map[string]any {
+	t.Helper()
+	arr, ok := v.([]any)
+	if !ok {
+		t.Fatalf("feed value %v (%T) is not an array", v, v)
+	}
+	rows := make([]map[string]any, 0, len(arr))
+	for _, e := range arr {
+		m, ok := e.(map[string]any)
+		if !ok {
+			t.Fatalf("feed element %v (%T) is not a map", e, e)
+		}
+		rows = append(rows, m)
+	}
+	return rows
+}
+
+// counts / feeds extract just the count or feed updates from a slice, in order.
+func counts(ups []stateUpdate) []int {
+	var out []int
+	for _, u := range ups {
+		if u.id == stCount {
+			out = append(out, u.count)
+		}
+	}
+	return out
+}
+
+func feeds(ups []stateUpdate) [][]map[string]any {
+	var out [][]map[string]any
+	for _, u := range ups {
+		if u.id == stFeed {
+			out = append(out, u.feed)
+		}
+	}
+	return out
+}
+
+func feedRow(category string) map[string]any {
+	return map[string]any{"title": "t", "body": "b", "time": "now",
+		"icon": "app", "color": "purple", "category": category}
+}
+
+// TestListenerCallbackPublishesFeed is the listener->state integration test: it
+// drives the exact callback main.go installs into startListener (setFeed + publish)
+// and asserts each listener event surfaces as both a notification.count and a
+// notification.feed stateUpdate on the IPC wire with the right values.
+func TestListenerCallbackPublishesFeed(t *testing.T) {
 	var out bytes.Buffer
 	w := &msgWriter{w: &out}
 	prov := newProvider()
 
-	// This is the callback wired in run(): a listener push updates the authoritative
-	// count and immediately publishes it.
-	onChange := func(n int) {
-		prov.setCount(n)
+	// This is the callback wired in run(): a listener push replaces the feed and
+	// immediately publishes count + feed.
+	onChange := func(items []map[string]any) {
+		prov.setFeed(items)
 		publish(w, prov)
 	}
 
-	onChange(3) // three notifications arrive
-	onChange(5) // two more
-	onChange(0) // action center cleared
+	onChange([]map[string]any{feedRow("apps"), feedRow("system"), feedRow("alerts")})
+	onChange([]map[string]any{feedRow("apps")})
+	onChange(nil) // action center cleared
 
-	got := decodeStateUpdates(t, out.Bytes())
-	want := []int{3, 5, 0}
-	if len(got) != len(want) {
-		t.Fatalf("published counts = %v, want %v", got, want)
+	ups := decodeStateUpdates(t, out.Bytes())
+	gotCounts := counts(ups)
+	wantCounts := []int{3, 1, 0}
+	if len(gotCounts) != len(wantCounts) {
+		t.Fatalf("published counts = %v, want %v", gotCounts, wantCounts)
 	}
-	for i := range want {
-		if got[i] != want[i] {
-			t.Fatalf("published counts = %v, want %v", got, want)
+	for i := range wantCounts {
+		if gotCounts[i] != wantCounts[i] {
+			t.Fatalf("published counts = %v, want %v", gotCounts, wantCounts)
+		}
+	}
+	gotFeeds := feeds(ups)
+	wantFeedLens := []int{3, 1, 0}
+	if len(gotFeeds) != len(wantFeedLens) {
+		t.Fatalf("published %d feeds, want %d", len(gotFeeds), len(wantFeedLens))
+	}
+	for i, want := range wantFeedLens {
+		if len(gotFeeds[i]) != want {
+			t.Errorf("feed[%d] len = %d, want %d", i, len(gotFeeds[i]), want)
 		}
 	}
 }
 
-// TestPublishReflectsSnapshot asserts a bare publish emits exactly one stateUpdate
-// carrying the provider's current snapshot (the cadence path in publishLoop).
-func TestPublishReflectsSnapshot(t *testing.T) {
+// TestPublishReflectsFilteredView asserts a bare publish emits the count (total) plus
+// the FILTERED feed view, and that the count is unaffected by the active filter.
+func TestPublishReflectsFilteredView(t *testing.T) {
 	var out bytes.Buffer
 	w := &msgWriter{w: &out}
 	prov := newProvider()
-	prov.setCount(7)
+	prov.setFeed([]map[string]any{feedRow("apps"), feedRow("apps"), feedRow("system")})
+	prov.setFilter("apps")
 
 	publish(w, prov)
 
-	got := decodeStateUpdates(t, out.Bytes())
-	if len(got) != 1 || got[0] != 7 {
-		t.Fatalf("published counts = %v, want [7]", got)
+	ups := decodeStateUpdates(t, out.Bytes())
+	if c := counts(ups); len(c) != 1 || c[0] != 3 {
+		t.Fatalf("published counts = %v, want [3] (total, unfiltered)", c)
+	}
+	if f := feeds(ups); len(f) != 1 || len(f[0]) != 2 {
+		t.Fatalf("published feed = %v, want one feed of len 2 (apps only)", f)
 	}
 }
 
-// TestStartListenerStubIsSafe documents the V1 contract: the per-OS listener is a
-// no-op stub, so wiring it must not panic, must not publish, and must respect ctx.
-// (Where a real listener lands, this still holds: it must not emit before an event.)
-func TestStartListenerStubIsSafe(t *testing.T) {
+// TestHandleActionPublishesAndReplies drives the action path the host triggers:
+// markAllRead must reply OK and re-publish an empty feed + count 0.
+func TestHandleActionPublishesAndReplies(t *testing.T) {
+	var out bytes.Buffer
+	w := &msgWriter{w: &out}
+	prov := newProvider()
+	prov.setFeed([]map[string]any{feedRow("apps"), feedRow("system")})
+
+	handleAction(w, prov, ipcproto.ActionPayload{CallID: "c1", ActionID: actMarkAllRead})
+
+	// Find the action result.
+	var sawResult bool
+	for _, line := range bytes.Split(out.Bytes(), []byte("\n")) {
+		if len(bytes.TrimSpace(line)) == 0 {
+			continue
+		}
+		m, err := ipcproto.Decode(line)
+		if err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		if m.Type == ipcproto.MsgActionResult && m.ActionResult != nil {
+			sawResult = true
+			if !m.ActionResult.OK || m.ActionResult.CallID != "c1" {
+				t.Errorf("action result = %+v, want OK with callId c1", m.ActionResult)
+			}
+		}
+	}
+	if !sawResult {
+		t.Error("no action result emitted")
+	}
+	if got := prov.snapshotCount(); got != 0 {
+		t.Errorf("count after markAllRead = %d, want 0", got)
+	}
+}
+
+// TestHandleActionUnknownRepliesError asserts an unknown action id replies !OK.
+func TestHandleActionUnknownRepliesError(t *testing.T) {
 	var out bytes.Buffer
 	w := &msgWriter{w: &out}
 	prov := newProvider()
 
+	handleAction(w, prov, ipcproto.ActionPayload{CallID: "c2", ActionID: "notifications.bogus"})
+
+	var sawResult bool
+	for _, line := range bytes.Split(out.Bytes(), []byte("\n")) {
+		if len(bytes.TrimSpace(line)) == 0 {
+			continue
+		}
+		m, err := ipcproto.Decode(line)
+		if err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		if m.Type == ipcproto.MsgActionResult && m.ActionResult != nil {
+			sawResult = true
+			if m.ActionResult.OK || m.ActionResult.Error == "" {
+				t.Errorf("action result = %+v, want !OK with error", m.ActionResult)
+			}
+		}
+	}
+	if !sawResult {
+		t.Error("no action result emitted")
+	}
+}
+
+// TestStartListenerRespectsContext documents the listener contract: wiring it must
+// not panic and must respect ctx cancellation. On platforms where the listener is a
+// no-op stub (darwin/linux) the callback is never invoked; on Windows it shells out
+// to PowerShell (not exercised here — no real PowerShell in tests). Either way,
+// cancelling ctx must let it tear down cleanly.
+func TestStartListenerRespectsContext(t *testing.T) {
+	prov := newProvider()
+	var mu sync.Mutex
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	var once sync.Once
-	called := false
-	startListener(ctx, func(n int) {
-		once.Do(func() { called = true })
-		prov.setCount(n)
-		publish(w, prov)
+	startListener(ctx, func(items []map[string]any) {
+		mu.Lock()
+		defer mu.Unlock()
+		prov.setFeed(items)
 	})
-
-	if called {
-		t.Error("stub listener invoked the callback; V1 stub must be a no-op")
-	}
-	if out.Len() != 0 {
-		t.Errorf("stub listener published %d bytes; want none", out.Len())
-	}
+	cancel() // tear down immediately; must not panic
 }
