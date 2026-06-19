@@ -12,4 +12,5 @@ use (
 	./plugins/notifications
 	./plugins/media
 	./plugins/system
+	./plugins/smarthome
 )

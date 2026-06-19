@@ -234,6 +234,19 @@ var PublishedTelemetryIDs = []string{
 	"game.profile.aaa",
 	"game.profile.streaming",
 	"game.profile.balanced",
+	"home.room.living",
+	"home.room.bedroom",
+	"home.room.kitchen",
+	"home.room.office",
+	"home.room.bathroom",
+	"home.lights.ceiling",
+	"home.lights.floor",
+	"home.tv",
+	"home.speaker",
+	"home.ac",
+	"home.coffee",
+	"home.auto.sunset",
+	"home.energy.now",
 }
 
 // StateBindings returns the distinct state ids a device's session subscribes to:

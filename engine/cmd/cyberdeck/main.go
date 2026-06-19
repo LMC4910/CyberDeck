@@ -320,6 +320,9 @@ func (h *hostService) Start(context.Context) error {
 	h.eng.launchPlugin("media", envIf(dryRun, "CYBERDECK_MEDIA_DRYRUN=1"))
 	// system: performance modes + maintenance utilities + fan local-state.
 	h.eng.launchPlugin("system", envIf(dryRun, "CYBERDECK_SYSTEM_DRYRUN=1"))
+	// smarthome: Home Assistant REST when CYBERDECK_HA_URL/TOKEN are set in the
+	// engine environment (inherited by the child); dry-run forces local-state only.
+	h.eng.launchPlugin("smarthome", envIf(dryRun, "CYBERDECK_SMARTHOME_DRYRUN=1"))
 	// notifications is read-only (publishes notification.count; no actions).
 	h.eng.launchPlugin("notifications", nil)
 	return nil
@@ -644,6 +647,25 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		"game.profile.set.aaa":          d("game.profile.set.aaa", "AAA Profile", "game", "system", false),
 		"game.profile.set.streaming":    d("game.profile.set.streaming", "Streaming Profile", "game", "system", false),
 		"game.profile.set.balanced":     d("game.profile.set.balanced", "Balanced Profile", "game", "system", false),
+		// smart home (plugins/smarthome — Home Assistant REST + persistent local-state)
+		"home.room.living.toggle":    d("home.room.living.toggle", "Living Room", "home", "smarthome", false),
+		"home.room.bedroom.toggle":   d("home.room.bedroom.toggle", "Bedroom", "home", "smarthome", false),
+		"home.room.kitchen.toggle":   d("home.room.kitchen.toggle", "Kitchen", "home", "smarthome", false),
+		"home.room.office.toggle":    d("home.room.office.toggle", "Office", "home", "smarthome", false),
+		"home.room.bathroom.toggle":  d("home.room.bathroom.toggle", "Bathroom", "home", "smarthome", false),
+		"home.lights.ceiling.toggle": d("home.lights.ceiling.toggle", "Ceiling Lights", "home", "smarthome", false),
+		"home.lights.floor.toggle":   d("home.lights.floor.toggle", "Floor Lamp", "home", "smarthome", false),
+		"home.tv.toggle":             d("home.tv.toggle", "Smart TV", "home", "smarthome", false),
+		"home.speaker.toggle":        d("home.speaker.toggle", "Speaker", "home", "smarthome", false),
+		"home.ac.toggle":             d("home.ac.toggle", "AC Unit", "home", "smarthome", false),
+		"home.coffee.toggle":         d("home.coffee.toggle", "Coffee Maker", "home", "smarthome", false),
+		"home.auto.sunset.toggle":    d("home.auto.sunset.toggle", "Sunset Automation", "home", "smarthome", false),
+		"home.scene.goodnight":       d("home.scene.goodnight", "Goodnight Scene", "home", "smarthome", false),
+		"home.scene.movie":           d("home.scene.movie", "Movie Scene", "home", "smarthome", false),
+		"home.scene.party":           d("home.scene.party", "Party Scene", "home", "smarthome", false),
+		"home.scene.focus":           d("home.scene.focus", "Focus Scene", "home", "smarthome", false),
+		"home.scene.morning":         d("home.scene.morning", "Morning Scene", "home", "smarthome", false),
+		"home.scene.away":            d("home.scene.away", "Away Scene", "home", "smarthome", false),
 	}
 }()}
 
