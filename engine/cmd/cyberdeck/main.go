@@ -666,6 +666,13 @@ var builtinLookup = staticLookup{m: func() map[string]registry.ActionDescriptor 
 		"home.scene.focus":           d("home.scene.focus", "Focus Scene", "home", "smarthome", false),
 		"home.scene.morning":         d("home.scene.morning", "Morning Scene", "home", "smarthome", false),
 		"home.scene.away":            d("home.scene.away", "Away Scene", "home", "smarthome", false),
+		// notifications (plugins/notifications — live action-center feed + filters)
+		"notifications.markAllRead":    d("notifications.markAllRead", "Mark All As Read", "notification", "notifications", false),
+		"notifications.filter.all":     d("notifications.filter.all", "All Notifications", "notification", "notifications", false),
+		"notifications.filter.apps":    d("notifications.filter.apps", "App Notifications", "notification", "notifications", false),
+		"notifications.filter.system":  d("notifications.filter.system", "System Notifications", "notification", "notifications", false),
+		"notifications.filter.alerts":  d("notifications.filter.alerts", "Alert Notifications", "notification", "notifications", false),
+		"notifications.history":        d("notifications.history", "Notification History", "notification", "notifications", false),
 	}
 }()}
 

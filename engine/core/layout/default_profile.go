@@ -210,6 +210,7 @@ var PublishedTelemetryIDs = []string{
 	"system.volume",
 	"system.muted",
 	"notification.count",
+	"notification.feed",
 	"media.nowplaying",
 	"media.playing",
 	"system.cpu.temp",
