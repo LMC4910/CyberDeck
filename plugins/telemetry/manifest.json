@@ -31,7 +31,9 @@
     "system.status",
     "system.cpu.temp",
     "system.net.ping",
-    "system.net"
+    "system.net",
+    "system.health.score",
+    "system.storage.used.tb"
   ],
   "contributes": {}
 }

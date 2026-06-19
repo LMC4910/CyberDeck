@@ -255,6 +255,16 @@ func (g *Gopsutil) StorageFree() (string, bool) {
 	return fmt.Sprintf("%.0f GB Free", free/(1<<30)), true
 }
 
+// StorageUsedTB reports the primary volume's used space in TB (binary, matching the
+// SystemInfo total). ok=false when the volume can't be read, so the tile shows "--".
+func (g *Gopsutil) StorageUsedTB() (float64, bool) {
+	u, err := disk.Usage(primaryMount())
+	if err != nil || u == nil || u.Total == 0 {
+		return 0, false
+	}
+	return float64(u.Used) / (1 << 40), true
+}
+
 // SystemInfo returns a best-effort snapshot of static host details for the
 // "Detailed System Info" card: OS, CPU model, total RAM, and primary-disk size.
 // Missing pieces are omitted so the card row keeps its authored literal.

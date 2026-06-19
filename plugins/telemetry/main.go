@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -223,6 +224,59 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadence
 		}()
 	}
 
+	// System health loop: a derived 0–100 score composed from live CPU/RAM load,
+	// CPU/GPU temperature and GPU load. Its own goroutine (composite read) and only
+	// when a real basis exists (else skipped → "--").
+	if cad.Health > 0 {
+		ctp, _ := prov.(cpuTempProvider)
+		go func() {
+			emit := func() {
+				if score, ok := computeHealth(prov, gpu, ctp); ok {
+					_ = w.write(ipcproto.Message{
+						Type:  ipcproto.MsgStateUpdate,
+						State: &ipcproto.StatePayload{ID: stateHealth, Value: score},
+					})
+				}
+			}
+			emit()
+			t := time.NewTicker(cad.Health)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-t.C:
+					emit()
+				}
+			}
+		}()
+	}
+
+	// Storage-used loop: the primary volume's used space in TB (System Overview tile).
+	if sup, ok := prov.(storageUsedProvider); ok && cad.Storage > 0 {
+		go func() {
+			emit := func() {
+				if tb, ok := sup.StorageUsedTB(); ok {
+					_ = w.write(ipcproto.Message{
+						Type:  ipcproto.MsgStateUpdate,
+						State: &ipcproto.StatePayload{ID: stateStorageUsedTB, Value: tb},
+					})
+				}
+			}
+			emit()
+			t := time.NewTicker(cad.Storage)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-t.C:
+					emit()
+				}
+			}
+		}()
+	}
+
 	// Heartbeat loop (liveness even when no metric is due).
 	go func() {
 		t := time.NewTicker(time.Second)
@@ -240,6 +294,60 @@ func run(in *os.File, out *os.File, prov pal.Telemetry, gpu pal.GPU, cad Cadence
 	// Drain stdin; loop ends when the host closes it.
 	for sc.Scan() {
 	}
+}
+
+// computeHealth derives a 0–100 system-health score from whatever live metrics are
+// readable: it starts at 100 and deducts for high CPU/RAM load, high CPU/GPU
+// temperature and high GPU load. Each band only penalises above a comfortable
+// threshold, so an idle, cool machine scores ~100. Returns ok=false when NO metric
+// is available (no real basis → the ring shows "--" rather than a fabricated number).
+func computeHealth(prov pal.Telemetry, gpu pal.GPU, ctp cpuTempProvider) (float64, bool) {
+	score := 100.0
+	used := false
+	if cpu, ok := prov.CPUPercent(); ok {
+		used = true
+		if cpu > 75 {
+			score -= (cpu - 75) * 0.5
+		}
+	}
+	if ram, ok := prov.MemUsedPercent(); ok {
+		used = true
+		if ram > 80 {
+			score -= (ram - 80) * 0.7
+		}
+	}
+	if gpu != nil {
+		if gl, ok := gpu.Load(); ok {
+			used = true
+			if gl > 85 {
+				score -= (gl - 85) * 0.3
+			}
+		}
+		if gt, ok := gpu.Temp(); ok {
+			used = true
+			if gt > 78 {
+				score -= (gt - 78) * 0.6
+			}
+		}
+	}
+	if ctp != nil {
+		if ct, ok := ctp.CPUTemp(); ok {
+			used = true
+			if ct > 75 {
+				score -= (ct - 75) * 0.6
+			}
+		}
+	}
+	if !used {
+		return 0, false
+	}
+	if score < 0 {
+		score = 0
+	}
+	if score > 100 {
+		score = 100
+	}
+	return math.Round(score), true
 }
 
 // formatUptime renders uptime seconds as "Dd Hh Mm" (dropping leading zero units)

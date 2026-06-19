@@ -132,7 +132,7 @@ func TestPublishDueEmitsAllMetricsFirstTick(t *testing.T) {
 	for _, id := range systemStates() {
 		switch id {
 		case stateSystemInfo, stateProcesses, stateStatus, stateCPUTemp,
-			stateNetPing, stateNetSummary:
+			stateNetPing, stateNetSummary, stateHealth, stateStorageUsedTB:
 			continue // published from their own goroutines, not via the cadence loop
 		}
 		if _, ok := st[id]; !ok {

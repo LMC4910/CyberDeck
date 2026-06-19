@@ -55,6 +55,12 @@ const (
 	// for the Networks card. Published from the net goroutine (ping shells out).
 	stateNetPing    = "system.net.ping"
 	stateNetSummary = "system.net"
+
+	// System Overview extras (composite/derived; published from their own goroutines).
+	// Health is a 0–100 heuristic derived from live CPU/RAM/temp/GPU load; storage is
+	// the primary volume's used space in TB. Both degrade to "--" when no real basis.
+	stateHealth         = "system.health.score"
+	stateStorageUsedTB  = "system.storage.used.tb"
 )
 
 // Per-drive mount points (Windows drive letters). Absent drives report ok=false
@@ -109,6 +115,12 @@ type pingProvider interface {
 	Ping() (float64, bool)
 }
 
+// storageUsedProvider supplies the primary volume's used space in TB for the System
+// Overview storage tile. Discovered by type assertion; absent → the tile shows "--".
+type storageUsedProvider interface {
+	StorageUsedTB() (float64, bool)
+}
+
 // Threshold-crossing event topics (under→over transitions only, no spam).
 const (
 	topicCPUHigh = "system.cpu.high"
@@ -126,7 +138,7 @@ func systemStates() []string {
 		stateRAMUsed, stateRAMFree, stateRAMTotal, stateNetRx, stateNetTx,
 		stateDiskC, stateDiskD, stateDiskE, stateDiskF,
 		stateSystemInfo, stateProcesses, stateStatus, stateCPUTemp,
-		stateNetPing, stateNetSummary,
+		stateNetPing, stateNetSummary, stateHealth, stateStorageUsedTB,
 	}
 }
 
@@ -142,6 +154,8 @@ type Cadences struct {
 	Status  time.Duration // system.status map (power plan / network / storage / uptime)
 	CPUTemp time.Duration // CPU temperature sensor (LHM; shells out, polled slowly)
 	Ping    time.Duration // network latency + summary map (ping shells out)
+	Health  time.Duration // derived 0–100 health score (composite of live metrics)
+	Storage time.Duration // primary-volume used space in TB
 }
 
 // DefaultCadences match 2G: fast gauges at 1s, storage at 10s, uptime at 60s. GPU
@@ -158,6 +172,8 @@ func DefaultCadences() Cadences {
 		Status:  10 * time.Second,
 		CPUTemp: 5 * time.Second,
 		Ping:    3 * time.Second,
+		Health:  2 * time.Second,
+		Storage: 10 * time.Second,
 	}
 }
 
