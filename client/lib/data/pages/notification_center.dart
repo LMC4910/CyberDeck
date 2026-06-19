@@ -218,6 +218,9 @@ List<WidgetNode> _notificationsFeed() {
         placement: at(16, 3, colSpan: 8, rowSpan: 12),
         title: 'Notifications',
         color: _kPurple,
+        // LIVE: the bound `notification.feed` list drives the rows; the static
+        // items below are the Demo/offline fallback when nothing is bound.
+        stateBinding: 'notification.feed',
         items: const [
           {
             'title': 'Discord',
@@ -225,6 +228,7 @@ List<WidgetNode> _notificationsFeed() {
             'time': '2m',
             'icon': 'app',
             'color': _kPurple,
+            'category': 'apps',
           },
           {
             'title': 'Spotify',
@@ -232,6 +236,7 @@ List<WidgetNode> _notificationsFeed() {
             'time': '5m',
             'icon': 'play',
             'color': _kGreen,
+            'category': 'apps',
           },
           {
             'title': 'System Update',
@@ -239,6 +244,7 @@ List<WidgetNode> _notificationsFeed() {
             'time': '18m',
             'icon': 'check',
             'color': _kBlue,
+            'category': 'system',
           },
           {
             'title': 'StreamHub',
@@ -246,6 +252,7 @@ List<WidgetNode> _notificationsFeed() {
             'time': '32m',
             'icon': 'star',
             'color': _kCyan,
+            'category': 'apps',
           },
           {
             'title': 'Security Alert',
@@ -253,6 +260,7 @@ List<WidgetNode> _notificationsFeed() {
             'time': '1h',
             'icon': 'alert',
             'color': _kRed,
+            'category': 'alerts',
           },
           {
             'title': 'Hardware Monitor',
@@ -260,6 +268,7 @@ List<WidgetNode> _notificationsFeed() {
             'time': '2h',
             'icon': 'temp',
             'color': _kAmber,
+            'category': 'alerts',
           },
         ]),
 

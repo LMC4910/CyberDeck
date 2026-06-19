@@ -31,6 +31,14 @@ class MockDeckSource implements DeckSource {
   Timer? _timer;
   double _phase = 0;
 
+  // Notification Center: the FULL feed (seeded) + the current category filter
+  // ('all' | 'apps' | 'system' | 'alerts'). Mark-all clears the live feed; the
+  // filter/history actions re-emit `notification.feed` from this full list.
+  final List<Map<String, dynamic>> _notifFeed = [
+    for (final r in seedNotificationFeed) Map<String, dynamic>.from(r),
+  ];
+  String _notifFilter = 'all';
+
   @override
   String get label => 'Demo Mode';
 
@@ -168,7 +176,36 @@ class MockDeckSource implements DeckSource {
       _set(id, !(_state[id] == true));
       return const ActionOutcome.success('Toggled');
     }
+    // Notification Center — mark-all clears the feed; filters re-emit the feed
+    // filtered by category; history re-shows everything. Mirrors the plugin.
+    if (actionId == 'notifications.markAllRead') {
+      _set('notification.feed', const <Map<String, dynamic>>[]);
+      _set('notification.count', 0);
+      return const ActionOutcome.success('All caught up');
+    }
+    if (actionId.startsWith('notifications.filter.')) {
+      final cat = actionId.substring('notifications.filter.'.length);
+      _notifFilter = cat;
+      _emitNotifFeed();
+      return ActionOutcome.success(
+          cat == 'all' ? 'Showing all' : 'Showing ${_titleCase(cat)}');
+    }
+    if (actionId == 'notifications.history') {
+      _notifFilter = 'all';
+      _emitNotifFeed();
+      return const ActionOutcome.success('Showing all');
+    }
     return ActionOutcome.success(_friendly(actionId));
+  }
+
+  /// Re-emits `notification.feed` from the full list under the current filter
+  /// ('all' → everything; otherwise only matching `category` rows) + the count.
+  void _emitNotifFeed() {
+    final rows = _notifFilter == 'all'
+        ? _notifFeed
+        : [for (final r in _notifFeed) if (r['category'] == _notifFilter) r];
+    _set('notification.feed', rows);
+    _set('notification.count', rows.length);
   }
 
   ActionOutcome _togglePlaying() {

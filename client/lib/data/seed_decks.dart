@@ -223,4 +223,65 @@ Map<String, Object?> seedInitialState() => {
       'home.cam.front': 'LIVE',
       'home.cam.back': 'LIVE',
       'home.cam.garage': 'OFFLINE',
+
+      // ── Notification Center: live feed + unread count ───────────────────────
+      // Category-tagged rows (apps/system/alerts) mirroring the page's static
+      // fallback; the mock source derives its in-memory full feed from this seed
+      // and the filter/mark-all actions re-emit `notification.feed`.
+      'notification.feed': seedNotificationFeed,
+      'notification.count': seedNotificationFeed.length,
     };
+
+/// The seed notification feed (category-tagged rows). Shared so Demo Mode's
+/// mock source can use the same full list it seeds into state. Row shape:
+/// `{title, body, time, icon, color, category}`, `category ∈ {apps, system, alerts}`.
+const List<Map<String, dynamic>> seedNotificationFeed = [
+  {
+    'title': 'Discord',
+    'body': 'Alex sent a message in #stream-team',
+    'time': '2m',
+    'icon': 'app',
+    'color': '#8B5CF6',
+    'category': 'apps',
+  },
+  {
+    'title': 'Spotify',
+    'body': 'Now playing: Blinding Lights — The Weeknd',
+    'time': '5m',
+    'icon': 'play',
+    'color': '#10B981',
+    'category': 'apps',
+  },
+  {
+    'title': 'System Update',
+    'body': 'Windows 11 update installed successfully',
+    'time': '18m',
+    'icon': 'check',
+    'color': '#3B82F6',
+    'category': 'system',
+  },
+  {
+    'title': 'StreamHub',
+    'body': r'New donation from Aled — $10',
+    'time': '32m',
+    'icon': 'star',
+    'color': '#22D3EE',
+    'category': 'apps',
+  },
+  {
+    'title': 'Security Alert',
+    'body': 'New login detected on Windows',
+    'time': '1h',
+    'icon': 'alert',
+    'color': '#EF4444',
+    'category': 'alerts',
+  },
+  {
+    'title': 'Hardware Monitor',
+    'body': 'CPU temperature is above 80°C',
+    'time': '2h',
+    'icon': 'temp',
+    'color': '#F59E0B',
+    'category': 'alerts',
+  },
+];

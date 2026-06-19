@@ -25,7 +25,11 @@ Widget buildNotificationList(BuildContext context, WidgetRenderContext ctx) {
   final style = node.appearance.style;
   final accent = resolveAccent(style);
   final title = style['title'] as String? ?? node.config['title'] as String?;
-  final items = _items(node.config['items']);
+  final configItems = _items(node.config['items']);
+  // A bound LIST drives the live feed (e.g. notification.feed); otherwise the
+  // authored config.items render (the Demo/offline fallback). Mirrors list.card.
+  final boundList = ctx.value is List ? _items(ctx.value) : null;
+  final items = boundList ?? configItems;
 
   return CardChrome(
     key: Key('notification-list-${node.id}'),

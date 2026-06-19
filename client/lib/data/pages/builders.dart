@@ -539,15 +539,19 @@ WidgetNode notificationList(
   String? title,
   List<Map<String, dynamic>> items = const [],
   String? color,
+  String? stateBinding,
 }) =>
     WidgetNode(
       id: id,
       type: 'notification.list',
       placement: placement,
-      appearance: Appearance(style: {
-        'title': ?title,
-        'color': ?color,
-      }),
+      appearance: Appearance(
+        stateBinding: stateBinding,
+        style: {
+          'title': ?title,
+          'color': ?color,
+        },
+      ),
       config: {'items': items},
     );
 
