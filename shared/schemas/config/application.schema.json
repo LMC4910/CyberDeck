@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/config/application.schema.json",
+  "title": "CyberDeck Application Configuration",
+  "description": "Product identity, boot manifest and API routing. Ships with the app; not editable by users or extensions (01_Architecture_Baseline.md §4). CD-108.",
+  "x-editability": {
+    "user": "none",
+    "extension": "none",
+    "persisted": true,
+    "owner": "system — install dir"
+  },
+  "type": "object",
+  "required": ["version", "identity", "api"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "document schema version; bump only with a registered migration (CD-109)"
+    },
+    "identity": {
+      "type": "object",
+      "required": ["name", "productVersion", "channel"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "productVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$",
+          "description": "semver of the installed product"
+        },
+        "channel": { "enum": ["stable", "beta", "dev"] }
+      }
+    },
+    "boot": {
+      "type": "object",
+      "required": ["manifest"],
+      "additionalProperties": false,
+      "properties": {
+        "manifest": {
+          "type": "array",
+          "minItems": 1,
+          "description": "ordered boot stages (BOOTSEQ()); blocking stages gate first paint",
+          "items": {
+            "type": "object",
+            "required": ["stage", "blocking"],
+            "additionalProperties": false,
+            "properties": {
+              "stage": { "type": "string", "minLength": 1 },
+              "blocking": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "required": ["gateway"],
+      "additionalProperties": false,
+      "properties": {
+        "gateway": {
+          "enum": ["mock", "engine"],
+          "description": "which ApiGateway the repositories resolve through (mock-first rule)"
+        },
+        "engineUrl": {
+          "type": "string",
+          "pattern": "^(https?|wss?)://",
+          "description": "control-plane endpoint; required only when gateway = engine"
+        }
+      }
+    }
+  }
+}

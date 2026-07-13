@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "workspaceId": "flows",
+  "panels": [
+    {
+      "id": "explorer",
+      "side": "left",
+      "size": 280,
+      "visible": true,
+      "collapsed": false
+    },
+    {
+      "id": "inspector",
+      "side": "right",
+      "size": 320
+    }
+  ],
+  "presets": [
+    {
+      "name": "authoring",
+      "panels": [
+        {
+          "id": "explorer",
+          "side": "left",
+          "size": 240
+        }
+      ]
+    }
+  ]
+}

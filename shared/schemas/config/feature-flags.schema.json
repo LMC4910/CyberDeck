@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/config/feature-flags.schema.json",
+  "title": "CyberDeck Feature Flags",
+  "description": "The 7 platform feature flags — mirrors the design's FLAGDEFS() exactly (ids, defaults, semantics). User-editable for dev/experimental flags only; system flags are app-managed (01_Architecture_Baseline.md §4). CD-108.",
+  "x-editability": {
+    "user": "dev-only",
+    "extension": "none",
+    "persisted": true,
+    "owner": "user config; system flags app-managed"
+  },
+  "type": "object",
+  "required": ["version", "features"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "document schema version; bump only with a registered migration (CD-109)"
+    },
+    "features": {
+      "type": "object",
+      "required": [
+        "expWidgets",
+        "devTools",
+        "aiProviders",
+        "marketplace",
+        "cloudSync",
+        "automation",
+        "pluginSandbox"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "expWidgets": {
+          "type": "boolean",
+          "default": false,
+          "description": "Experimental Widgets — unreleased manifests are discovered but hidden from Insert"
+        },
+        "devTools": {
+          "type": "boolean",
+          "default": true,
+          "description": "Developer Tools — Platform Inspector · boot replay · architecture markers"
+        },
+        "aiProviders": {
+          "type": "boolean",
+          "default": true,
+          "description": "AI Providers — pluggable completion backends behind AIService"
+        },
+        "marketplace": {
+          "type": "boolean",
+          "default": false,
+          "description": "Marketplace — extension browsing + one-click install"
+        },
+        "cloudSync": {
+          "type": "boolean",
+          "default": false,
+          "description": "Cloud Sync — workspace + project sync via SyncService"
+        },
+        "automation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automation Engine — flow scheduler + background triggers"
+        },
+        "pluginSandbox": {
+          "type": "boolean",
+          "default": true,
+          "description": "Plugin Sandbox — run extensions in isolated workers"
+        }
+      }
+    }
+  }
+}

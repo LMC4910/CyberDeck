@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "theme": {
+    "id": "cyber-dark",
+    "mode": "dark"
+  },
+  "density": "compact",
+  "keymap": "default",
+  "telemetry": {
+    "enabled": true,
+    "crashReports": true
+  }
+}

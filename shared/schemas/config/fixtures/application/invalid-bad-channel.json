@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "identity": {
+    "name": "CyberDeck",
+    "productVersion": "2.0.0",
+    "channel": "nightly"
+  },
+  "api": {
+    "gateway": "mock"
+  }
+}

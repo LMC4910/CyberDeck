@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "bindings": [
+    {
+      "command": "UndoNow",
+      "key": "Ctrl+Z"
+    }
+  ]
+}

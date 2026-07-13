@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/config/keymap.schema.json",
+  "title": "CyberDeck Keymap Configuration",
+  "description": "Keybindings: user rebinds plus extension-contributed bindings (01_Architecture_Baseline.md §4). Dispatch + rebinding store is CD-122. CD-108.",
+  "x-editability": {
+    "user": "full",
+    "extension": "contribute",
+    "persisted": true,
+    "owner": "user config + extension manifests"
+  },
+  "type": "object",
+  "required": ["version", "bindings"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "document schema version; bump only with a registered migration (CD-109)"
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "key"],
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "type": "string",
+            "pattern": "^[a-z][a-zA-Z0-9]*(\\.[a-z][a-zA-Z0-9]*)+$",
+            "description": "command id from the command registry, e.g. view.commandPalette"
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "description": "chord string, e.g. \"Ctrl+K Ctrl+S\""
+          },
+          "when": {
+            "type": "string",
+            "description": "context expression gating the binding, e.g. workspace == deck-designer"
+          },
+          "source": {
+            "enum": ["default", "user", "extension"],
+            "default": "user",
+            "description": "who contributed the binding; user bindings shadow defaults"
+          }
+        }
+      }
+    }
+  }
+}

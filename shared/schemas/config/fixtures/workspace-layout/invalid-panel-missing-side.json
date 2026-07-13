@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "workspaceId": "flows",
+  "panels": [
+    {
+      "id": "explorer",
+      "size": 280
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "bindings": [
+    {
+      "command": "view.commandPalette",
+      "key": "Ctrl+Shift+P",
+      "source": "default"
+    },
+    {
+      "command": "edit.undo",
+      "key": "Ctrl+Z"
+    },
+    {
+      "command": "deck.insertWidget",
+      "key": "Ctrl+I",
+      "when": "workspace == deck-designer",
+      "source": "user"
+    }
+  ]
+}

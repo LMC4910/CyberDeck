@@ -12,7 +12,7 @@
 - [x] CD-105 CI: IDE workflow + bundle budget — ✅ Done 2026-07-14 (CI green pending next push)
 - [x] CD-106 CI: engine + player workflows — ✅ Done 2026-07-14 (pre-existing ci.yml already covers it)
 - [x] CD-107 Test harness: vitest + RTL + utilities — ✅ Done 2026-07-14
-- [ ] CD-108 Schemas: configuration areas + fixtures
+- [x] CD-108 Schemas: configuration areas + fixtures — ✅ Done 2026-07-14
 - [ ] CD-109 Layer-merge semantics + migration convention
 - [ ] CD-110 Schema: widget manifest v2 + canon manifests
 - [ ] CD-111 Schemas: project doc + published layout + ID rules
@@ -114,8 +114,10 @@
 **BP:** CON-E01-F01-T01 · **Hat:** BE+FE · **P:** P0 · **Est:** M · **Deps:** CD-101
 **Do:** `shared/schemas/config/`: application, user-prefs, workspace-layout, session, feature-flags (the 7 `FLAGDEFS()` ids), keymap. Each: editability flags per `01` §4, `version` field, ≥2 valid + ≥2 invalid fixtures.
 **AC:**
-- [ ] all six schemas + fixtures validate (ajv + gojsonschema)
-- [ ] flags schema mirrors design `FLAGDEFS()` exactly
+- [x] all six schemas + fixtures validate (ajv + gojsonschema)
+- [x] flags schema mirrors design `FLAGDEFS()` exactly
+
+**Notes (2026-07-14):** Six draft-2020-12 schemas in `shared/schemas/config/` (matching the existing suite's dialect), each with root `x-editability` (user/extension/persisted/owner per `01` §4), `version: const 1` (bump = registered migration, CD-109), `additionalProperties: false` throughout, and 4 fixtures (24 total) under `fixtures/<area>/`. Dual validation: TS via ajv (Ajv2020) in `ide/src/shared/schemas/config-schemas.test.ts` (runs in the CI ide job; also asserts the FLAGDEFS mirror — 7 ids + defaults transcribed from the design at line 2613); Go via **santhosh-tekuri/jsonschema/v6** in `engine/core/schemas/config_schemas_test.go` (runs in the CI engine jobs). *Deviation:* the ticket names gojsonschema, but it tops out at draft-07 and can't compile 2020-12 schemas — substituted the actively-maintained santhosh-tekuri lib. All green: 41 vitest + `go test ./core/schemas` pass; `go vet`/`go build ./...` clean.
 
 ### CD-109 · Layer-merge semantics + migration convention
 **BP:** CON-E01-F01-T02/T03 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-108

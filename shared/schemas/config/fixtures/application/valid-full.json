@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "identity": {
+    "name": "CyberDeck",
+    "productVersion": "2.1.0-beta.1",
+    "channel": "beta"
+  },
+  "boot": {
+    "manifest": [
+      {
+        "stage": "boot-manager",
+        "blocking": true
+      },
+      {
+        "stage": "configuration-loader",
+        "blocking": true
+      },
+      {
+        "stage": "widget-registry",
+        "blocking": false
+      }
+    ]
+  },
+  "api": {
+    "gateway": "engine",
+    "engineUrl": "ws://127.0.0.1:8787/control"
+  }
+}

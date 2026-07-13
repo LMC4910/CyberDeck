@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "activeWorkspace": "deck-designer",
+  "openProjectId": "proj-42",
+  "selection": [
+    "widget-7",
+    "widget-9"
+  ],
+  "zoom": 1.5,
+  "window": {
+    "x": 100,
+    "y": 60,
+    "width": 1600,
+    "height": 900,
+    "maximized": false
+  },
+  "savedAt": "2026-07-14T09:30:00Z"
+}

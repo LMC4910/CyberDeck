@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "features": {
+    "expWidgets": false,
+    "devTools": true,
+    "aiProviders": true,
+    "marketplace": false,
+    "cloudSync": false,
+    "automation": true
+  }
+}

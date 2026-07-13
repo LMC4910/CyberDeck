@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "features": {
+    "expWidgets": true,
+    "devTools": false,
+    "aiProviders": false,
+    "marketplace": false,
+    "cloudSync": false,
+    "automation": true,
+    "pluginSandbox": true
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/config/workspace-layout.schema.json",
+  "title": "CyberDeck Workspace Layout Configuration",
+  "description": "Per-workspace panel layout, sizes and presets. Edited implicitly through the UI (dragging panels), never by extensions (01_Architecture_Baseline.md §4). CD-108.",
+  "x-editability": {
+    "user": "implicit",
+    "extension": "none",
+    "persisted": true,
+    "owner": "IDE — user config dir"
+  },
+  "type": "object",
+  "required": ["version", "workspaceId", "panels"],
+  "additionalProperties": false,
+  "$defs": {
+    "panel": {
+      "type": "object",
+      "required": ["id", "side"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "side": { "enum": ["left", "right", "bottom", "top"] },
+        "size": {
+          "type": "number",
+          "minimum": 0,
+          "description": "panel extent in px along its docking axis"
+        },
+        "visible": { "type": "boolean", "default": true },
+        "collapsed": { "type": "boolean", "default": false }
+      }
+    }
+  },
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "document schema version; bump only with a registered migration (CD-109)"
+    },
+    "workspaceId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "workspace this layout belongs to, e.g. deck-designer"
+    },
+    "panels": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/panel" }
+    },
+    "presets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "panels"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "panels": { "type": "array", "items": { "$ref": "#/$defs/panel" } }
+        }
+      }
+    }
+  }
+}

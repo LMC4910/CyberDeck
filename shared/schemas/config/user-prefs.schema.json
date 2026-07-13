@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/config/user-prefs.schema.json",
+  "title": "CyberDeck User Preferences",
+  "description": "Theme, density, active keymap and telemetry consent. Fully user-editable; extensions may not write it (01_Architecture_Baseline.md §4). CD-108.",
+  "x-editability": {
+    "user": "full",
+    "extension": "none",
+    "persisted": true,
+    "owner": "IDE — user config dir"
+  },
+  "type": "object",
+  "required": ["version"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "document schema version; bump only with a registered migration (CD-109)"
+    },
+    "theme": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "description": "active theme id" },
+        "mode": { "enum": ["dark", "light", "system"] }
+      }
+    },
+    "density": { "enum": ["comfortable", "compact", "spacious"] },
+    "keymap": {
+      "type": "string",
+      "minLength": 1,
+      "description": "active keymap id; individual rebinds live in the keymap document"
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "description": "opt-in at first run (decision D4)",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "crashReports": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}
