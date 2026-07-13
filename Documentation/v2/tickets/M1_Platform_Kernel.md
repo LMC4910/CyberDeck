@@ -13,7 +13,7 @@
 - [x] CD-106 CI: engine + player workflows — ✅ Done 2026-07-14 (pre-existing ci.yml already covers it)
 - [x] CD-107 Test harness: vitest + RTL + utilities — ✅ Done 2026-07-14
 - [x] CD-108 Schemas: configuration areas + fixtures — ✅ Done 2026-07-14
-- [ ] CD-109 Layer-merge semantics + migration convention
+- [x] CD-109 Layer-merge semantics + migration convention — ✅ Done 2026-07-14 (spec pending maintainer review)
 - [ ] CD-110 Schema: widget manifest v2 + canon manifests
 - [ ] CD-111 Schemas: project doc + published layout + ID rules
 - [ ] CD-112 Schema: flow document + triggers
@@ -123,8 +123,10 @@
 **BP:** CON-E01-F01-T02/T03 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-108
 **Do:** Written spec: precedence (`defaults←app←user←workspace←runtime`), array strategy, delete markers, SettingsChanged delta shape; migration registry pattern with one worked v1→v2 example.
 **AC:**
-- [ ] spec committed beside the schemas; reviewed
-- [ ] edge cases enumerated (scalar/object/array conflicts)
+- [ ] spec committed beside the schemas; reviewed — *committed; maintainer review pending*
+- [x] edge cases enumerated (scalar/object/array conflicts)
+
+**Notes (2026-07-14):** Spec at `shared/schemas/config/MERGE_AND_MIGRATION.md`. Key decisions: arrays replace **atomically** (no concat/byId until a real use case), delete marker is `{"$unset": true}` (null is a legitimate value), layers validate before AND after merge with broken-layer fallback so a corrupt user file can't kill boot, SettingsChanged deltas are per-path on the merged view with a per-area revision counter, migrations are single-hop pure functions run per layer document before merge, newer-than-app documents are rejected not down-migrated. 13 edge cases enumerated. Worked v1→v2 example: user-prefs keymap string→object. Implementation lands with CD-117/118.
 
 ### CD-110 · Schema: widget manifest v2 + canon manifests
 **BP:** CON-E01-F02 · **Hat:** FE+BE · **P:** P0 · **Est:** M · **Deps:** CD-108
