@@ -12,7 +12,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --noEmit",
-    "lint": "oxlint",
+    "lint": "eslint src --ignore-pattern \"**/__fixture-*__/**\"",
+    "test:boundaries": "node --test scripts/",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -24,8 +25,11 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
-    "oxlint": "^1.71.0",
+    "eslint": "^10.7.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^7.0.2",
     "typescript": "~6.0.2",
+    "typescript-eslint": "^8.64.0",
     "vite": "^8.1.1"
   }
 }

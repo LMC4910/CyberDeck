@@ -1,32 +1,41 @@
-# React + TypeScript + Vite
+# CyberDeck IDE
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite app; ships in a Tauri shell (M6). Runs fully featured on the MockApiGateway — the Go engine is a deployment-time swap, never a code dependency.
 
-Currently, two official plugins are available:
+## Layout (`src/`)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Folder | Layer | Holds |
+|---|---|---|
+| `shared/` | Shared | IDE-internal types/utils; generated contract types land here |
+| `platform/` | Platform kernel | BootManager, ServiceContainer, EventBus, Command Registry |
+| `services/` | Services | single-responsibility platform services, resolved by interface |
+| `repositories/` | Data access | per-domain repositories + gateway (Mock \| Engine) — the only layer that talks to the gateway |
+| `stores/` | State | domain stores; UI subscribes, never mutates directly |
+| `workspaces/<name>/` | Feature | one folder per workspace (deck-designer, flows, …) |
+| `widgets/<id>/` | Feature | self-contained widget modules loaded from manifests |
+| `extensions/<id>/` | Feature | sandboxed extension host code |
+| `src/*` (root files) | App shell | `main.tsx`, `App.tsx` |
 
-## React Compiler
+## Allowed-dependency matrix
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Enforced by `eslint-plugin-boundaries` (`boundaries/dependencies` rule in `eslint.config.js`). **Default is deny** — an import pair not listed here fails lint. Cross-feature imports (workspace→workspace, widget→widget, …) are always denied; features communicate via stores/events.
 
-## Expanding the Oxlint configuration
+| From ↓ may import → | shared | platform | services | repositories | stores | workspaces | widgets |
+|---|---|---|---|---|---|---|---|
+| **shared** | — | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| **platform** | ✔ | — | ✖ | ✖ | ✖ | ✖ | ✖ |
+| **services** | ✔ | ✔ | — | ✖ | ✖ | ✖ | ✖ |
+| **repositories** | ✔ | ✔ | ✔ | — | ✖ | ✖ | ✖ |
+| **stores** | ✔ | ✔ | ✔ | ✔ | — | ✖ | ✖ |
+| **workspaces/<n>** | ✔ | ✔ | ✔ | ✖ | ✔ | ✖ | ✖ |
+| **widgets/<id>** | ✔ | ✔ | ✔ | ✖ | ✔ | ✖ | ✖ |
+| **extensions/<id>** | ✔ | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| **app shell** | ✔ | ✔ | ✔ | ✖ | ✔ | ✔ | ✖ |
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+The rule is proven by committed fixtures: `src/workspaces/__fixture-b__` imports from `__fixture-a__`, and `pnpm test:boundaries` asserts lint reports it (fixtures are excluded from the plain `pnpm lint` run).
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+## Scripts
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`pnpm dev` · `pnpm build` (tsc + vite) · `pnpm typecheck` · `pnpm lint` · `pnpm test:boundaries`
+
+Toolchain pinned: Node 20.19.x / pnpm 10.34.x (`engines`, `packageManager`, root `.tool-versions`). Path alias: `@/* → src/*`.

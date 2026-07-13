@@ -7,7 +7,7 @@
 
 - [x] CD-101 Kickoff confirmation (assumptions, decisions, stack ADR) — ✅ Done 2026-07-13
 - [x] CD-102 Scaffold `ide/` app — ✅ Done 2026-07-13
-- [ ] CD-103 Folder structure + lint boundaries
+- [x] CD-103 Folder structure + lint boundaries — ✅ Done 2026-07-13
 - [ ] CD-104 Taskfile targets for the IDE
 - [ ] CD-105 CI: IDE workflow + bundle budget
 - [ ] CD-106 CI: engine + player workflows
@@ -71,8 +71,10 @@
 **BP:** DEV-E01-F01-T02 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-102
 **Do:** Create `platform/ services/ repositories/ stores/ workspaces/ widgets/ extensions/ shared/`; eslint boundaries plugin with the allowed-dependency matrix from `01` §17; README (≤1 page).
 **AC:**
-- [ ] fixture cross-feature import fails lint (test committed)
-- [ ] README documents the matrix
+- [x] fixture cross-feature import fails lint (test committed)
+- [x] README documents the matrix
+
+**Notes (2026-07-13):** All 8 layer folders created under `ide/src/`. Swapped template oxlint for ESLint 10 + typescript-eslint + eslint-plugin-boundaries v7 (`boundaries/dependencies` rule, default-deny, v7 `policies` syntax). Matrix documented in `ide/README.md`. Committed fixtures `src/workspaces/__fixture-a__/__fixture-b__` prove a cross-workspace import fails lint; `pnpm test:boundaries` (node --test + ESLint API) asserts it in CI-runnable form. `pnpm lint` clean, tests 2/2, build green.
 
 ### CD-104 · Taskfile targets for the IDE
 **BP:** DEV-E01-F01-T03 · **Hat:** DO · **P:** P1 · **Est:** S · **Deps:** CD-102
