@@ -1,0 +1,76 @@
+{
+  "id": "gauge.circular",
+  "version": "1.2.0",
+  "metadata": {
+    "label": "Circular Gauge",
+    "icon": "gauge",
+    "category": "Live Data",
+    "description": "Radial gauge for a scalar variable with warn threshold and peak tracking.",
+    "tags": [
+      "metric",
+      "ring"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "min": {
+        "type": "number"
+      },
+      "max": {
+        "type": "number"
+      },
+      "warn": {
+        "type": "number"
+      }
+    }
+  },
+  "defaults": {
+    "min": 0,
+    "max": 100,
+    "warn": 80
+  },
+  "acceptsStateKinds": [
+    "scalar"
+  ],
+  "gestures": [
+    "tap",
+    "hold"
+  ],
+  "permissions": [],
+  "dependencies": {
+    "platform": ">=2.0",
+    "widgets": []
+  },
+  "dataProvider": {
+    "repo": "variables",
+    "subscribe": true
+  },
+  "refresh": {
+    "strategy": "push"
+  },
+  "caching": {
+    "policy": "swr",
+    "ttl": 30
+  },
+  "lifecycle": {
+    "lazy": true,
+    "chunk": "gauges"
+  },
+  "actions": [
+    {
+      "id": "reset",
+      "label": "Reset peak"
+    }
+  ],
+  "events": {
+    "subscribes": [
+      "VariableChanged"
+    ],
+    "emits": []
+  },
+  "persistedState": [
+    "peakValue"
+  ]
+}

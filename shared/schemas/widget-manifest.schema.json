@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/widget-manifest.schema.json",
+  "title": "CyberDeck Widget Manifest v2",
+  "description": "Production widget manifest per 01_Architecture_Baseline.md §5 — the v2 extension of widget.schema.json (the v1 engine descriptor, kept for the live engine; see widgets/DESCRIPTOR_MAPPING.md). Widgets are discovered from these manifests, never manually imported. CD-110.",
+  "type": "object",
+  "required": ["id", "version", "metadata"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$",
+      "description": "unique widget id, e.g. gauge.circular (v1 descriptor field: type)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$",
+      "description": "semver of the widget module"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["label"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "icon": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "configSchema": {
+      "type": "object",
+      "description": "JSON Schema for instance settings (v1 descriptor used a flat name/type list)"
+    },
+    "defaults": {
+      "type": "object",
+      "description": "default instance config; must validate against configSchema"
+    },
+    "acceptsStateKinds": {
+      "type": "array",
+      "items": { "enum": ["scalar", "text", "boolean", "enum", "series"] },
+      "description": "state kinds the designer may bind (same vocabulary as v1)"
+    },
+    "gestures": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "interaction slots the widget exposes, e.g. tap, hold"
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "network",
+          "notifications",
+          "media",
+          "git",
+          "devices",
+          "environment",
+          "filesystem",
+          "clipboard",
+          "automation"
+        ]
+      },
+      "description": "declared capabilities — enum is exactly the design's PERMS() vocabulary (§12); undeclared capabilities are denied at runtime"
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "description": "required platform version range, e.g. >=2.0"
+        },
+        "widgets": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$" }
+        }
+      }
+    },
+    "dataProvider": {
+      "type": "object",
+      "required": ["repo"],
+      "additionalProperties": false,
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1,
+          "description": "repository the widget reads through, e.g. variables"
+        },
+        "subscribe": { "type": "boolean", "default": false }
+      }
+    },
+    "refresh": {
+      "type": "object",
+      "required": ["strategy"],
+      "additionalProperties": false,
+      "properties": {
+        "strategy": { "enum": ["push", "poll", "manual"] },
+        "interval": {
+          "type": "integer",
+          "minimum": 100,
+          "description": "poll interval in ms; required when strategy = poll"
+        }
+      },
+      "if": { "properties": { "strategy": { "const": "poll" } } },
+      "then": { "required": ["strategy", "interval"] }
+    },
+    "caching": {
+      "type": "object",
+      "required": ["policy"],
+      "additionalProperties": false,
+      "properties": {
+        "policy": { "enum": ["none", "swr", "ttl"] },
+        "ttl": { "type": "number", "minimum": 0, "description": "seconds" }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lazy": { "type": "boolean", "default": true },
+        "chunk": {
+          "type": "string",
+          "minLength": 1,
+          "description": "code-split chunk name the module loads from"
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9-]*$" },
+          "label": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "subscribes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "emits": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "persistedState": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "state keys persisted into the project document, keyed by stable instance id"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "rgb.controller",
+  "version": "1.0.0",
+  "metadata": {
+    "label": "RGB Controller"
+  },
+  "permissions": [
+    "superuser"
+  ]
+}

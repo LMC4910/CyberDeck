@@ -1,0 +1,10 @@
+{
+  "id": "stats.system",
+  "version": "1.0.0",
+  "metadata": {
+    "label": "System Stats"
+  },
+  "refresh": {
+    "strategy": "poll"
+  }
+}

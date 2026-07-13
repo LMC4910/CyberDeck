@@ -1,0 +1,81 @@
+{
+  "id": "button.action",
+  "version": "1.0.0",
+  "metadata": {
+    "label": "Action Button",
+    "icon": "bolt",
+    "category": "Controls",
+    "description": "Tap to run a flow or command; hold for the secondary action.",
+    "tags": [
+      "button",
+      "trigger"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "label": {
+        "type": "string"
+      },
+      "icon": {
+        "type": "string"
+      },
+      "confirm": {
+        "type": "boolean"
+      }
+    }
+  },
+  "defaults": {
+    "label": "Run",
+    "confirm": false
+  },
+  "acceptsStateKinds": [
+    "boolean",
+    "text"
+  ],
+  "gestures": [
+    "tap",
+    "hold"
+  ],
+  "permissions": [
+    "automation"
+  ],
+  "dependencies": {
+    "platform": ">=2.0",
+    "widgets": []
+  },
+  "dataProvider": {
+    "repo": "flows",
+    "subscribe": false
+  },
+  "refresh": {
+    "strategy": "manual"
+  },
+  "caching": {
+    "policy": "none"
+  },
+  "lifecycle": {
+    "lazy": true,
+    "chunk": "controls"
+  },
+  "actions": [
+    {
+      "id": "invoke",
+      "label": "Run action"
+    },
+    {
+      "id": "invoke-secondary",
+      "label": "Run secondary action"
+    }
+  ],
+  "events": {
+    "subscribes": [
+      "FlowDeployed"
+    ],
+    "emits": [
+      "ActionInvoked"
+    ]
+  },
+  "persistedState": []
+}

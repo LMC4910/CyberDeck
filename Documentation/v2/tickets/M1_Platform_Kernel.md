@@ -14,7 +14,7 @@
 - [x] CD-107 Test harness: vitest + RTL + utilities — ✅ Done 2026-07-14
 - [x] CD-108 Schemas: configuration areas + fixtures — ✅ Done 2026-07-14
 - [x] CD-109 Layer-merge semantics + migration convention — ✅ Done 2026-07-14 (spec pending maintainer review)
-- [ ] CD-110 Schema: widget manifest v2 + canon manifests
+- [x] CD-110 Schema: widget manifest v2 + canon manifests — ✅ Done 2026-07-14
 - [ ] CD-111 Schemas: project doc + published layout + ID rules
 - [ ] CD-112 Schema: flow document + triggers
 - [ ] CD-113 Control-plane envelope + route-registry format + error model
@@ -132,8 +132,10 @@
 **BP:** CON-E01-F02 · **Hat:** FE+BE · **P:** P0 · **Est:** M · **Deps:** CD-108
 **Do:** Extend `widget.schema.json` with the 15 fields of `01` §5 (permissions enum = `PERMS()` vocabulary). Author `gauge.circular`, `button.action`, `media.nowplaying` manifests. Old-descriptor→new-field mapping note for ENG.
 **AC:**
-- [ ] 3 canon manifests validate; invalid fixtures (undeclared permission, bad semver) rejected
-- [ ] mapping note lists every engine descriptor gap
+- [x] 3 canon manifests validate; invalid fixtures (undeclared permission, bad semver) rejected
+- [x] mapping note lists every engine descriptor gap
+
+**Notes (2026-07-14):** v2 authored as a NEW schema `shared/schemas/widget-manifest.schema.json` rather than editing `widget.schema.json` in place — the v1 descriptor is enforced by the live engine (PROJ-161) and mutating it would break v1 consumers before the M5 swap; `widgets/DESCRIPTOR_MAPPING.md` records the field mapping + all 11 engine descriptor gaps + M5 adoption order. All 16 §5 fields covered; `permissions` enum = exactly the 9 PERMS() capability ids (network, notifications, media, git, devices, environment, filesystem, clipboard, automation); poll strategy requires `interval` via if/then. Canon manifests in `shared/schemas/widgets/`; 3 invalid fixtures (undeclared permission, bad semver, poll-without-interval). Dual-validated (ajv 51-test suite + Go twin); tests also assert filename=id and that each manifest's `defaults` validate against its own `configSchema`.
 
 ### CD-111 · Schemas: project doc + published layout + ID rules
 **BP:** CON-E01-F03 · **Hat:** FE+BE · **P:** P0 · **Est:** L · **Deps:** CD-110

@@ -1,0 +1,81 @@
+{
+  "id": "media.nowplaying",
+  "version": "1.1.0",
+  "metadata": {
+    "label": "Now Playing",
+    "icon": "music",
+    "category": "Media",
+    "description": "Track metadata, artwork and transport controls for the active media session.",
+    "tags": [
+      "media",
+      "spotify",
+      "transport"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "showArtwork": {
+        "type": "boolean"
+      },
+      "compact": {
+        "type": "boolean"
+      }
+    }
+  },
+  "defaults": {
+    "showArtwork": true,
+    "compact": false
+  },
+  "acceptsStateKinds": [
+    "text",
+    "scalar"
+  ],
+  "gestures": [
+    "tap"
+  ],
+  "permissions": [
+    "media"
+  ],
+  "dependencies": {
+    "platform": ">=2.0",
+    "widgets": []
+  },
+  "dataProvider": {
+    "repo": "runtime",
+    "subscribe": true
+  },
+  "refresh": {
+    "strategy": "push"
+  },
+  "caching": {
+    "policy": "ttl",
+    "ttl": 5
+  },
+  "lifecycle": {
+    "lazy": true,
+    "chunk": "media"
+  },
+  "actions": [
+    {
+      "id": "play-pause",
+      "label": "Play / Pause"
+    },
+    {
+      "id": "next",
+      "label": "Next track"
+    },
+    {
+      "id": "previous",
+      "label": "Previous track"
+    }
+  ],
+  "events": {
+    "subscribes": [
+      "MediaStateChanged"
+    ],
+    "emits": []
+  },
+  "persistedState": []
+}
