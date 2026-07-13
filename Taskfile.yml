@@ -51,9 +51,10 @@ tasks:
       - pnpm dev
 
   ide:test:
-    desc: "IDE tests (boundary-rule tests now; vitest suite lands with CD-107)"
+    desc: "IDE tests (vitest suite + boundary-rule tests)"
     dir: ide
     cmds:
+      - pnpm test
       - pnpm run test:boundaries
 
   ide:build:

@@ -11,7 +11,7 @@
 - [x] CD-104 Taskfile targets for the IDE — ✅ Done 2026-07-13
 - [x] CD-105 CI: IDE workflow + bundle budget — ✅ Done 2026-07-14 (CI green pending next push)
 - [x] CD-106 CI: engine + player workflows — ✅ Done 2026-07-14 (pre-existing ci.yml already covers it)
-- [ ] CD-107 Test harness: vitest + RTL + utilities
+- [x] CD-107 Test harness: vitest + RTL + utilities — ✅ Done 2026-07-14
 - [ ] CD-108 Schemas: configuration areas + fixtures
 - [ ] CD-109 Layer-merge semantics + migration convention
 - [ ] CD-110 Schema: widget manifest v2 + canon manifests
@@ -105,8 +105,10 @@
 **BP:** QA-E01-T01 · **Hat:** QA · **P:** P0 · **Est:** S · **Deps:** CD-102
 **Do:** vitest + testing-library config; test-container/store utilities skeleton; sample tests.
 **AC:**
-- [ ] sample unit + component tests run in CI
-- [ ] utilities importable from any feature folder without boundary violation
+- [x] sample unit + component tests run in CI
+- [x] utilities importable from any feature folder without boundary violation
+
+**Notes (2026-07-14):** vitest 4.1.10 + jsdom + RTL (+ jest-dom matchers, user-event, coverage-v8) configured via the `test` block in `ide/vite.config.ts` (setup: `src/shared/test/setup.ts`). Utilities live in `src/shared/test/` — `createTestContainer()` (token→instance registry mirroring the CD-119 ServiceContainer shape) and `renderWithProviders()` (RTL wrapper that grows providers with CD-119/130/134) — `shared` is importable from every layer per the boundary matrix, so no violation (proven: `App.test.tsx` imports it and lint is clean). Sample tests: container unit test + App shell component test, 3/3 green. CI `ide` job + `task ide:test` now run vitest before the boundary tests.
 
 ### CD-108 · Schemas: configuration areas + fixtures
 **BP:** CON-E01-F01-T01 · **Hat:** BE+FE · **P:** P0 · **Est:** M · **Deps:** CD-101

@@ -106,7 +106,9 @@ jobs:
         run: pnpm lint
       - name: tsc --noEmit
         run: pnpm typecheck
-      - name: tests
+      - name: tests (vitest)
+        run: pnpm test
+      - name: tests (boundary rules)
         run: pnpm run test:boundaries
       - name: build
         run: pnpm build
