@@ -81,6 +81,38 @@ jobs:
             echo "::endgroup::"
           done
 
+  # IDE (ide/ — Vite + React + TS): the four gates + the 350 KB gzipped bundle
+  # budget for the shell entry (CD-105). pnpm version comes from packageManager in
+  # ide/package.json; Node from .tool-versions-pinned 20.19.x. vitest replaces the
+  # boundary-only test step when CD-107 lands.
+  ide:
+    name: ide (lint + type + test + build + budget)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ide
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ide/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.4
+          cache: pnpm
+          cache-dependency-path: ide/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: eslint (boundary rules included)
+        run: pnpm lint
+      - name: tsc --noEmit
+        run: pnpm typecheck
+      - name: tests
+        run: pnpm run test:boundaries
+      - name: build
+        run: pnpm build
+      - name: bundle budget (≤ 350 KB gz shell entry)
+        run: pnpm size
+
   # Flutter client: analyze + test + a toolchain-free build (asset bundle). Per-OS
   # desktop/mobile installers are built by the EPIC-1 matrix tickets (PROJ-190/191/192).
   client:

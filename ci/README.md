@@ -12,6 +12,7 @@ branch green; the per-ticket local validation below mirrors it.
 | `engine` | ubuntu | `go vet` · `golangci-lint run` (v2.12.2) · `go test -race ./...` · `go build ./...` |
 | `engine-cross` | windows, macos | `go build ./...` · `go test ./...` (proves the engine compiles + passes on all three desktop OSes) |
 | `client` | ubuntu | `dart analyze` · `flutter test` · `flutter build bundle` |
+| `ide` | ubuntu | `pnpm lint` (eslint + boundary rules) · `pnpm typecheck` · `pnpm run test:boundaries` · `pnpm build` · `pnpm size` (≤ 350 KB gz shell entry, CD-105) |
 
 ### Go: every workspace module, not just the engine
 
@@ -74,7 +75,8 @@ re-appliable). It enforces, for everyone except a repository **admin** (bypass):
   reviews dismissed on push; review threads must be resolved).
 - **Require the CI checks to pass** and the branch to be **up to date**:
   `engine (lint + test -race, linux)`, `engine (build + test) (windows-latest)`,
-  `engine (build + test) (macos-latest)`, `client (analyze + test + build)`.
+  `engine (build + test) (macos-latest)`, `client (analyze + test + build)`,
+  `ide (lint + type + test + build + budget)`.
 - **Linear history** (no merge commits), **no force-push** (`non_fast_forward`),
   **no branch deletion**.
 

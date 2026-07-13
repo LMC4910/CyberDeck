@@ -9,8 +9,8 @@
 - [x] CD-102 Scaffold `ide/` app — ✅ Done 2026-07-13
 - [x] CD-103 Folder structure + lint boundaries — ✅ Done 2026-07-13
 - [x] CD-104 Taskfile targets for the IDE — ✅ Done 2026-07-13
-- [ ] CD-105 CI: IDE workflow + bundle budget
-- [ ] CD-106 CI: engine + player workflows
+- [x] CD-105 CI: IDE workflow + bundle budget — ✅ Done 2026-07-14 (CI green pending next push)
+- [x] CD-106 CI: engine + player workflows — ✅ Done 2026-07-14 (pre-existing ci.yml already covers it)
 - [ ] CD-107 Test harness: vitest + RTL + utilities
 - [ ] CD-108 Schemas: configuration areas + fixtures
 - [ ] CD-109 Layer-merge semantics + migration convention
@@ -88,14 +88,18 @@
 **BP:** DEV-E01-F02-T01 · **Hat:** DO · **P:** P0 · **Est:** S · **Deps:** CD-102
 **Do:** GH Actions: eslint + `tsc` + vitest + build; size-limit gate at 350 KB gz for the shell entry; pnpm caching.
 **AC:**
-- [ ] green on scaffold; required check on PRs
-- [ ] budget gate proven to fail with an intentionally fat fixture (then removed)
+- [ ] green on scaffold; required check on PRs — *pending: user pushes + re-applies ruleset (`gh api PUT` per `ci/README.md`); full job sequence mirrored green locally 2026-07-14*
+- [x] budget gate proven to fail with an intentionally fat fixture (then removed)
+
+**Notes (2026-07-14):** `ide` job added to `.github/workflows/ci.yml` (pnpm/action-setup + Node 20.19.4 + pnpm cache keyed on `ide/pnpm-lock.yaml`; lint → typecheck → test:boundaries → build → `pnpm size`). Budget = size-limit 350 KB gz on `dist/assets/*.js` (`size-limit` config in `ide/package.json`). Fat-fixture proof: a 530 KB incompressible module pushed the entry to 471.87 kB gz → `pnpm size` exited 1; fixture removed, back to 59.35 kB gz green. (First proof attempt was tree-shaken away — usage must be non-foldable.) Required-check context `ide (lint + type + test + build + budget)` added to `ci/branch-ruleset.json` + `ci/README.md`; vitest replaces the test step at CD-107.
 
 ### CD-106 · CI: engine + player workflows ∥
 **BP:** DEV-E01-F02-T02 · **Hat:** DO · **P:** P0 · **Est:** S · **Deps:** —
 **Do:** `go vet` + `go test ./...` (ubuntu+windows, CGO off) and `flutter analyze` + `flutter test` (pinned channel) workflows; caching.
 **AC:**
-- [ ] existing engine + player suites green in CI
+- [x] existing engine + player suites green in CI
+
+**Notes (2026-07-14):** Satisfied by the pre-existing `.github/workflows/ci.yml` (v1-era PROJ-102), which exceeds this ticket: engine gets vet + golangci-lint + `test -race` + build on ubuntu AND build + test on windows + macos, looped over every go.work module, with per-module go.sum caching; client gets `dart analyze` + `flutter test` + `flutter build bundle` on pinned Flutter 3.44.1 with pub cache. Suites green as of last pushed CI run. No changes made.
 
 ### CD-107 · Test harness: vitest + RTL + utilities ∥
 **BP:** QA-E01-T01 · **Hat:** QA · **P:** P0 · **Est:** S · **Deps:** CD-102

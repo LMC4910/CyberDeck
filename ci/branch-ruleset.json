@@ -39,7 +39,8 @@
           { "context": "engine (lint + test -race, linux)" },
           { "context": "engine (build + test) (windows-latest)" },
           { "context": "engine (build + test) (macos-latest)" },
-          { "context": "client (analyze + test + build)" }
+          { "context": "client (analyze + test + build)" },
+          { "context": "ide (lint + type + test + build + budget)" }
         ]
       }
     }
