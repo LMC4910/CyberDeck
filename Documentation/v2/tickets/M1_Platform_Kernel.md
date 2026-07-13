@@ -8,7 +8,7 @@
 - [x] CD-101 Kickoff confirmation (assumptions, decisions, stack ADR) — ✅ Done 2026-07-13
 - [x] CD-102 Scaffold `ide/` app — ✅ Done 2026-07-13
 - [x] CD-103 Folder structure + lint boundaries — ✅ Done 2026-07-13
-- [ ] CD-104 Taskfile targets for the IDE
+- [x] CD-104 Taskfile targets for the IDE — ✅ Done 2026-07-13
 - [ ] CD-105 CI: IDE workflow + bundle budget
 - [ ] CD-106 CI: engine + player workflows
 - [ ] CD-107 Test harness: vitest + RTL + utilities
@@ -80,7 +80,9 @@
 **BP:** DEV-E01-F01-T03 · **Hat:** DO · **P:** P1 · **Est:** S · **Deps:** CD-102
 **Do:** `task ide:dev / ide:test / ide:build / ide:lint`; verify on PowerShell and Git Bash.
 **AC:**
-- [ ] all four targets work on Windows shells
+- [x] all four targets work on Windows shells
+
+**Notes (2026-07-13):** Four `ide:*` targets added to root `Taskfile.yml`; aggregate `lint`/`test`/`build` now fan out to the IDE too. `ide:test` runs the boundary tests until vitest lands (CD-107). Verified lint/test/build on PowerShell + Git Bash; `ide:dev` verified serving on :5173. Task binary was not on PATH — installed go-task 3.52.0 standalone at `D:\Tools\task\task.exe` (C: had no space for `go install`; add `D:\Tools\task` to PATH).
 
 ### CD-105 · CI: IDE workflow + bundle budget ∥
 **BP:** DEV-E01-F02-T01 · **Hat:** DO · **P:** P0 · **Est:** S · **Deps:** CD-102

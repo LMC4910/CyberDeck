@@ -12,10 +12,11 @@ tasks:
       - 'echo "CyberDeck — task lint | task test | task build (run \"task --list-all\" for all)"'
 
   lint:
-    desc: "Lint engine (go vet + golangci-lint) and client (dart analyze)"
+    desc: "Lint engine (go vet + golangci-lint), client (dart analyze) and IDE (eslint)"
     cmds:
       - task: lint:engine
       - task: lint:client
+      - task: ide:lint
 
   lint:engine:
     desc: "go vet + golangci-lint on the engine module"
@@ -35,10 +36,37 @@ tasks:
           fi
 
   test:
-    desc: "Test engine and client"
+    desc: "Test engine, client and IDE"
     cmds:
       - task: test:engine
       - task: test:client
+      - task: ide:test
+
+  # --- IDE (ide/ — Vite + React + TS; CD-104) ---
+
+  ide:dev:
+    desc: "Run the IDE dev server (vite)"
+    dir: ide
+    cmds:
+      - pnpm dev
+
+  ide:test:
+    desc: "IDE tests (boundary-rule tests now; vitest suite lands with CD-107)"
+    dir: ide
+    cmds:
+      - pnpm run test:boundaries
+
+  ide:build:
+    desc: "Typecheck + production build of the IDE (tsc -b && vite build)"
+    dir: ide
+    cmds:
+      - pnpm build
+
+  ide:lint:
+    desc: "eslint on the IDE (boundary rules included)"
+    dir: ide
+    cmds:
+      - pnpm lint
 
   test:engine:
     desc: "go test on the engine module"
@@ -74,10 +102,11 @@ tasks:
       - go test ./test/soak/ -run 'TestSoakFull' -v -timeout 9h
 
   build:
-    desc: "Build engine and client"
+    desc: "Build engine, client and IDE"
     cmds:
       - task: build:engine
       - task: build:client
+      - task: ide:build
 
   build:engine:
     desc: "go build the engine module"
