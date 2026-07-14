@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json",
+  "title": "CyberDeck Project Document (cyberdeck.project)",
+  "description": "Authoring truth: pages of widget instances (stable IDs — AUDIT C3), component defs/instances/overrides, binding/state/event registries, device assignments. Covers the design's serializeProject() shape plus pages/components/devices. Owned by the engine (ProjectService); see ID_AND_FLATTEN.md. CD-111.",
+  "type": "object",
+  "required": ["format", "version", "meta", "pages"],
+  "additionalProperties": false,
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*_[a-z0-9][a-z0-9-]{5,}$",
+      "description": "opaque stable id (prefix_random); NEVER derived from a display name"
+    },
+    "frame": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "w": { "type": "number", "exclusiveMinimum": 0 },
+        "h": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "widgetInstance": {
+      "type": "object",
+      "required": ["id", "type", "frame"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$",
+          "description": "widget manifest id (widget-manifest.schema.json)"
+        },
+        "name": {
+          "type": "string",
+          "description": "display name — presentation only, never a key (AUDIT C3)"
+        },
+        "frame": { "$ref": "#/$defs/frame" },
+        "config": { "type": "object", "description": "instance settings per the manifest's configSchema" },
+        "locked": { "type": "boolean", "default": false },
+        "component": {
+          "$ref": "#/$defs/stableId",
+          "description": "set when this instance is a component instance"
+        },
+        "variant": {
+          "$ref": "#/$defs/stableId",
+          "description": "selected variant of the component; requires component"
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "prop → value overriding the component/variant defaults; requires component"
+        }
+      },
+      "dependentRequired": {
+        "variant": ["component"],
+        "overrides": ["component"]
+      }
+    },
+    "binding": {
+      "type": "object",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["static", "variable", "expression"] },
+        "src": { "type": "string", "description": "variable path when mode = variable" },
+        "expr": { "type": "string", "description": "expression source when mode = expression" },
+        "val": { "description": "literal value when mode = static" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "variable" } } },
+          "then": { "required": ["mode", "src"] }
+        },
+        {
+          "if": { "properties": { "mode": { "const": "expression" } } },
+          "then": { "required": ["mode", "expr"] }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "format": { "const": "cyberdeck.project" },
+    "version": {
+      "const": 1,
+      "description": "document schema version; the design prototype's un-schematized serialization is pre-v1 (see ID_AND_FLATTEN.md migration note)"
+    },
+    "savedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "meta": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "workspace": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "widgets"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "name": { "type": "string", "minLength": 1 },
+          "canvas": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "w": { "type": "number", "exclusiveMinimum": 0 },
+              "h": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "description": "authoring canvas size in px (frames are authored against it)"
+          },
+          "widgets": { "type": "array", "items": { "$ref": "#/$defs/widgetInstance" } }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "widgets"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "name": { "type": "string", "minLength": 1 },
+          "props": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "prop name → default value; instances/variants override these"
+          },
+          "widgets": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/widgetInstance" },
+            "description": "template subtree (frames relative to the component origin)"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "name"],
+              "additionalProperties": false,
+              "properties": {
+                "id": { "$ref": "#/$defs/stableId" },
+                "name": { "type": "string", "minLength": 1 },
+                "overrides": { "type": "object", "additionalProperties": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]*_[a-z0-9][a-z0-9-]{5,}$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "$ref": "#/$defs/binding" },
+        "description": "prop → binding"
+      },
+      "description": "widget id → { prop → binding } (design registries.bindings)"
+    },
+    "states": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]*_[a-z0-9][a-z0-9-]{5,}$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "active": { "type": "string" },
+          "custom": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "ov": {
+            "type": "object",
+            "additionalProperties": { "type": "object", "additionalProperties": true },
+            "description": "state name → { prop → value } overrides"
+          }
+        }
+      },
+      "description": "widget id → state definition (design registries.states)"
+    },
+    "events": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]*_[a-z0-9][a-z0-9-]{5,}$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "$ref": "#/$defs/stableId" },
+        "description": "gesture/event kind → flow id"
+      },
+      "description": "widget id → { event → flow id } (design registries.events)"
+    },
+    "locks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/stableId" },
+      "description": "locked widget ids (design registries.locks)"
+    },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "deviceClass", "pageId"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "name": { "type": "string" },
+          "deviceClass": { "type": "string", "minLength": 1, "description": "e.g. ipad, pixel, deck" },
+          "pageId": { "$ref": "#/$defs/stableId", "description": "page assigned to this device" }
+        }
+      },
+      "description": "device assignments — which page each paired device renders"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "uri"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "kind": { "enum": ["image", "icon", "font", "audio"] },
+          "uri": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

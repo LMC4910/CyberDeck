@@ -1,0 +1,14 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "meta": {
+    "name": "Empty"
+  },
+  "pages": [
+    {
+      "id": "page_start01",
+      "name": "Start",
+      "widgets": []
+    }
+  ]
+}

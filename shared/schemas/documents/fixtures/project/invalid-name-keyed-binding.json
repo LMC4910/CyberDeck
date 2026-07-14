@@ -1,0 +1,22 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "meta": {
+    "name": "Bad"
+  },
+  "pages": [
+    {
+      "id": "page_x00001",
+      "name": "P",
+      "widgets": []
+    }
+  ],
+  "bindings": {
+    "CPU Load": {
+      "value": {
+        "mode": "static",
+        "val": 1
+      }
+    }
+  }
+}

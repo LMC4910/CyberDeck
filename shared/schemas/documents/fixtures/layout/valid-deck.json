@@ -1,0 +1,84 @@
+{
+  "format": "cyberdeck.layout",
+  "version": 3,
+  "projectId": "proj_seed001",
+  "publishedAt": "2026-07-14T10:05:00Z",
+  "device": {
+    "deviceClass": "deck",
+    "name": "Stream Deck"
+  },
+  "pages": [
+    {
+      "id": "page_deck00",
+      "name": "Stream Panel",
+      "grid": {
+        "columns": 30,
+        "rows": 22,
+        "deviceClass": "deck"
+      },
+      "version": 1,
+      "widgets": [
+        {
+          "id": "w_dec0000",
+          "type": "gauge.circular",
+          "placement": {
+            "col": 0,
+            "row": 0,
+            "colSpan": 4,
+            "rowSpan": 5
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "CPU"
+          }
+        },
+        {
+          "id": "w_dec0001",
+          "type": "gauge.circular",
+          "placement": {
+            "col": 0,
+            "row": 5,
+            "colSpan": 4,
+            "rowSpan": 4
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "GPU"
+          }
+        },
+        {
+          "id": "w_dec0002",
+          "type": "button.action",
+          "placement": {
+            "col": 4,
+            "row": 0,
+            "colSpan": 3,
+            "rowSpan": 5
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Scene A"
+          }
+        },
+        {
+          "id": "w_dec0003",
+          "type": "button.action",
+          "placement": {
+            "col": 13,
+            "row": 0,
+            "colSpan": 3,
+            "rowSpan": 5
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Mute"
+          }
+        }
+      ]
+    }
+  ]
+}

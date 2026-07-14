@@ -1,0 +1,174 @@
+{
+  "format": "cyberdeck.layout",
+  "version": 3,
+  "projectId": "proj_seed001",
+  "publishedAt": "2026-07-14T10:05:00Z",
+  "device": {
+    "deviceClass": "ipad",
+    "name": "iPad"
+  },
+  "pages": [
+    {
+      "id": "page_ipad00",
+      "name": "Main Deck",
+      "grid": {
+        "columns": 30,
+        "rows": 22,
+        "deviceClass": "ipad"
+      },
+      "version": 1,
+      "widgets": [
+        {
+          "id": "w_ipa0000",
+          "type": "gauge.circular",
+          "placement": {
+            "col": 1,
+            "row": 1,
+            "colSpan": 7,
+            "rowSpan": 5
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "CPU Load"
+          }
+        },
+        {
+          "id": "w_ipa0001",
+          "type": "gauge.circular",
+          "placement": {
+            "col": 8,
+            "row": 1,
+            "colSpan": 7,
+            "rowSpan": 5
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "GPU Temp"
+          }
+        },
+        {
+          "id": "w_ipa0002",
+          "type": "chart.line",
+          "placement": {
+            "col": 15,
+            "row": 1,
+            "colSpan": 14,
+            "rowSpan": 5
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Net Throughput"
+          }
+        },
+        {
+          "id": "w_ipa0003",
+          "type": "stat.readout",
+          "placement": {
+            "col": 1,
+            "row": 6,
+            "colSpan": 4,
+            "rowSpan": 3
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "FPS"
+          }
+        },
+        {
+          "id": "w_ipa0004",
+          "type": "stat.readout",
+          "placement": {
+            "col": 5,
+            "row": 6,
+            "colSpan": 4,
+            "rowSpan": 3
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Ping"
+          }
+        },
+        {
+          "id": "w_ipa0005",
+          "type": "media.nowplaying",
+          "placement": {
+            "col": 15,
+            "row": 6,
+            "colSpan": 14,
+            "rowSpan": 3
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Now Playing"
+          }
+        },
+        {
+          "id": "w_ipa0006",
+          "type": "button.action",
+          "placement": {
+            "col": 1,
+            "row": 9,
+            "colSpan": 4,
+            "rowSpan": 3
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Scene A"
+          }
+        },
+        {
+          "id": "w_ipa0007",
+          "type": "input.slider",
+          "placement": {
+            "col": 20,
+            "row": 9,
+            "colSpan": 9,
+            "rowSpan": 3
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Volume"
+          }
+        },
+        {
+          "id": "w_ipa0008",
+          "type": "image.static",
+          "placement": {
+            "col": 20,
+            "row": 13,
+            "colSpan": 9,
+            "rowSpan": 7
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Cam 1"
+          }
+        },
+        {
+          "id": "w_ipa0009",
+          "type": "text.log",
+          "placement": {
+            "col": 10,
+            "row": 16,
+            "colSpan": 9,
+            "rowSpan": 4
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Status Log"
+          }
+        }
+      ]
+    }
+  ]
+}

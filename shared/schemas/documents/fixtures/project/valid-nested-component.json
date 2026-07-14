@@ -1,0 +1,134 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "savedAt": "2026-07-14T10:00:00Z",
+  "meta": {
+    "name": "Battlestation",
+    "workspace": "deck-designer"
+  },
+  "pages": [
+    {
+      "id": "page_home001",
+      "name": "Main Deck",
+      "canvas": {
+        "w": 1180,
+        "h": 820
+      },
+      "widgets": [
+        {
+          "id": "w_cpu0001a",
+          "type": "gauge.circular",
+          "name": "CPU Load",
+          "frame": {
+            "x": 24,
+            "y": 24,
+            "w": 270,
+            "h": 180
+          },
+          "config": {
+            "max": 100
+          }
+        },
+        {
+          "id": "w_inst001a",
+          "type": "stat.readout",
+          "name": "FPS Card",
+          "frame": {
+            "x": 24,
+            "y": 220,
+            "w": 178,
+            "h": 120
+          },
+          "component": "cmp_statcd1",
+          "variant": "var_compact1",
+          "overrides": {
+            "accent": "#0ff"
+          }
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "cmp_statcd1",
+      "name": "Stat Card",
+      "props": {
+        "accent": "#888",
+        "label": "Stat"
+      },
+      "widgets": [
+        {
+          "id": "w_tmpl001a",
+          "type": "stat.readout",
+          "name": "value",
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 178,
+            "h": 120
+          }
+        }
+      ],
+      "variants": [
+        {
+          "id": "var_compact1",
+          "name": "Compact",
+          "overrides": {
+            "dense": true
+          }
+        }
+      ]
+    }
+  ],
+  "bindings": {
+    "w_cpu0001a": {
+      "value": {
+        "mode": "variable",
+        "src": "sys.cpu.load"
+      }
+    },
+    "w_inst001a": {
+      "value": {
+        "mode": "expression",
+        "expr": "fps.current"
+      }
+    }
+  },
+  "states": {
+    "w_cpu0001a": {
+      "active": "warn",
+      "custom": [
+        "warn",
+        "crit"
+      ],
+      "ov": {
+        "warn": {
+          "color": "#fa0"
+        }
+      }
+    }
+  },
+  "events": {
+    "w_inst001a": {
+      "tap": "flow_reset01"
+    }
+  },
+  "locks": [
+    "w_cpu0001a"
+  ],
+  "devices": [
+    {
+      "id": "dev_ipad001",
+      "name": "iPad",
+      "deviceClass": "ipad",
+      "pageId": "page_home001"
+    }
+  ],
+  "assets": [
+    {
+      "id": "ast_cam0001",
+      "kind": "image",
+      "uri": "asset://cam1.png"
+    }
+  ]
+}

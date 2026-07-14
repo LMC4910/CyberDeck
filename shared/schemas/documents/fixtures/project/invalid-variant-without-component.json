@@ -1,0 +1,26 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "meta": {
+    "name": "Bad"
+  },
+  "pages": [
+    {
+      "id": "page_x00001",
+      "name": "P",
+      "widgets": [
+        {
+          "id": "w_bad0001a",
+          "type": "stat.readout",
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 10,
+            "h": 10
+          },
+          "variant": "var_x00001"
+        }
+      ]
+    }
+  ]
+}

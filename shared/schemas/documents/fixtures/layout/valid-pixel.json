@@ -1,0 +1,114 @@
+{
+  "format": "cyberdeck.layout",
+  "version": 3,
+  "projectId": "proj_seed001",
+  "publishedAt": "2026-07-14T10:05:00Z",
+  "device": {
+    "deviceClass": "pixel",
+    "name": "Pixel"
+  },
+  "pages": [
+    {
+      "id": "page_pixel0",
+      "name": "Quick Actions",
+      "grid": {
+        "columns": 30,
+        "rows": 22,
+        "deviceClass": "pixel"
+      },
+      "version": 1,
+      "widgets": [
+        {
+          "id": "w_pix0000",
+          "type": "stat.readout",
+          "placement": {
+            "col": 0,
+            "row": 0,
+            "colSpan": 5,
+            "rowSpan": 2
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Ping"
+          }
+        },
+        {
+          "id": "w_pix0001",
+          "type": "stat.readout",
+          "placement": {
+            "col": 5,
+            "row": 0,
+            "colSpan": 5,
+            "rowSpan": 2
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "FPS"
+          }
+        },
+        {
+          "id": "w_pix0002",
+          "type": "media.nowplaying",
+          "placement": {
+            "col": 0,
+            "row": 3,
+            "colSpan": 10,
+            "rowSpan": 3
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Now Playing"
+          }
+        },
+        {
+          "id": "w_pix0003",
+          "type": "button.action",
+          "placement": {
+            "col": 0,
+            "row": 6,
+            "colSpan": 5,
+            "rowSpan": 3
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Scene A"
+          }
+        },
+        {
+          "id": "w_pix0004",
+          "type": "input.slider",
+          "placement": {
+            "col": 0,
+            "row": 15,
+            "colSpan": 10,
+            "rowSpan": 2
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Volume"
+          }
+        },
+        {
+          "id": "w_pix0005",
+          "type": "chart.line",
+          "placement": {
+            "col": 0,
+            "row": 18,
+            "colSpan": 10,
+            "rowSpan": 4
+          },
+          "appearance": {},
+          "interaction": {},
+          "config": {
+            "label": "Net Throughput"
+          }
+        }
+      ]
+    }
+  ]
+}

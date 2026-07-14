@@ -15,7 +15,7 @@
 - [x] CD-108 Schemas: configuration areas + fixtures — ✅ Done 2026-07-14
 - [x] CD-109 Layer-merge semantics + migration convention — ✅ Done 2026-07-14 (spec pending maintainer review)
 - [x] CD-110 Schema: widget manifest v2 + canon manifests — ✅ Done 2026-07-14
-- [ ] CD-111 Schemas: project doc + published layout + ID rules
+- [x] CD-111 Schemas: project doc + published layout + ID rules — ✅ Done 2026-07-14
 - [ ] CD-112 Schema: flow document + triggers
 - [ ] CD-113 Control-plane envelope + route-registry format + error model
 - [ ] CD-114 Route set v1 + event bridge map
@@ -141,9 +141,11 @@
 **BP:** CON-E01-F03 · **Hat:** FE+BE · **P:** P0 · **Est:** L · **Deps:** CD-110
 **Do:** `cyberdeck.project` schema (pages, widgets w/ stable IDs, components/instances/overrides, bindings, states, device assignments) + flattened `cyberdeck.layout` player schema + written ID-stability/migration invariants (AUDIT C3). Fixtures include the design's 3 `DPVLAYOUTS`.
 **AC:**
-- [ ] fixture with nested component instance validates
-- [ ] flatten relationship specified (Q2 default: engine-side at publish)
-- [ ] MOB hat desk-checks the layout schema against the existing render model
+- [x] fixture with nested component instance validates
+- [x] flatten relationship specified (Q2 default: engine-side at publish)
+- [x] MOB hat desk-checks the layout schema against the existing render model
+
+**Notes (2026-07-14):** Two schemas in `shared/schemas/documents/`. `project.schema.json`: pages of widget instances keyed by opaque stable ids (`^[a-z][a-z0-9]*_…$`, `name` presentation-only), components w/ props+variants, component instances via `component`/`variant`/`overrides` (dependentRequired enforces variant/overrides ⇒ component), bindings/states/events/locks registries (design `serializeProject()` shape), devices, assets. `layout.schema.json`: player-facing flattened projection, pages mirror `client/lib/render/model.dart` field-for-field. `ID_AND_FLATTEN.md`: 6 ID invariants w/ violation examples (referential-closure noted as engine-validated since JSON Schema can't express cross-tree joins), full project→layout flatten table (Q2 engine-side, deterministic expanded ids `<instanceId>-<templateId>`), pre-v1 design-serialization migration note, and the MOB desk-check table (all render-model fields match; envelope keys are ignored-safe). Fixtures: nested-component project + minimal + 2 invalid (name-keyed binding, variant-without-component); 3 DPVLAYOUTS-derived layouts (ipad/pixel/deck) + 2 invalid. Dual-validated, 65 vitest + Go green.
 
 ### CD-112 · Schema: flow document + triggers ∥
 **BP:** CON-E01-F04 · **Hat:** BE · **P:** P0 · **Est:** M · **Deps:** CD-108

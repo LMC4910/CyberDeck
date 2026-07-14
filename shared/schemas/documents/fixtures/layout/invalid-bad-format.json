@@ -1,0 +1,13 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "device": {
+    "deviceClass": "ipad"
+  },
+  "pages": [
+    {
+      "id": "page_x00001",
+      "widgets": []
+    }
+  ]
+}
