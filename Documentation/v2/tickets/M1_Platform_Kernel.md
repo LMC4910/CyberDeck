@@ -24,7 +24,7 @@
 - [x] CD-117 ConfigurationService core — ✅ Done 2026-07-14
 - [x] CD-118 Config persistence, validation, migration — ✅ Done 2026-07-14
 - [x] CD-119 ServiceContainer — ✅ Done 2026-07-14
-- [ ] CD-120 EventBus
+- [x] CD-120 EventBus — ✅ Done 2026-07-14
 - [ ] CD-121 Command registry + contexts + seed commands
 - [ ] CD-122 Keymap dispatcher + rebinding store
 - [ ] CD-123 Undo/redo engine
@@ -224,8 +224,10 @@
 **BP:** IDE-E01-F04 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-119
 **Do:** Typed emit/subscribe from the generated event catalog; wildcard topics; async microtask delivery; bounded per-subscriber queue with drop+log overflow; replay-on-subscribe for replayable topics; `bus.tap()` for dev surfaces.
 **AC:**
-- [ ] tests: ordering, wildcard, replay, overflow, unsubscribe
-- [ ] 13 catalog events typed
+- [x] tests: ordering, wildcard, replay, overflow, unsubscribe
+- [x] 13 catalog events typed
+
+**Notes (2026-07-14):** `ide/src/platform/eventbus/`. `EventBus`: async delivery via microtask (injectable `schedule` for deterministic tests), FIFO per subscriber; wildcard subscriptions (`*` = all, `prefix.*` = prefix match, exact); bounded per-subscriber queue (`queueLimit` default 1000) with drop-oldest + `console.warn` + `droppedCount`; replay-on-subscribe for topics configured in `replayable` (topic→ring size), delivered async to new subscribers; `tap()` for dev surfaces (synchronous, sees every event → Platform Inspector CD-138); a throwing handler is caught and logged so it can't stall others. `TypedEventBus` (catalog.ts) is the typed facade over the **13 EVCAT events**, each mapped to its generated contract payload (`@/shared/contract` *Event types); `EVENT_NAMES` runtime list. `.raw` escape hatch for wildcard/dev. 10 tests: async ordering, `*`+`prefix.*` wildcard, replay (ring-trimmed) + no-replay, overflow drop+log, unsubscribe-before-drain, tap, throwing-handler isolation, 13-event typed emit/on. 156 vitest green. SettingsChanged bridge (ConfigurationService→bus) wires at assembly.
 
 ### CD-121 · Command registry + contexts + seed commands
 **BP:** IDE-E02-F01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-119, CD-120
