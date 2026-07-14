@@ -38,7 +38,7 @@
 - [x] CD-131 Boot-critical stores — ✅ Done 2026-07-15
 - [x] CD-132 Remaining domain stores — ✅ Done 2026-07-15
 - [x] CD-133 Optimistic updates + rollback — ✅ Done 2026-07-15
-- [ ] CD-134 Theme engine
+- [x] CD-134 Theme engine — ✅ Done 2026-07-15
 - [ ] CD-135 Contract-test generator, green vs mock
 - [ ] CD-136 Playwright boot E2E + coverage floors
 - [ ] CD-137 Platform Inspector: services/stores/flags tabs
@@ -344,8 +344,10 @@
 **BP:** IDE-E05 · **Hat:** FE+DES · **P:** P0 · **Est:** M · **Deps:** CD-117, CD-116
 **Do:** Token schema; extract Dark Cyber tokens from the design file CSS; ThemeService applies tokens to `:root` at boot stage 5 (pre-paint); hot-swap rewrites vars + emits ThemeChanged; second minimal theme proves the pipeline.
 **AC:**
-- [ ] no-flash verified via paint-order marks
-- [ ] theme swap restyles chrome without reload; ThemeChanged observed
+- [x] no-flash verified via paint-order marks
+- [x] theme swap restyles chrome without reload; ThemeChanged observed
+
+**Notes (2026-07-15):** `ide/src/services/theme/`. `Theme = {id, name, mode, tokens}`; `tokens.ts` has **Dark Cyber** (`cyber-dark`) extracted from the design `:root` CSS vars (accent/good/warn/bad/panel/panel2/line/line2/ink/ink2/ink3/bg) + a second **`cyber-light`** minimal theme proving hot-swap; `REQUIRED_TOKENS` is the key set every theme must define. `ThemeService.apply(id)` writes each token to `:root` as `--<token>` (via an injectable root for tests / `document.documentElement` in-app), synchronously so it can gate first paint; marks `cyberdeck:theme:applied`; emits `ThemeChanged` (wiring bridges to bus + config). `register` rejects a theme missing required tokens (`ThemeMissingTokensError`). Tests: token→var application, missing-token/unknown-id rejection, **hot-swap rewrites vars + emits ThemeChanged twice (no reload)**, both builtins registered, and **no-flash proven** by running `apply` as a blocking boot phase and asserting the token is readable at the later non-blocking paint phase AND `theme:applied` mark precedes the `paint` mark. 260 vitest green.
 
 ### CD-135 · Contract-test generator, green vs mock
 **BP:** CON-E03-T03 / QA-E02 · **Hat:** QA · **P:** P0 · **Est:** M · **Deps:** CD-114, CD-127, CD-107
