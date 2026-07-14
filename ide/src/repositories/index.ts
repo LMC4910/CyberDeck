@@ -24,3 +24,4 @@ export {
   type GatewaySelection,
   type SelectGatewayDeps,
 } from './gateway-selection'
+export * from './cache'

@@ -33,7 +33,7 @@
 - [x] CD-126 Middleware: retry/backoff + cancellation — ✅ Done 2026-07-14
 - [x] CD-127 MockApiGateway: router + fixture DB — ✅ Done 2026-07-14
 - [x] CD-128 Mock push streams + gateway selection + offline — ✅ Done 2026-07-14 (offline banner E2E deferred to shell/CD-136)
-- [ ] CD-129 CacheManager
+- [x] CD-129 CacheManager — ✅ Done 2026-07-15
 - [ ] CD-130 Store base + persistence contract
 - [ ] CD-131 Boot-critical stores
 - [ ] CD-132 Remaining domain stores
@@ -300,8 +300,10 @@
 **BP:** IDE-E03-F04 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-124, CD-120
 **Do:** LRU keyed `(repo, query-hash)` + TTL backstop; event-driven precise invalidation map; SWR mode for catalog reads; hit/miss counters to telemetry tap.
 **AC:**
-- [ ] precise-eviction test (one event evicts one entry)
-- [ ] bounded memory test
+- [x] precise-eviction test (one event evicts one entry)
+- [x] bounded memory test
+
+**Notes (2026-07-15):** `ide/src/repositories/cache/`. `CacheManager` — `CacheManager.keyFor(repo, query)` builds a stable key via sorted-key stringify (equal queries hash equally regardless of key order). LRU via Map insertion order: `get` touches (re-inserts) MRU, `set` over `maxEntries` (default 200) evicts the oldest. TTL backstop per entry (default 30s); expired non-SWR entry evicts + counts a miss. **SWR** (`swr:true`, for catalog reads like widget manifests): past-TTL `get` returns the stale value once and flags `isStale(key)` for the caller to revalidate. **Event-driven precise invalidation:** entries carry `tags`; `invalidateByTag(tag)` evicts exactly the entries with that tag (a `variables:cpu` tag → 1 entry; a broad `variables` tag → all) — the EventBus (VariableChanged etc.) drives this at wiring. Hit/miss/evict counters + `onStat` telemetry tap. 10 tests incl. **one-event-evicts-one-entry** and **bounded-under-1000-inserts (size stays 50)**. 232 vitest green.
 
 ### CD-130 · Store base + persistence contract
 **BP:** IDE-E04-F01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-119, CD-116
