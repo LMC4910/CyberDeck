@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "id": "msg-3",
+  "correlation": "msg-1",
+  "kind": "error",
+  "error": {
+    "code": "not_found",
+    "message": "no such project",
+    "retryable": false
+  }
+}

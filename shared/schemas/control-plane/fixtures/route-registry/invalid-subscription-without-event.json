@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "id": "bad.stream",
+      "method": "GET",
+      "path": "/v1/bad",
+      "kind": "subscription"
+    }
+  ]
+}

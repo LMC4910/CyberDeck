@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/error.schema.json",
+  "title": "CyberDeck Control-Plane Error",
+  "description": "Coded error model for the control plane. `retryable` drives the middleware retry/backoff (CD-126): a client may retry retryable errors, must not retry non-retryable ones. CD-113.",
+  "type": "object",
+  "required": ["code", "message", "retryable"],
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "enum": [
+        "bad_request",
+        "unauthorized",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "validation_failed",
+        "rate_limited",
+        "unavailable",
+        "timeout",
+        "internal",
+        "not_implemented"
+      ],
+      "description": "stable machine code; the enum is the whole vocabulary — no free-form codes"
+    },
+    "message": { "type": "string", "minLength": 1, "description": "human-readable, non-localized" },
+    "retryable": {
+      "type": "boolean",
+      "description": "true ⇒ the same request may succeed later (rate_limited/unavailable/timeout/internal); false ⇒ deterministic failure the client must fix (bad_request/validation_failed/not_found/…)"
+    },
+    "details": {
+      "type": "object",
+      "description": "optional structured context, e.g. field errors for validation_failed",
+      "additionalProperties": true
+    },
+    "retryAfterMs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "hint for rate_limited/unavailable: earliest sensible retry delay"
+    }
+  }
+}

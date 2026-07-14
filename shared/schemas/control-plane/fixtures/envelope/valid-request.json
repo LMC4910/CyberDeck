@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "id": "msg-1",
+  "kind": "request",
+  "route": "projects.list",
+  "ts": 1720000000000,
+  "payload": {
+    "page": 1
+  }
+}

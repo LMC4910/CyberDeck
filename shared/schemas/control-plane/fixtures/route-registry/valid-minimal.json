@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "id": "health.ping",
+      "method": "GET",
+      "path": "/v1/health",
+      "kind": "unary"
+    }
+  ]
+}

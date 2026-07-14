@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "id": "projects.list",
+      "method": "GET",
+      "path": "/v1/projects",
+      "kind": "unary",
+      "summary": "List projects",
+      "response": "documents/project.schema.json",
+      "errors": [
+        "unavailable",
+        "internal"
+      ]
+    },
+    {
+      "id": "variables.subscribe",
+      "method": "GET",
+      "path": "/v1/variables/subscribe",
+      "kind": "subscription",
+      "event": "documents/project.schema.json",
+      "errors": [
+        "unauthorized"
+      ]
+    }
+  ]
+}

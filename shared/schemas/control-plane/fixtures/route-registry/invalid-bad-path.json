@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "id": "bad.route",
+      "method": "GET",
+      "path": "/projects",
+      "kind": "unary"
+    }
+  ]
+}

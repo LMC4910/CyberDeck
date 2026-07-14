@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "id": "sub-7",
+  "kind": "subscribe",
+  "route": "variables.subscribe",
+  "stream": {
+    "resumeFrom": 42,
+    "credits": 64
+  },
+  "payload": {
+    "scope": "sys"
+  }
+}

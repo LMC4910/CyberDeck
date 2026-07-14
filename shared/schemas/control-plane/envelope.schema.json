@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/envelope.schema.json",
+  "title": "CyberDeck Control-Plane Envelope",
+  "description": "IDE ⇄ engine control-plane message envelope (Q4 default: WebSocket + JSON on localhost). Lineage: extends the engine transport envelope (engine/core/transport/envelope.go v/ch/type/seq/ts) with request/response correlation and subscription framing. Error payloads follow error.schema.json. CD-113.",
+  "type": "object",
+  "required": ["v", "id", "kind"],
+  "additionalProperties": false,
+  "properties": {
+    "v": { "const": 1, "description": "envelope version (transport.ProtocolVersion)" },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "unique message id (uuid); response.correlation echoes it"
+    },
+    "correlation": {
+      "type": "string",
+      "description": "the request id this frame answers; required on response/error/event-for-subscription frames"
+    },
+    "kind": {
+      "enum": ["request", "response", "event", "subscribe", "unsubscribe", "error"],
+      "description": "frame kind"
+    },
+    "route": {
+      "type": "string",
+      "description": "route id (route-registry); required on request/subscribe"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "per-subscription monotonic sequence for gap detection + resume"
+    },
+    "ts": { "type": "integer", "description": "unix ms send time" },
+    "payload": {
+      "description": "request args / response body / event data; shape is the route's request or response schema"
+    },
+    "error": {
+      "$ref": "https://cyberdeck.shishir.com/schemas/control-plane/error.schema.json",
+      "description": "present only on kind=error"
+    },
+    "stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "subscription framing (kind=subscribe/event)",
+      "properties": {
+        "resumeFrom": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "on subscribe: last seq the client already has; engine replays from seq+1 or sends a reset event if it cannot"
+        },
+        "credits": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "backpressure: max in-flight events the client will buffer; engine pauses past this until more credits arrive"
+        },
+        "reset": {
+          "type": "boolean",
+          "description": "on event: true means the engine could not resume from resumeFrom — client must re-sync from this snapshot"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "enum": ["response", "error"] } } },
+      "then": { "required": ["v", "id", "kind", "correlation"] }
+    },
+    {
+      "if": { "properties": { "kind": { "enum": ["request", "subscribe"] } } },
+      "then": { "required": ["v", "id", "kind", "route"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "error" } } },
+      "then": { "required": ["v", "id", "kind", "correlation", "error"] }
+    }
+  ]
+}

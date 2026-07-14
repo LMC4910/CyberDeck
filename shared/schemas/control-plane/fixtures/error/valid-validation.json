@@ -1,0 +1,8 @@
+{
+  "code": "validation_failed",
+  "message": "bad flow",
+  "retryable": false,
+  "details": {
+    "field": "trigger.kind"
+  }
+}

@@ -17,7 +17,7 @@
 - [x] CD-110 Schema: widget manifest v2 + canon manifests — ✅ Done 2026-07-14
 - [x] CD-111 Schemas: project doc + published layout + ID rules — ✅ Done 2026-07-14
 - [x] CD-112 Schema: flow document + triggers — ✅ Done 2026-07-14
-- [ ] CD-113 Control-plane envelope + route-registry format + error model
+- [x] CD-113 Control-plane envelope + route-registry format + error model — ✅ Done 2026-07-14
 - [ ] CD-114 Route set v1 + event bridge map
 - [ ] CD-115 TS type generation + CI drift gate
 - [ ] CD-116 BootManager
@@ -159,8 +159,10 @@
 **BP:** CON-E02-T01/T03/T04 · **Hat:** BE+FE · **P:** P0 · **Est:** S · **Deps:** CD-108
 **Do:** Machine-readable route-registry format; envelope (id/correlation/kind/payload, lineage of `protocol-envelope.schema.json`); subscription frame semantics (backpressure, resume); coded error enum + retryable flag.
 **AC:**
-- [ ] registry format consumable by both codegen and a router
-- [ ] envelope + error schemas validate fixtures
+- [x] registry format consumable by both codegen and a router
+- [x] envelope + error schemas validate fixtures
+
+**Notes (2026-07-14):** Three schemas in `shared/schemas/control-plane/`. `envelope.schema.json` (id/correlation/kind/payload; kinds request/response/event/subscribe/unsubscribe/error) — lineage from the engine transport envelope (`engine/core/transport/envelope.go` v/ch/type/seq/ts), adding correlation + a `stream` object for subscription framing: `resumeFrom` (replay-or-reset), `credits` (backpressure), `reset` (resync signal); if/then enforces correlation on responses/errors and route on requests/subscribes. `error.schema.json`: 11-code closed enum + `retryable` flag (drives CD-126 retry/backoff) + retryAfterMs. `route-registry.schema.json`: the meta-schema for the route set — each route has id/method/path/kind(unary|subscription)/request/response/event/errors, deliberately shaped for BOTH the CD-115 codegen and the CD-127 router to consume (subscription routes require an `event` schema). Route SET v1 is authored in CD-114 against this format. Dual-validated (90 vitest + Go, $ref from envelope→error resolved via addSchema/AddResource).
 
 ### CD-114 · Route set v1 + event bridge map
 **BP:** CON-E02-T02/T04 · **Hat:** BE+FE · **P:** P0 · **Est:** L · **Deps:** CD-110, CD-111, CD-112, CD-113

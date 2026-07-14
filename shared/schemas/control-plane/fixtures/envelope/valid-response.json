@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "id": "msg-2",
+  "correlation": "msg-1",
+  "kind": "response",
+  "payload": {
+    "items": []
+  }
+}
