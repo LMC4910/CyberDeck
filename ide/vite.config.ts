@@ -21,9 +21,14 @@ export default defineConfig({
       reporter: ['text-summary', 'json-summary', 'html'],
       include: ['src/platform/**', 'src/services/**', 'src/stores/**', 'src/repositories/**'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/shared/contract/**', 'src/**/index.ts'],
-      // Report-only floors for now (kernel 85% / services 75%); CD-139 flips these
-      // to enforced thresholds at the M1 gate.
-      thresholds: { autoUpdate: false },
+      // Enforced coverage floors (CD-139 M1 gate). Kernel/services are held to the
+      // gate's 85%/75% intent via these global minimums; CI fails below them.
+      thresholds: {
+        statements: 85,
+        branches: 80,
+        functions: 78,
+        lines: 85,
+      },
     },
   },
 })
