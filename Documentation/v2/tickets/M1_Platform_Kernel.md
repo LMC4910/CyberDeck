@@ -26,7 +26,7 @@
 - [x] CD-119 ServiceContainer — ✅ Done 2026-07-14
 - [x] CD-120 EventBus — ✅ Done 2026-07-14
 - [x] CD-121 Command registry + contexts + seed commands — ✅ Done 2026-07-14
-- [ ] CD-122 Keymap dispatcher + rebinding store
+- [x] CD-122 Keymap dispatcher + rebinding store — ✅ Done 2026-07-14
 - [ ] CD-123 Undo/redo engine
 - [ ] CD-124 Repository base + registry + 7 domain repos
 - [ ] CD-125 Middleware: composition, latency, failure injection
@@ -242,7 +242,9 @@
 **BP:** IDE-E02-F02 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-121, CD-118
 **Do:** Single keydown dispatcher; combo parser with ⌘/Ctrl platform mapping; context-specific resolution; user overrides in keymap config layer; conflict detection.
 **AC:**
-- [ ] tests: combo match, specificity, override round-trip, conflict flagged
+- [x] tests: combo match, specificity, override round-trip, conflict flagged
+
+**Notes (2026-07-14):** `ide/src/platform/keymap/`. `combo.ts` normalizes design tokens (`['⌘','K']`) and KeyboardEvents to `{mod,shift,alt,key}` where the primary modifier `mod` = ⌘ on mac / Ctrl on other (matches the design's meta||ctrl collapse, platform-aware). `KeymapDispatcher`: single `dispatch(event, ctx)` entry (resolve→canExecute→execute→preventDefault, returns handled); `loadDefaults()` seeds bindings from command `keys`; `rebind(cmd, combo, when)` adds a `source:'user'` binding that shadows the default (round-trips through resolve). `resolve` picks by specificity via `rank` = user(2) over default, +1 for a when-clause → context-specific beats global, and gated-out bindings fall through. `conflicts()` groups by combo+when → same-combo/same-context collisions flagged. Bindings mirror the keymap config-layer shape (source default|user) so ConfigurationService overrides load as user bindings at assembly. 8 tests: token parse + mac/other mapping, dispatch hit/miss, specificity (scoped beats global, gated→global), user-override round-trip, 2-command conflict, seed-set has no same-context default conflicts. 175 vitest green.
 
 ### CD-123 · Undo/redo engine
 **BP:** IDE-E02-F03 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-121
