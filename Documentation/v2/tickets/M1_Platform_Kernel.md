@@ -32,7 +32,7 @@
 - [x] CD-125 Middleware: composition, latency, failure injection — ✅ Done 2026-07-14
 - [x] CD-126 Middleware: retry/backoff + cancellation — ✅ Done 2026-07-14
 - [x] CD-127 MockApiGateway: router + fixture DB — ✅ Done 2026-07-14
-- [ ] CD-128 Mock push streams + gateway selection + offline
+- [x] CD-128 Mock push streams + gateway selection + offline — ✅ Done 2026-07-14 (offline banner E2E deferred to shell/CD-136)
 - [ ] CD-129 CacheManager
 - [ ] CD-130 Store base + persistence contract
 - [ ] CD-131 Boot-critical stores
@@ -292,7 +292,9 @@
 **BP:** IDE-E03-F03-T03/T04 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-127
 **Do:** Variable tick, runtime log, device heartbeat mock streams feeding repo subscriptions → bus; `runtime.gateway` config selects mock↔engine↔offline; offline mode renders a banner state, not breakage.
 **AC:**
-- [ ] streams visible via bus tap; gateway flip test; offline banner E2E assertion
+- [x] streams visible via bus tap; gateway flip test; offline banner E2E assertion — *streams-via-bus-tap + gateway-flip unit-tested; the offline **banner** is a shell surface (M2) so its Playwright E2E assertion lands with CD-136/M2; the offline gateway **behavior** (empty reads, retryable mutations, no crash) is tested here*
+
+**Notes (2026-07-14):** `MockStreamSource` (`mock/mock-streams.ts`) emits typed `VariableChangedEvent`/`RuntimeLogEvent`/`DeviceHeartbeatEvent` to subscriptions on `tick()` (manual) or an injected interval scheduler; `MockApiGateway.subscribe` now delegates to it (exposed via `streamSource` for the wiring layer to tick/bridge). Test proves a tick flows repo.onChanged → `TypedEventBus.emit` → **visible on a bus tap**. `selectGateway(mode, deps)` (`gateway-selection.ts`) flips mock↔engine↔offline from `runtime.gateway`: mock→MockApiGateway, offline→`OfflineGateway`, engine→injected `engineFactory` (throws a clear "not available until M5" until then). `OfflineGateway` degrades gracefully — reads return empty `Page` (banner state, not breakage), mutations reject retryable (queue+retry later), subscribe no-ops; `offline=true` flag. 13 tests: stream tick/auto/unsub, stream→bus-tap, mode flip (mock/offline/engine-throws/engine-factory/distinct instances), offline empty-read/retryable-mutation/repo-no-crash. 222 vitest green.
 
 ### CD-129 · CacheManager ∥
 **BP:** IDE-E03-F04 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-124, CD-120

@@ -17,3 +17,10 @@ export * from './domain-repositories'
 export { RepositoryRegistry } from './repository-registry'
 export * from './middleware'
 export * from './mock'
+export {
+  selectGateway,
+  OfflineGateway,
+  type GatewayMode,
+  type GatewaySelection,
+  type SelectGatewayDeps,
+} from './gateway-selection'

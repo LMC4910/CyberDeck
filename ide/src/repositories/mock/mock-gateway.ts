@@ -8,6 +8,7 @@ import type { Gateway, RequestOptions, RequestLogEntry } from '../gateway'
 import { GatewayError } from '../middleware'
 import { FixtureDB, type Doc } from './fixture-db'
 import { defaultSeed, type SeedMap } from './seed'
+import { MockStreamSource } from './mock-streams'
 
 export class ContractError extends Error {
   constructor(route: string) {
@@ -34,19 +35,28 @@ export interface MockGatewayOptions {
   seed?: SeedMap
   /** Injected id generator for created docs (tests). */
   newId?: (prefix: string) => string
+  /** Mock push stream source (CD-128); a default is created if omitted. */
+  streams?: MockStreamSource
 }
 
 export class MockApiGateway implements Gateway {
   private readonly db: FixtureDB
   private readonly taps = new Set<(e: RequestLogEntry) => void>()
   private readonly newId: (prefix: string) => string
+  private readonly streams: MockStreamSource
   private idSeq = 0
 
   constructor(options: MockGatewayOptions = {}) {
     this.db = new FixtureDB(options.storage)
     this.newId = options.newId ?? ((p) => `${p}_${(++this.idSeq).toString(36).padStart(6, '0')}`)
+    this.streams = options.streams ?? new MockStreamSource()
     const seed = options.seed ?? defaultSeed()
     for (const [collection, docs] of Object.entries(seed)) this.db.seed(collection, docs)
+  }
+
+  /** The push-stream source, for the wiring layer to tick / bridge onto the bus. */
+  get streamSource(): MockStreamSource {
+    return this.streams
   }
 
   async request<T>(route: RouteId | string, options: RequestOptions = {}): Promise<T> {
@@ -65,10 +75,14 @@ export class MockApiGateway implements Gateway {
     }
   }
 
-  // Subscriptions are wired to real mock streams in CD-128; here they no-op.
-  subscribe<T>(route: RouteId | string, _params: unknown, _handler: (e: T) => void): () => void {
+  // Subscriptions are driven by the mock stream source (CD-128).
+  subscribe<T>(
+    route: RouteId | string,
+    params: Record<string, unknown> | undefined,
+    handler: (e: T) => void,
+  ): () => void {
     if (!ROUTE_SET.has(route)) throw new ContractError(route)
-    return () => {}
+    return this.streams.subscribe(route, params, handler as (e: unknown) => void)
   }
 
   tap(fn: (entry: RequestLogEntry) => void): () => void {
