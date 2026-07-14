@@ -8,7 +8,7 @@
 
 | Milestone | Tickets | Gate (demo that must pass to proceed) | Blueprint sprints |
 |---|---|---|---|
-| **M1 — Platform Kernel** | CD-101…139 | Boot ≤ 150 ms with inspectable stages; everything config-driven; contract tests green vs MockApiGateway; Platform Inspector live | S1–S3 |
+| **M1 — Platform Kernel** ✅ | CD-101…139 | Boot ≤ 150 ms with inspectable stages; everything config-driven; contract tests green vs MockApiGateway; Platform Inspector live — **GATE PASSED 2026-07-15** | S1–S3 |
 | **M2 — Shell & Chrome** | CD-201…219 | 7 workspaces navigable; palette, prefs, docking, session restore; every visible control operable or honestly disabled | S4–S5 |
 | **M3 — Authoring Core** | CD-301…330 | On mocks: insert → bind → state → undo → save → reload authoring journey, incl. components/variants/overrides | S6–S8 |
 | **M4 — Workspaces Complete + Widget Platform** | CD-401…425 | Every workspace functional on mocks; flows test-run; player preview; widgets load from manifests as lazy chunks | S9–S11 |
