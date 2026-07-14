@@ -11,3 +11,5 @@ export {
 export { useStore } from './use-store'
 export { StoreManager, type StoreManagerOptions, type StoreNotice } from './store-manager'
 export * from './boot-critical'
+export * from './domain/domain-stores'
+export { createAllStores, storesManifest, type AllStores, type StoreRow } from './all-stores'

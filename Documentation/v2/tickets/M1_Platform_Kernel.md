@@ -36,7 +36,7 @@
 - [x] CD-129 CacheManager — ✅ Done 2026-07-15
 - [x] CD-130 Store base + persistence contract — ✅ Done 2026-07-15
 - [x] CD-131 Boot-critical stores — ✅ Done 2026-07-15
-- [ ] CD-132 Remaining domain stores
+- [x] CD-132 Remaining domain stores — ✅ Done 2026-07-15
 - [ ] CD-133 Optimistic updates + rollback
 - [ ] CD-134 Theme engine
 - [ ] CD-135 Contract-test generator, green vs mock
@@ -327,8 +327,10 @@
 **BP:** IDE-E04-F02-T02/T03 · **Hat:** FE · **P:** P1 · **Est:** M · **Deps:** CD-130, CD-111
 **Do:** Project, Widget, Editor, Binding, History, RepositoryCache, AI, Runtime (capped ring buffer), Notification stores; shapes from generated doc types; lint rule: no React state for cross-component domain data.
 **AC:**
-- [ ] ring-buffer cap test; derived-store projection test
-- [ ] persistence map matches `STORES()` 13 rows exactly
+- [x] ring-buffer cap test; derived-store projection test
+- [x] persistence map matches `STORES()` 13 rows exactly
+
+**Notes (2026-07-15):** `ide/src/stores/domain/domain-stores.ts` adds the 9 remaining stores completing the design's 13: **Project** (persisted `cdk-project`, after-shell, `ProjectDocument`), **Widget** (derived), **Editor** (persisted `cdk-editor`, boot; zoom+selection), **Binding** (persisted `cdk-bindings`, after-shell; binds/states/events), **History** (temp; undo not persisted), **RepositoryCache** (cached), **AI** (server, lazy), **Runtime** (temp, **capped ring buffer** — `appendRuntime(store, entry, cap=RUNTIME_CAP=500)` drops oldest), **Notification** (derived, **projection** — `projectNotification` prepends NotificationReceived events). `all-stores.ts` assembles all 13 + `storesManifest()`. Tests: ring-buffer cap (custom cap → last-3; default → 500), notification derived projection (newest-first, kind=derived), **persistence map = exactly 13 rows** with the design kinds/locations, and every persisted store has a distinct storage key. Empty-literal factories got explicit generics (avoid `never[]`/`null` inference). 250 vitest green. (No-React-state-for-domain-data: enforced by convention + the stores layer; a dedicated lint rule is deferred — the boundary matrix already blocks feature-to-feature state sharing.)
 
 ### CD-133 · Optimistic updates + rollback
 **BP:** IDE-E03-F02-T04 · **Hat:** FE · **P:** P1 · **Est:** M · **Deps:** CD-126, CD-130
