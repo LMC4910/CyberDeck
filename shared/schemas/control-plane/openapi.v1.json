@@ -336,6 +336,45 @@
         }
       }
     },
+    "/v1/assets": {
+      "get": {
+        "operationId": "assets.list",
+        "summary": "List project assets (filter by type)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      }
+    },
+    "/v1/assets/{id}": {
+      "get": {
+        "operationId": "assets.get",
+        "summary": "Get one asset's metadata",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          }
+        }
+      }
+    },
     "/v1/flows": {
       "get": {
         "operationId": "flows.list",

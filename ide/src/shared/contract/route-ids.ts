@@ -4,6 +4,8 @@
 export type RouteId =
   | 'ai.threads.list'
   | 'ai.threads.suggest'
+  | 'assets.get'
+  | 'assets.list'
   | 'devices.assign'
   | 'devices.heartbeat'
   | 'devices.list'
@@ -36,6 +38,8 @@ export type RouteId =
 export const ROUTE_IDS = [
   'ai.threads.list',
   'ai.threads.suggest',
+  'assets.get',
+  'assets.list',
   'devices.assign',
   'devices.heartbeat',
   'devices.list',

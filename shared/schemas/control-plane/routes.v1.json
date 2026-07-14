@@ -16,6 +16,9 @@
     { "id": "widgets.manifests", "method": "GET", "path": "/v1/widgets/manifests", "kind": "unary", "summary": "List widget manifests (paginated)", "response": "widget-manifest.schema.json", "errors": ["unavailable"] },
     { "id": "widgets.manifest.get", "method": "GET", "path": "/v1/widgets/manifests/:id", "kind": "unary", "summary": "Get one widget manifest", "response": "widget-manifest.schema.json", "errors": ["not_found"] },
 
+    { "id": "assets.list", "method": "GET", "path": "/v1/assets", "kind": "unary", "summary": "List project assets (filter by type)", "errors": ["unavailable"] },
+    { "id": "assets.get", "method": "GET", "path": "/v1/assets/:id", "kind": "unary", "summary": "Get one asset's metadata", "errors": ["not_found"] },
+
     { "id": "flows.list", "method": "GET", "path": "/v1/flows", "kind": "unary", "summary": "List flows", "response": "documents/flow.schema.json", "errors": ["unavailable"] },
     { "id": "flows.get", "method": "GET", "path": "/v1/flows/:id", "kind": "unary", "summary": "Get one flow", "response": "documents/flow.schema.json", "errors": ["not_found"] },
     { "id": "flows.create", "method": "POST", "path": "/v1/flows", "kind": "unary", "summary": "Create a flow", "request": "documents/flow.schema.json", "response": "documents/flow.schema.json", "errors": ["validation_failed", "conflict"] },

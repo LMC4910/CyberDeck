@@ -34,11 +34,11 @@ describe('route set v1', () => {
     expect(ok).toBe(true)
   })
 
-  it('has ~30 routes across the 7 REPOS domains', () => {
-    expect(routes.length).toBe(30)
+  it('has 32 routes across the REPOS + control domains', () => {
+    expect(routes.length).toBe(32)
     const domains = new Set(routes.map((r) => r.id.split('.')[0]))
-    // projects, variables, widgets, flows, runtime, devices, permissions, ai
-    for (const d of ['projects', 'variables', 'widgets', 'flows', 'runtime', 'devices', 'permissions', 'ai']) {
+    // the 7 REPOS domains + runtime/permissions control routes
+    for (const d of ['projects', 'variables', 'widgets', 'assets', 'flows', 'runtime', 'devices', 'permissions', 'ai']) {
       expect(domains).toContain(d)
     }
   })

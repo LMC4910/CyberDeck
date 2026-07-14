@@ -5,7 +5,7 @@ import { ROUTE_IDS, type RouteId, type CyberDeckFeatureFlags } from '@/shared/co
 
 describe('generated contract', () => {
   it('exposes the route-id union + runtime list', () => {
-    expect(ROUTE_IDS.length).toBe(30)
+    expect(ROUTE_IDS.length).toBe(32)
     const id: RouteId = 'projects.list'
     expect(ROUTE_IDS).toContain(id)
   })
