@@ -37,7 +37,7 @@
 - [x] CD-130 Store base + persistence contract — ✅ Done 2026-07-15
 - [x] CD-131 Boot-critical stores — ✅ Done 2026-07-15
 - [x] CD-132 Remaining domain stores — ✅ Done 2026-07-15
-- [ ] CD-133 Optimistic updates + rollback
+- [x] CD-133 Optimistic updates + rollback — ✅ Done 2026-07-15
 - [ ] CD-134 Theme engine
 - [ ] CD-135 Contract-test generator, green vs mock
 - [ ] CD-136 Playwright boot E2E + coverage floors
@@ -336,7 +336,9 @@
 **BP:** IDE-E03-F02-T04 · **Hat:** FE · **P:** P1 · **Est:** M · **Deps:** CD-126, CD-130
 **Do:** Optimistic mutation layer on repos writing through stores; rollback + corrective event on failure.
 **AC:**
-- [ ] test: optimistic apply → injected failure → rollback + event observed
+- [x] test: optimistic apply → injected failure → rollback + event observed
+
+**Notes (2026-07-15):** `ide/src/stores/optimistic.ts`. `optimistic({store, apply, commit, reconcile?, onRollback?})` snapshots the store, applies `apply` immediately, awaits `commit` (the repo write); on success optionally `reconcile`s with the server's authoritative result, on failure **restores the snapshot and calls `onRollback(error, restored)`** (the wiring turns this into a corrective NotificationReceived/bus event) then rethrows. Generic over store state + commit result; decoupled from EventBus via the callback. Tests: success keeps change, reconcile applies server result, **injected commit failure → rollback to snapshot + onRollback fired with error & restored state**, and the optimistic value is provably visible mid-flight before rollback. 254 vitest green.
 
 ### CD-134 · Theme engine
 **BP:** IDE-E05 · **Hat:** FE+DES · **P:** P0 · **Est:** M · **Deps:** CD-117, CD-116

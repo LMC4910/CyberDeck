@@ -13,3 +13,4 @@ export { StoreManager, type StoreManagerOptions, type StoreNotice } from './stor
 export * from './boot-critical'
 export * from './domain/domain-stores'
 export { createAllStores, storesManifest, type AllStores, type StoreRow } from './all-stores'
+export { optimistic, type OptimisticMutation } from './optimistic'
