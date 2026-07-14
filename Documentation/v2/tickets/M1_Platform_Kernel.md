@@ -42,7 +42,7 @@
 - [x] CD-135 Contract-test generator, green vs mock — ✅ Done 2026-07-15
 - [x] CD-136 Playwright boot E2E + coverage floors — ✅ Done 2026-07-15
 - [x] CD-137 Platform Inspector: services/stores/flags tabs — ✅ Done 2026-07-15
-- [ ] CD-138 Inspector: repos/events tabs + Architecture Mode + boot replay
+- [x] CD-138 Inspector: repos/events tabs + Architecture Mode + boot replay — ✅ Done 2026-07-15
 - [ ] CD-139 **M1 gate review**
 
 ---
@@ -378,8 +378,10 @@
 **BP:** IDE-E06-T02/T04/T05 · **Hat:** FE · **P:** P2 · **Est:** M · **Deps:** CD-137, CD-127
 **Do:** Repos tab from the request-log tap (route/ms/cache hit); events tab streaming `bus.tap()` + catalog; Architecture Mode markers with the 21 `ARCH()` notes from a content file; boot overlay replaying recorded stage timings.
 **AC:**
-- [ ] request rows + live event stream visible
-- [ ] 21 notes render; boot replay uses real marks
+- [x] request rows + live event stream visible
+- [x] 21 notes render; boot replay uses real marks
+
+**Notes (2026-07-15):** `ide/src/workspaces/inspector/inspector-extra.tsx`. **ReposTab** renders a live request log (route/ok/ms) from an injected `subscribe` tap — takes a `RequestTap` prop (structural `RequestRow`), NOT the gateway, because the workspace layer may not import `@/repositories` (the app-shell wiring passes `gateway.tap`; boundary-clean). **EventsTab** renders the 13-event catalog (`EVENT_NAMES`) + a live stream from `bus.tap()`. **ArchitectureMode** renders all **21 ARCH notes** from `arch-notes.ts` (content-only, transcribed from the design `ARCH()` — id/title/what/how/why so PM/design can edit). **BootReplay** renders a real `BootReport`'s recorded per-stage timings + status + interactive-at. Tests: request row via injected tap (route/ok/38ms), 13-event catalog + live ThemeChanged stream, all 21 arch notes render, and boot replay over a **real `runBoot` report** (3 stages, status ok, interactive-at). 270 vitest green. **M1 platform kernel implementation complete — CD-139 gate next.**
 
 ### CD-139 · **M1 gate review**
 **BP:** Blueprint M1 gate · **Hat:** PM+QA · **P:** P0 · **Est:** S · **Deps:** CD-101…138
