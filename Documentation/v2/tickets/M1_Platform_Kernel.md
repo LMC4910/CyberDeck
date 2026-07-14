@@ -34,7 +34,7 @@
 - [x] CD-127 MockApiGateway: router + fixture DB — ✅ Done 2026-07-14
 - [x] CD-128 Mock push streams + gateway selection + offline — ✅ Done 2026-07-14 (offline banner E2E deferred to shell/CD-136)
 - [x] CD-129 CacheManager — ✅ Done 2026-07-15
-- [ ] CD-130 Store base + persistence contract
+- [x] CD-130 Store base + persistence contract — ✅ Done 2026-07-15
 - [ ] CD-131 Boot-critical stores
 - [ ] CD-132 Remaining domain stores
 - [ ] CD-133 Optimistic updates + rollback
@@ -309,8 +309,10 @@
 **BP:** IDE-E04-F01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-119, CD-116
 **Do:** Store factory with subscribe/select (memoized) + React hook; declared `{kind, location, restoreAt, migrate}` per store; write-behind for persisted kinds; boot-stage restore ordering; corrupt-blob fallback.
 **AC:**
-- [ ] render-count test proves selector memoization
-- [ ] restore-ordering + corrupt-blob tests green
+- [x] render-count test proves selector memoization
+- [x] restore-ordering + corrupt-blob tests green
+
+**Notes (2026-07-15):** `ide/src/stores/`. `createStore(initial, descriptor)` — observable store (`getState`/`setState` notify-on-change via Object.is/`subscribe`/`select`/`hydrate`); `StoreDescriptor{name, kind, location?, restoreAt?, migrate?}` where `kind` ∈ temp/persisted/derived/cached/server (the design's 13 STORES map onto these). `useStore(store, selector, isEqual=Object.is)` (`use-store.ts`) binds via `useSyncExternalStore` with a **ref-cached snapshot** so a component re-renders only when its selected slice changes — proven by a render-count test (unrelated `b` update → 0 re-renders, selected `a` update → 1) plus a custom-equality array test. `StoreManager` (`store-manager.ts`): `register` wires write-behind (debounced, injectable scheduler) for persisted kinds; `restore()` restores persisted stores in `restoreAt` order (boot-blocking→boot→after-shell→lazy), running each store's `migrate`; a **corrupt blob falls back to initial state + a `corrupt-blob` notice, never crashing**; `flush()` forces pending writes (flush-on-quit — fixed an initial bug where flush cancelled instead of writing). 11 tests (store notify, select, restore ordering, corrupt-blob fallback, migrate, debounce+flush, scheduler-tick write, render-count ×2). 241 vitest green.
 
 ### CD-131 · Boot-critical stores
 **BP:** IDE-E04-F02-T01 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-130, CD-118
