@@ -13,8 +13,18 @@ const cpDir = join(schemasDir, 'control-plane')
 const readJson = (p: string) => JSON.parse(readFileSync(p, 'utf8')) as Record<string, unknown>
 
 const ajv = new Ajv2020({ strict: false, allErrors: true })
+interface Route {
+  id: string
+  method: string
+  path: string
+  kind: string
+  request?: string
+  response?: string
+  event?: string
+  errors?: string[]
+}
 const registry = readJson(join(cpDir, 'routes.v1.json'))
-const routes = registry.routes as Array<Record<string, string>>
+const routes = registry.routes as Route[]
 
 describe('route set v1', () => {
   it('validates against the route-registry meta-schema', () => {
@@ -36,7 +46,8 @@ describe('route set v1', () => {
   it('every referenced request/response/event schema file exists', () => {
     for (const r of routes) {
       for (const key of ['request', 'response', 'event'] as const) {
-        if (r[key]) expect(existsSync(join(schemasDir, r[key]))).toBe(true)
+        const ref = r[key]
+        if (ref) expect(existsSync(join(schemasDir, ref))).toBe(true)
       }
     }
   })

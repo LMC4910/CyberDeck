@@ -102,6 +102,11 @@ jobs:
           cache: pnpm
           cache-dependency-path: ide/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - name: contract drift gate (regenerate types + openapi, then diff)
+        run: |
+          pnpm gen:types
+          git diff --exit-code -- src/shared/contract ../shared/schemas/control-plane/openapi.v1.json \
+            || (echo "::error::Generated contract is stale — run 'task gen:types' and commit." && exit 1)
       - name: eslint (boundary rules included)
         run: pnpm lint
       - name: tsc --noEmit

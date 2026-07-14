@@ -19,7 +19,7 @@
 - [x] CD-112 Schema: flow document + triggers — ✅ Done 2026-07-14
 - [x] CD-113 Control-plane envelope + route-registry format + error model — ✅ Done 2026-07-14
 - [x] CD-114 Route set v1 + event bridge map — ✅ Done 2026-07-14
-- [ ] CD-115 TS type generation + CI drift gate
+- [x] CD-115 TS type generation + CI drift gate — ✅ Done 2026-07-14
 - [ ] CD-116 BootManager
 - [ ] CD-117 ConfigurationService core
 - [ ] CD-118 Config persistence, validation, migration
@@ -177,8 +177,10 @@
 **BP:** CON-E03-T01 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-114, CD-105
 **Do:** `task gen:types` → TS types under `ide/src/shared/contract/`; CI job regenerates + `git diff --exit-code`; codegen README.
 **AC:**
-- [ ] kernel code imports only generated contract types
-- [ ] drift gate fails on stale types (proven once)
+- [x] kernel code imports only generated contract types
+- [x] drift gate fails on stale types (proven once)
+
+**Notes (2026-07-14):** `ide/scripts/gen-types.mjs` (json-schema-to-typescript) walks `shared/schemas/**` (skips fixtures/openapi), emits one `.ts` per schema + `route-ids.ts` (RouteId union + ROUTE_IDS const from the registry) + a deduped `index.ts` barrel, under `ide/src/shared/contract/` — 36 files. Absolute `$id` refs resolved to local files via a custom ref resolver (no network). `task gen:types` / `pnpm gen:types` also regenerates the OpenAPI export. Barrel re-exports each type once (shared `$defs` like StableId/Param declared in several files → first-wins). Kernel imports only from `@/shared/contract` (README + smoke test enforce). CI `ide` job: `pnpm gen:types` then `git diff --exit-code` on the generated dir + openapi — drift = red build. **Drift gate proven** (2026-07-14): hand-editing a committed generated file then diffing against HEAD produces a non-empty diff / non-zero exit. **Also fixed latent CI failure:** the schema test files use Node APIs but `tsconfig.app.json` is browser-typed (`types: vite/client`), so `pnpm typecheck` had been failing since CD-108 — added `tsconfig.test.json` (node types, includes `*.test.ts` + `src/shared/test`) as a project reference and excluded tests from the app project; generated dir eslint-ignored. Full local CI mirror now green: lint + typecheck + 98 vitest + build + budget.
 
 ### CD-116 · BootManager
 **BP:** IDE-E01-F01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-102, CD-107

@@ -6,7 +6,8 @@ import boundaries from 'eslint-plugin-boundaries'
 // listed under `policies` below fails lint, including workspace→workspace and
 // widget→widget (cross-feature communication goes through stores/events).
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules'] },
+  // src/shared/contract is generated (gen-types.mjs) + drift-gated, not hand-authored.
+  { ignores: ['dist', 'node_modules', 'src/shared/contract'] },
   ...tseslint.configs.recommended,
   {
     files: ['src/**/*.{ts,tsx}'],

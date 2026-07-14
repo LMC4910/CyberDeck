@@ -69,6 +69,12 @@ tasks:
     cmds:
       - pnpm lint
 
+  gen:types:
+    desc: "Regenerate TS contract types + OpenAPI export from shared/schemas (CD-115)"
+    dir: ide
+    cmds:
+      - pnpm gen:types
+
   test:engine:
     desc: "go test on the engine module"
     dir: engine
