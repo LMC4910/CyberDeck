@@ -31,7 +31,7 @@
 - [x] CD-124 Repository base + registry + 7 domain repos — ✅ Done 2026-07-14
 - [x] CD-125 Middleware: composition, latency, failure injection — ✅ Done 2026-07-14
 - [x] CD-126 Middleware: retry/backoff + cancellation — ✅ Done 2026-07-14
-- [ ] CD-127 MockApiGateway: router + fixture DB
+- [x] CD-127 MockApiGateway: router + fixture DB — ✅ Done 2026-07-14
 - [ ] CD-128 Mock push streams + gateway selection + offline
 - [ ] CD-129 CacheManager
 - [ ] CD-130 Store base + persistence contract
@@ -283,8 +283,10 @@
 **BP:** IDE-E03-F03-T01/T02 · **Hat:** FE · **P:** P0 · **Est:** L · **Deps:** CD-124, CD-114
 **Do:** Router auto-built from the route registry (unknown route = contract error); fixture DB seeded from CD-108…112 fixtures + design values (telemetry vars, projects, flows); pagination/filter/sort implemented mock-side; mutations persist (memory + localStorage).
 **AC:**
-- [ ] every registry route resolves; unknown route errors loudly
-- [ ] query semantics verified by the contract suite (CD-135)
+- [x] every registry route resolves; unknown route errors loudly
+- [x] query semantics verified by the contract suite (CD-135) — *query semantics implemented + unit-tested here; the generated contract suite consumes them in CD-135*
+
+**Notes (2026-07-14):** `ide/src/repositories/mock/`. `MockApiGateway implements Gateway` fully in-memory. Router is auto-derived from the generated `ROUTE_IDS` set (no cross-boundary JSON import) — a route not in the registry throws a loud `ContractError`; known routes map by `prefix.op` to a collection + CRUD/domain handler. `FixtureDB`: collections with mock-side query (shallow-equality filter, field sort asc/desc, page/limit → `Page{items,page,limit,total}`); `get/put/delete`; persists each mutated collection JSON through the injected `StorageAdapter` (memory or browser). `seed.ts` embeds compact design values (6 telemetry variables, a project, the stream-start flow, 3 canon manifests, a device, an asset) — full schema fixtures back CD-135. Subscriptions no-op here (CD-128 wires mock streams); request `tap` for the inspector. Tests: **all 32 routes resolve without ContractError**, unknown route → ContractError, filter/sort/pagination, create/update/delete round-trip + persistence, **second gateway on same storage sees mutations**, RepositoryRegistry queries/mutates through the mock. Also added eslint `argsIgnorePattern:^_` for interface-impl unused args. 210 vitest green.
 
 ### CD-128 · Mock push streams + gateway selection + offline
 **BP:** IDE-E03-F03-T03/T04 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-127

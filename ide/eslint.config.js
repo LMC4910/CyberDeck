@@ -30,6 +30,11 @@ export default tseslint.config(
       'boundaries/files': [{ category: 'app', pattern: 'src/*' }],
     },
     rules: {
+      // underscore-prefixed args/vars are intentionally unused (interface impls).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'boundaries/dependencies': [
         'error',
         {
