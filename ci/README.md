@@ -12,7 +12,8 @@ branch green; the per-ticket local validation below mirrors it.
 | `engine` | ubuntu | `go vet` · `golangci-lint run` (v2.12.2) · `go test -race ./...` · `go build ./...` |
 | `engine-cross` | windows, macos | `go build ./...` · `go test ./...` (proves the engine compiles + passes on all three desktop OSes) |
 | `client` | ubuntu | `dart analyze` · `flutter test` · `flutter build bundle` |
-| `ide` | ubuntu | `pnpm lint` (eslint + boundary rules) · `pnpm typecheck` · `pnpm test` (vitest + RTL) · `pnpm run test:boundaries` · `pnpm build` · `pnpm size` (≤ 350 KB gz shell entry, CD-105) |
+| `ide` | ubuntu | `pnpm lint` (eslint + boundary rules) · `pnpm typecheck` · `pnpm test:coverage` (vitest + RTL + coverage report) · `pnpm run test:boundaries` · `pnpm build` · `pnpm size` (≤ 350 KB gz shell entry, CD-105) |
+| `ide-e2e` | ubuntu | Playwright chromium boot journey (CD-136): app boots to interactive + shell renders |
 
 ### Go: every workspace module, not just the engine
 

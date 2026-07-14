@@ -15,7 +15,9 @@
     "lint": "eslint src --ignore-pattern \"**/__fixture-*__/**\"",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:boundaries": "node --test scripts/",
+    "test:e2e": "playwright test",
     "size": "size-limit",
     "gen:types": "node scripts/gen-types.mjs && node scripts/gen-openapi.mjs",
     "preview": "vite preview"
@@ -33,6 +35,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@size-limit/file": "^12.1.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

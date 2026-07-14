@@ -111,14 +111,38 @@ jobs:
         run: pnpm lint
       - name: tsc --noEmit
         run: pnpm typecheck
-      - name: tests (vitest)
-        run: pnpm test
+      - name: tests (vitest + coverage report)
+        run: pnpm test:coverage
       - name: tests (boundary rules)
         run: pnpm run test:boundaries
       - name: build
         run: pnpm build
       - name: bundle budget (≤ 350 KB gz shell entry)
         run: pnpm size
+
+  # Headless boot journey (CD-136). Coverage floors gate from CD-139; this proves
+  # the app boots to interactive in a real browser.
+  ide-e2e:
+    name: ide (boot E2E)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ide
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ide/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.4
+          cache: pnpm
+          cache-dependency-path: ide/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: install Playwright chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: boot E2E
+        run: pnpm test:e2e
 
   # Flutter client: analyze + test + a toolchain-free build (asset bundle). Per-OS
   # desktop/mobile installers are built by the EPIC-1 matrix tickets (PROJ-190/191/192).

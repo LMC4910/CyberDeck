@@ -1,0 +1,68 @@
+// App boot sequence (CD-136). Assembles the kernel services and runs the ordered
+// boot phases (BOOTSEQ) via the BootManager. This is the real, observable boot the
+// Playwright E2E drives: it ends by marking the app interactive. Kept minimal for
+// M1 — later milestones add extension host, widget registry, background services.
+import { runBoot, type BootPhase, type BootReport } from '@/platform/boot'
+import { ConfigurationService } from '@/services/configuration'
+import { ThemeService } from '@/services/theme'
+import { CommandRegistry, seedCommands } from '@/platform/commands'
+import { EventBus, TypedEventBus } from '@/platform/eventbus'
+
+export interface BootedKernel {
+  config: ConfigurationService
+  theme: ThemeService
+  commands: CommandRegistry
+  bus: TypedEventBus
+  report: BootReport
+}
+
+/** The default feature flags (design FLAGDEFS defaults). */
+function defaultConfig(): ConfigurationService {
+  return new ConfigurationService({
+    layers: {
+      defaults: {
+        features: {
+          expWidgets: false,
+          devTools: true,
+          aiProviders: true,
+          marketplace: false,
+          cloudSync: false,
+          automation: true,
+          pluginSandbox: true,
+        },
+        theme: { id: 'cyber-dark', mode: 'dark' },
+      },
+    },
+  })
+}
+
+export async function runAppBoot(): Promise<BootedKernel> {
+  const config = defaultConfig()
+  const theme = new ThemeService()
+  const commands = new CommandRegistry()
+  const bus = new TypedEventBus(new EventBus())
+
+  const phases: BootPhase[] = [
+    { id: 'configuration', blocking: true, run: () => void config.getAll() },
+    {
+      id: 'theme',
+      blocking: true,
+      run: () => theme.apply(config.get<string>('theme.id') ?? 'cyber-dark'),
+    },
+    { id: 'commands', blocking: true, run: () => commands.registerAll(seedCommands()) },
+  ]
+
+  const report = await runBoot(phases, {
+    order: ['configuration', 'theme', 'commands'],
+    onComplete: () => {
+      // mark the app interactive for the E2E / perf tooling
+      try {
+        performance.mark('cyberdeck:boot:interactive')
+      } catch {
+        /* no-op */
+      }
+    },
+  })
+
+  return { config, theme, commands, bus, report }
+}
