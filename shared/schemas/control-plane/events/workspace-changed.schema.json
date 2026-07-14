@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/workspace-changed.schema.json",
+  "title": "WorkspaceChanged Event",
+  "description": "IDE-internal: active workspace switched. No engine topic. CD-114.",
+  "type": "object",
+  "required": [
+    "workspaceId"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "workspaceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}

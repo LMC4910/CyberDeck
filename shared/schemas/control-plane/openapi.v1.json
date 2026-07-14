@@ -1,0 +1,769 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CyberDeck Control Plane",
+    "version": "1.1.0",
+    "description": "Generated from shared/schemas/control-plane/routes.v1.json (CD-114). Do not edit by hand — run ide/scripts/gen-openapi.mjs."
+  },
+  "paths": {
+    "/v1/projects": {
+      "get": {
+        "operationId": "projects.list",
+        "summary": "List projects (sorted, paginated)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "internal"
+          }
+        }
+      },
+      "post": {
+        "operationId": "projects.create",
+        "summary": "Create a project",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "internal"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{id}": {
+      "get": {
+        "operationId": "projects.get",
+        "summary": "Get one project document",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      },
+      "put": {
+        "operationId": "projects.update",
+        "summary": "Replace a project document",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "projects.delete",
+        "summary": "Delete a project",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      }
+    },
+    "/v1/projects/{id}/open": {
+      "post": {
+        "operationId": "projects.open",
+        "summary": "Open a project (hydrates registries, emits ProjectOpened)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/project.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "internal"
+          }
+        }
+      }
+    },
+    "/v1/variables": {
+      "get": {
+        "operationId": "variables.query",
+        "summary": "Query variables (scope/filter/sort/page)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "default": {
+            "description": "internal"
+          }
+        }
+      }
+    },
+    "/v1/variables/{id}": {
+      "get": {
+        "operationId": "variables.get",
+        "summary": "Read one variable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          }
+        }
+      },
+      "put": {
+        "operationId": "variables.write",
+        "summary": "Write a variable value",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "validation_failed"
+          }
+        }
+      }
+    },
+    "/v1/variables/subscribe": {
+      "get": {
+        "operationId": "variables.subscribe",
+        "summary": "Stream VariableChanged deltas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "event stream frame",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/control-plane/events/variable-changed.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        },
+        "x-cyberdeck-stream": true
+      }
+    },
+    "/v1/widgets/manifests": {
+      "get": {
+        "operationId": "widgets.manifests",
+        "summary": "List widget manifests (paginated)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/widget-manifest.schema.json"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      }
+    },
+    "/v1/widgets/manifests/{id}": {
+      "get": {
+        "operationId": "widgets.manifest.get",
+        "summary": "Get one widget manifest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/widget-manifest.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found"
+          }
+        }
+      }
+    },
+    "/v1/flows": {
+      "get": {
+        "operationId": "flows.list",
+        "summary": "List flows",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/flow.schema.json"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "flows.create",
+        "summary": "Create a flow",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/flow.schema.json"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://cyberdeck.shishir.com/schemas/documents/flow.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/flows/{id}": {
+      "get": {
+        "operationId": "flows.get",
+        "summary": "Get one flow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/flow.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found"
+          }
+        }
+      },
+      "put": {
+        "operationId": "flows.update",
+        "summary": "Replace a flow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/documents/flow.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "validation_failed"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://cyberdeck.shishir.com/schemas/documents/flow.schema.json"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "flows.delete",
+        "summary": "Delete a flow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          }
+        }
+      }
+    },
+    "/v1/flows/{id}/deploy": {
+      "post": {
+        "operationId": "flows.deploy",
+        "summary": "Deploy a flow to the engine",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      }
+    },
+    "/v1/flows/{id}/arm": {
+      "post": {
+        "operationId": "flows.arm",
+        "summary": "Arm/disarm a flow trigger",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "bad_request"
+          }
+        }
+      }
+    },
+    "/v1/flows/{id}/trace": {
+      "get": {
+        "operationId": "flows.trace",
+        "summary": "Stream a flow's execution trace (FlowExecuted)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "event stream frame",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/control-plane/events/flow-executed.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        },
+        "x-cyberdeck-stream": true
+      }
+    },
+    "/v1/runtime/log": {
+      "get": {
+        "operationId": "runtime.log",
+        "summary": "Stream the runtime log/event ring buffer",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "event stream frame",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/control-plane/events/runtime-log.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        },
+        "x-cyberdeck-stream": true
+      }
+    },
+    "/v1/devices": {
+      "get": {
+        "operationId": "devices.list",
+        "summary": "List paired devices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      }
+    },
+    "/v1/devices/heartbeat": {
+      "get": {
+        "operationId": "devices.heartbeat",
+        "summary": "Stream device heartbeats/presence",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "event stream frame",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://cyberdeck.shishir.com/schemas/control-plane/events/device-heartbeat.schema.json"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        },
+        "x-cyberdeck-stream": true
+      }
+    },
+    "/v1/devices/{id}/assign": {
+      "post": {
+        "operationId": "devices.assign",
+        "summary": "Assign a page/layout to a device",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "validation_failed"
+          }
+        }
+      }
+    },
+    "/v1/devices/{id}/revoke": {
+      "post": {
+        "operationId": "devices.revoke",
+        "summary": "Revoke a device pairing",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          }
+        }
+      }
+    },
+    "/v1/permissions": {
+      "get": {
+        "operationId": "permissions.list",
+        "summary": "List permission grants (engine core/security is the owner)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      }
+    },
+    "/v1/permissions/grant": {
+      "post": {
+        "operationId": "permissions.grant",
+        "summary": "Grant a requested capability",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "default": {
+            "description": "validation_failed"
+          }
+        }
+      }
+    },
+    "/v1/permissions/revoke": {
+      "post": {
+        "operationId": "permissions.revoke",
+        "summary": "Revoke a capability grant",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "not_found"
+          },
+          "default": {
+            "description": "forbidden"
+          }
+        }
+      }
+    },
+    "/v1/ai/threads": {
+      "get": {
+        "operationId": "ai.threads.list",
+        "summary": "List AI threads (interface-only stub, flag aiProviders)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "default": {
+            "description": "unavailable"
+          }
+        }
+      }
+    },
+    "/v1/ai/threads/suggest-layout": {
+      "post": {
+        "operationId": "ai.threads.suggest",
+        "summary": "Request a layout suggestion (stub — no bundled provider, D7)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "default": {
+            "description": "rate_limited"
+          }
+        }
+      }
+    }
+  }
+}

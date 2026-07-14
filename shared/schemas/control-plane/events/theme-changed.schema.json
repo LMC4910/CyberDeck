@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/theme-changed.schema.json",
+  "title": "ThemeChanged Event",
+  "description": "IDE-internal: active theme switched. No engine topic. CD-114.",
+  "type": "object",
+  "required": [
+    "themeId"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "themeId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}

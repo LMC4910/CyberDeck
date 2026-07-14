@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/device-heartbeat.schema.json",
+  "title": "Device Heartbeat Event",
+  "description": "A device presence/heartbeat frame (engine bridge: device.paired / device.revoked + liveness). CD-114.",
+  "type": "object",
+  "required": [
+    "deviceId",
+    "state"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "deviceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "enum": [
+        "online",
+        "offline",
+        "paired",
+        "revoked"
+      ]
+    },
+    "rttMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}

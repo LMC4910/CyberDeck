@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "routes": [
+    { "id": "projects.list", "method": "GET", "path": "/v1/projects", "kind": "unary", "summary": "List projects (sorted, paginated)", "response": "documents/project.schema.json", "errors": ["unavailable", "internal"] },
+    { "id": "projects.get", "method": "GET", "path": "/v1/projects/:id", "kind": "unary", "summary": "Get one project document", "response": "documents/project.schema.json", "errors": ["not_found", "unavailable"] },
+    { "id": "projects.create", "method": "POST", "path": "/v1/projects", "kind": "unary", "summary": "Create a project", "request": "documents/project.schema.json", "response": "documents/project.schema.json", "errors": ["validation_failed", "conflict", "internal"] },
+    { "id": "projects.update", "method": "PUT", "path": "/v1/projects/:id", "kind": "unary", "summary": "Replace a project document", "request": "documents/project.schema.json", "response": "documents/project.schema.json", "errors": ["not_found", "validation_failed", "conflict"] },
+    { "id": "projects.delete", "method": "DELETE", "path": "/v1/projects/:id", "kind": "unary", "summary": "Delete a project", "errors": ["not_found", "unavailable"] },
+    { "id": "projects.open", "method": "POST", "path": "/v1/projects/:id/open", "kind": "unary", "summary": "Open a project (hydrates registries, emits ProjectOpened)", "response": "documents/project.schema.json", "errors": ["not_found", "internal"] },
+
+    { "id": "variables.query", "method": "GET", "path": "/v1/variables", "kind": "unary", "summary": "Query variables (scope/filter/sort/page)", "errors": ["unavailable", "internal"] },
+    { "id": "variables.get", "method": "GET", "path": "/v1/variables/:id", "kind": "unary", "summary": "Read one variable", "errors": ["not_found"] },
+    { "id": "variables.write", "method": "PUT", "path": "/v1/variables/:id", "kind": "unary", "summary": "Write a variable value", "errors": ["not_found", "forbidden", "validation_failed"] },
+    { "id": "variables.subscribe", "method": "GET", "path": "/v1/variables/subscribe", "kind": "subscription", "summary": "Stream VariableChanged deltas", "event": "control-plane/events/variable-changed.schema.json", "errors": ["unauthorized", "unavailable"] },
+
+    { "id": "widgets.manifests", "method": "GET", "path": "/v1/widgets/manifests", "kind": "unary", "summary": "List widget manifests (paginated)", "response": "widget-manifest.schema.json", "errors": ["unavailable"] },
+    { "id": "widgets.manifest.get", "method": "GET", "path": "/v1/widgets/manifests/:id", "kind": "unary", "summary": "Get one widget manifest", "response": "widget-manifest.schema.json", "errors": ["not_found"] },
+
+    { "id": "flows.list", "method": "GET", "path": "/v1/flows", "kind": "unary", "summary": "List flows", "response": "documents/flow.schema.json", "errors": ["unavailable"] },
+    { "id": "flows.get", "method": "GET", "path": "/v1/flows/:id", "kind": "unary", "summary": "Get one flow", "response": "documents/flow.schema.json", "errors": ["not_found"] },
+    { "id": "flows.create", "method": "POST", "path": "/v1/flows", "kind": "unary", "summary": "Create a flow", "request": "documents/flow.schema.json", "response": "documents/flow.schema.json", "errors": ["validation_failed", "conflict"] },
+    { "id": "flows.update", "method": "PUT", "path": "/v1/flows/:id", "kind": "unary", "summary": "Replace a flow", "request": "documents/flow.schema.json", "response": "documents/flow.schema.json", "errors": ["not_found", "validation_failed"] },
+    { "id": "flows.delete", "method": "DELETE", "path": "/v1/flows/:id", "kind": "unary", "summary": "Delete a flow", "errors": ["not_found"] },
+    { "id": "flows.deploy", "method": "POST", "path": "/v1/flows/:id/deploy", "kind": "unary", "summary": "Deploy a flow to the engine", "errors": ["not_found", "validation_failed", "unavailable"] },
+    { "id": "flows.arm", "method": "POST", "path": "/v1/flows/:id/arm", "kind": "unary", "summary": "Arm/disarm a flow trigger", "errors": ["not_found", "bad_request"] },
+    { "id": "flows.trace", "method": "GET", "path": "/v1/flows/:id/trace", "kind": "subscription", "summary": "Stream a flow's execution trace (FlowExecuted)", "event": "control-plane/events/flow-executed.schema.json", "errors": ["not_found", "unavailable"] },
+
+    { "id": "runtime.log", "method": "GET", "path": "/v1/runtime/log", "kind": "subscription", "summary": "Stream the runtime log/event ring buffer", "event": "control-plane/events/runtime-log.schema.json", "errors": ["unauthorized", "unavailable"] },
+
+    { "id": "devices.list", "method": "GET", "path": "/v1/devices", "kind": "unary", "summary": "List paired devices", "errors": ["unavailable"] },
+    { "id": "devices.heartbeat", "method": "GET", "path": "/v1/devices/heartbeat", "kind": "subscription", "summary": "Stream device heartbeats/presence", "event": "control-plane/events/device-heartbeat.schema.json", "errors": ["unavailable"] },
+    { "id": "devices.assign", "method": "POST", "path": "/v1/devices/:id/assign", "kind": "unary", "summary": "Assign a page/layout to a device", "errors": ["not_found", "validation_failed"] },
+    { "id": "devices.revoke", "method": "POST", "path": "/v1/devices/:id/revoke", "kind": "unary", "summary": "Revoke a device pairing", "errors": ["not_found"] },
+
+    { "id": "permissions.list", "method": "GET", "path": "/v1/permissions", "kind": "unary", "summary": "List permission grants (engine core/security is the owner)", "errors": ["unavailable"] },
+    { "id": "permissions.grant", "method": "POST", "path": "/v1/permissions/grant", "kind": "unary", "summary": "Grant a requested capability", "errors": ["forbidden", "validation_failed"] },
+    { "id": "permissions.revoke", "method": "POST", "path": "/v1/permissions/revoke", "kind": "unary", "summary": "Revoke a capability grant", "errors": ["not_found", "forbidden"] },
+
+    { "id": "ai.threads.list", "method": "GET", "path": "/v1/ai/threads", "kind": "unary", "summary": "List AI threads (interface-only stub, flag aiProviders)", "errors": ["not_implemented", "unavailable"] },
+    { "id": "ai.threads.suggest", "method": "POST", "path": "/v1/ai/threads/suggest-layout", "kind": "unary", "summary": "Request a layout suggestion (stub — no bundled provider, D7)", "errors": ["not_implemented", "rate_limited"] }
+  ]
+}

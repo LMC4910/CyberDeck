@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/flow-executed.schema.json",
+  "title": "FlowExecuted Event",
+  "description": "A flow run completed or failed (engine bridge: flow.run / flow.failed). CD-114.",
+  "type": "object",
+  "required": [
+    "flowId",
+    "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "flowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "error": {
+      "type": "string"
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}

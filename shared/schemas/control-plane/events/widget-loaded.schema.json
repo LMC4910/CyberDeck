@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/widget-loaded.schema.json",
+  "title": "WidgetLoaded Event",
+  "description": "IDE-internal: a widget module finished lazy init. No engine topic. CD-114.",
+  "type": "object",
+  "required": [
+    "widgetId",
+    "type"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "widgetId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}

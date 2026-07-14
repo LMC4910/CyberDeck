@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/ai-completed.schema.json",
+  "title": "AICompleted Event",
+  "description": "An AI thread/completion finished. CD-114.",
+  "type": "object",
+  "required": [
+    "threadId",
+    "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "threadId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}

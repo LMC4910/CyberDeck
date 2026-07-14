@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/variable-changed.schema.json",
+  "title": "VariableChanged Event",
+  "description": "A variable value changed (engine bridge: state.changed / threshold.crossed). CD-114.",
+  "type": "object",
+  "required": [
+    "id",
+    "value"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value": {},
+    "previous": {},
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}

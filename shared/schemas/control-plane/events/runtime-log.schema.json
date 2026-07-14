@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/control-plane/events/runtime-log.schema.json",
+  "title": "Runtime Log Event",
+  "description": "One entry from the runtime log/event ring buffer stream. CD-114.",
+  "type": "object",
+  "required": [
+    "level",
+    "message"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "level": {
+      "enum": [
+        "debug",
+        "info",
+        "warn",
+        "error"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "integer",
+      "description": "unix ms"
+    }
+  }
+}
