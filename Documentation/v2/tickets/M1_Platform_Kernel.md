@@ -27,7 +27,7 @@
 - [x] CD-120 EventBus — ✅ Done 2026-07-14
 - [x] CD-121 Command registry + contexts + seed commands — ✅ Done 2026-07-14
 - [x] CD-122 Keymap dispatcher + rebinding store — ✅ Done 2026-07-14
-- [ ] CD-123 Undo/redo engine
+- [x] CD-123 Undo/redo engine — ✅ Done 2026-07-14
 - [ ] CD-124 Repository base + registry + 7 domain repos
 - [ ] CD-125 Middleware: composition, latency, failure injection
 - [ ] CD-126 Middleware: retry/backoff + cancellation
@@ -250,7 +250,9 @@
 **BP:** IDE-E02-F03 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-121
 **Do:** History stack of `{do, undo, label, icon, time}` command objects; gesture coalescing (<1 s same-key); jump-to-index; depth/memory cap; `execUndoable(label, mutate)` helper emitting "— ⌘Z to undo" toast payloads.
 **AC:**
-- [ ] tests: undo/redo/jump/coalesce/cap; do→undo = identity on a sample model
+- [x] tests: undo/redo/jump/coalesce/cap; do→undo = identity on a sample model
+
+**Notes (2026-07-14):** `ide/src/platform/undo/`. `UndoStack` — in-memory only (design STORES: undo stack not persisted). `execUndoable(label, apply, {icon, coalesceKey})`: `apply()` performs the change and RETURNS its inverse; entry stores `apply` (re-run on redo to refresh the inverse) + current `inverse` (run on undo) → do→undo is exact identity. Returns an `UndoToast` (`"<label> — ⌘Z to undo"`). Coalescing: a same-`coalesceKey` entry within `coalesceWindowMs` (default 1000) folds into the top entry — keeps the ORIGINAL inverse (reverts the whole gesture) and adopts the latest apply (redo re-applies the final value); correct for set-value gestures (drag/typing), documented. `undo`/`redo`/`jumpTo(index)` (undo/redo to reach a history position)/`clear`/`list` (with applied flag)/`canUndo`/`canRedo`/`index`. Depth cap (default 100) drops oldest, adjusting the pointer. New action truncates the redo tail. Injected clock for deterministic coalesce tests. 8 tests: identity, redo-tail truncation, toast, coalesce in/out of window, jump backward/forward/to-zero, cap eviction, empty guards. Undo/redo wire to the CD-121 `undo` seed commands + the registry's onUndoRecord at assembly. 183 vitest green.
 
 ### CD-124 · Repository base + registry + 7 domain repos
 **BP:** IDE-E03-F01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-119, CD-120, CD-115
