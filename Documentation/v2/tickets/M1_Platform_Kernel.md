@@ -20,7 +20,7 @@
 - [x] CD-113 Control-plane envelope + route-registry format + error model — ✅ Done 2026-07-14
 - [x] CD-114 Route set v1 + event bridge map — ✅ Done 2026-07-14
 - [x] CD-115 TS type generation + CI drift gate — ✅ Done 2026-07-14
-- [ ] CD-116 BootManager
+- [x] CD-116 BootManager — ✅ Done 2026-07-14
 - [ ] CD-117 ConfigurationService core
 - [ ] CD-118 Config persistence, validation, migration
 - [ ] CD-119 ServiceContainer
@@ -186,9 +186,11 @@
 **BP:** IDE-E01-F01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-102, CD-107
 **Do:** Phase interface `{id, blocking, run, onError}`; ordered runner with barriers; failure policies (fatal/skip/retry-once); stages declared in app config (validated); `performance.mark` per stage; timing report on `BootCompleted`.
 **AC:**
-- [ ] unit tests: ordering, barrier, each failure policy
-- [ ] unknown stage in config = boot error with readable message
-- [ ] marks visible in devtools Performance panel
+- [x] unit tests: ordering, barrier, each failure policy
+- [x] unknown stage in config = boot error with readable message
+- [x] marks visible in devtools Performance panel
+
+**Notes (2026-07-14):** `ide/src/platform/boot/` — `runBoot(phases, {order, now, onComplete})`. Order is config-driven (the app config `boot.manifest` stage ids; `BootManifestEntry` matches that schema), not code order. Blocking phases run first as a barrier → `interactiveAtMs` stamped at the group boundary, then non-blocking phases. Failure policies: `fatal` (default, aborts + skips remainder), `skip` (marks skipped, continues), `retry-once` (second attempt; persistent failure escalates to fatal). `onError` fires before the policy; instrumentation via `performance.mark`/`measure` namespaced `cyberdeck:boot:*` (guarded so boot never dies on instrumentation). Returns a replayable `BootReport` (per-stage timing/status/attempts) for the CD-138 overlay; `onComplete` sink lets the wiring layer emit BootCompleted once EventBus (CD-120) exists — kept decoupled. Unknown manifest stage / phase-missing-from-manifest → readable `BootConfigError`. 11 unit tests (ordering, barrier, all 3 policies + escalation + onError, both config errors, perf marks present, report). Not yet wired into App (tree-shaken from bundle — 60.15 kB unchanged); wiring lands with the boot sequence assembly.
 
 ### CD-117 · ConfigurationService core
 **BP:** IDE-E01-F02-T01/T02 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-115, CD-109
