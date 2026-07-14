@@ -25,7 +25,7 @@
 - [x] CD-118 Config persistence, validation, migration — ✅ Done 2026-07-14
 - [x] CD-119 ServiceContainer — ✅ Done 2026-07-14
 - [x] CD-120 EventBus — ✅ Done 2026-07-14
-- [ ] CD-121 Command registry + contexts + seed commands
+- [x] CD-121 Command registry + contexts + seed commands — ✅ Done 2026-07-14
 - [ ] CD-122 Keymap dispatcher + rebinding store
 - [ ] CD-123 Undo/redo engine
 - [ ] CD-124 Repository base + registry + 7 domain repos
@@ -233,8 +233,10 @@
 **BP:** IDE-E02-F01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-119, CD-120
 **Do:** Command shape `{id, category, label, icon, keys, context, permissions, args, undo, telemetry}`; execution pipeline (context→permission→handler→telemetry→undo record); when-clause engine (workspace/selectionKind/flags keys); register the design's 26-command seed set (Q1).
 **AC:**
-- [ ] tests: context gating, unknown id, duplicate id error, args validation
-- [ ] seed set registered with design category groups
+- [x] tests: context gating, unknown id, duplicate id error, args validation
+- [x] seed set registered with design category groups
+
+**Notes (2026-07-14):** `ide/src/platform/commands/`. `CommandDescriptor` = `{id, category, label, icon?, keys?, when?, permissions?, validateArgs?, undo?, telemetry?, handler}`. `CommandRegistry.execute` runs the pipeline: when-clause → permissions → args validation → handler → telemetry hook → undo hook (telemetry/undo hooks injected — TelemetryService + CD-123 undo engine wire in later). `canExecute` for palette/menu enablement. Typed errors: Duplicate/Unknown/NotAvailable(context|permission)/Args. `when-clause.ts` evaluates the subset `key`/`!key`/`key == v`/`key != v` combined with `&&`/`||` over a context (`workspace`, `selectionKind`, `flags.*` via dot-lookup). Seed set = the design's `CMDS()` — **24 commands** (design metadata says 26; the array literal at design line 2993 has 24 — registered what's authoritative, noted the discrepancy) across the 6 groups General/Edit/Design/Project/View/Platform; editing commands (dup/group/ungroup/mkcomp/insert) carry when-clauses so context gating is live; handlers delegate to an injected `ActionDispatch` until real actions land. 11 tests: when-clause matrix, duplicate/unknown, context + permission + args gating, telemetry/undo hooks, 24-command seed with category groups, gated `insert`. 167 vitest green.
 
 ### CD-122 · Keymap dispatcher + rebinding store ∥
 **BP:** IDE-E02-F02 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-121, CD-118
