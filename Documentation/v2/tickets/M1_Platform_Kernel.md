@@ -41,7 +41,7 @@
 - [x] CD-134 Theme engine — ✅ Done 2026-07-15
 - [x] CD-135 Contract-test generator, green vs mock — ✅ Done 2026-07-15
 - [x] CD-136 Playwright boot E2E + coverage floors — ✅ Done 2026-07-15
-- [ ] CD-137 Platform Inspector: services/stores/flags tabs
+- [x] CD-137 Platform Inspector: services/stores/flags tabs — ✅ Done 2026-07-15
 - [ ] CD-138 Inspector: repos/events tabs + Architecture Mode + boot replay
 - [ ] CD-139 **M1 gate review**
 
@@ -369,8 +369,10 @@
 **BP:** IDE-E06-T01 · **Hat:** FE · **P:** P1 · **Est:** M · **Deps:** CD-119, CD-130, CD-117
 **Do:** Inspector shell (behind `devTools` flag, lazy chunk); services tab from container registrations (ready/lazy/bg); stores tab from live persistence contracts; flags tab toggling ConfigurationService (emits SettingsChanged).
 **AC:**
-- [ ] all three tabs render **live** kernel state (no fixtures)
-- [ ] flag toggle round-trips config + event
+- [x] all three tabs render **live** kernel state (no fixtures)
+- [x] flag toggle round-trips config + event
+
+**Notes (2026-07-15):** First real UI. `ide/src/workspaces/inspector/`. `InspectorPanel` (tablist: services/stores/flags) renders **live** kernel state, no fixtures: **Services** from `container.registrations_snapshot()` (new introspection method → id + ready/lazy/eager, reflecting actual instantiation); **Stores** from each store's live `descriptor` (name/kind/location — shows all 13); **Flags** reads `config.get('features')` and each row toggles via `config.set('features.<id>', next, 'runtime')` which **emits SettingsChanged**, with the switch's `aria-checked` reflecting the new value. `lazyInspector` is the `React.lazy` code-split entry the shell mounts only when `devTools` is on (M2 wires the gate + chunk). Tests: services tab shows a registered `logger` (lazy) + an instantiated `telemetry` (ready), stores tab renders exactly 13 with `auth`→`cdk-auth`, and **flag toggle round-trips: config updated + one precise SettingsChanged delta (path/value/layer=runtime) + UI reflects on**. Also fixed missing **RTL cleanup** in the shared test setup (afterEach(cleanup)) — multiple component tests were leaking DOM. 266 vitest green.
 
 ### CD-138 · Inspector: repos/events tabs + Architecture Mode + boot replay
 **BP:** IDE-E06-T02/T04/T05 · **Hat:** FE · **P:** P2 · **Est:** M · **Deps:** CD-137, CD-127

@@ -58,6 +58,15 @@ export class ServiceContainer {
     return this.registrations.has(tk.id) || this.instances.has(tk.id)
   }
 
+  /** Live registration snapshot for the Platform Inspector (CD-137). */
+  registrations_snapshot(): Array<{ id: string; lazy: boolean; instantiated: boolean }> {
+    const out: Array<{ id: string; lazy: boolean; instantiated: boolean }> = []
+    for (const [id, reg] of this.registrations) {
+      out.push({ id, lazy: reg.lazy, instantiated: this.instances.has(id) })
+    }
+    return out
+  }
+
   /** Replace a service with a ready instance (tests / boot overrides). */
   override<T>(tk: Token<T>, instance: T): void {
     this.instances.set(tk.id, instance)
