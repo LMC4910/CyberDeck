@@ -30,7 +30,7 @@
 - [x] CD-123 Undo/redo engine — ✅ Done 2026-07-14
 - [x] CD-124 Repository base + registry + 7 domain repos — ✅ Done 2026-07-14
 - [x] CD-125 Middleware: composition, latency, failure injection — ✅ Done 2026-07-14
-- [ ] CD-126 Middleware: retry/backoff + cancellation
+- [x] CD-126 Middleware: retry/backoff + cancellation — ✅ Done 2026-07-14
 - [ ] CD-127 MockApiGateway: router + fixture DB
 - [ ] CD-128 Mock push streams + gateway selection + offline
 - [ ] CD-129 CacheManager
@@ -275,7 +275,9 @@
 **BP:** IDE-E03-F02-T03 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-125
 **Do:** Exponential backoff gated on retryable errors (CD-113 error model); AbortSignal propagation end-to-end.
 **AC:**
-- [ ] tests: retry budget respected; abort mid-flight cancels cleanly
+- [x] tests: retry budget respected; abort mid-flight cancels cleanly
+
+**Notes (2026-07-14):** `ide/src/repositories/middleware/retry-middleware.ts`. `retryMiddleware({maxRetries=3, baseDelayMs=100, factor=2, delay})` retries **only** `GatewayError` with `retryable=true` (CD-113 model); backoff = `retryAfterMs` hint ?? `base*factor^attempt`; non-retryable errors rethrow immediately (1 call). `AbortSignal` end-to-end: aborted-before → `AbortError` without calling next; abort during the backoff → the abortable delay rejects `AbortError` and retrying stops. **Fixed a compose tension:** the koa double-`next()` guard forbade retry's legitimate chain re-invocation — removed the guard (retry re-runs downstream sequentially; no existing test relied on it). 7 tests: budget (1+3 calls), success-on-later-attempt, non-retryable-no-retry, exponential+hint backoff sequence, abort-before, abort-during-backoff, composed retry. 204 vitest green.
 
 ### CD-127 · MockApiGateway: router + fixture DB
 **BP:** IDE-E03-F03-T01/T02 · **Hat:** FE · **P:** P0 · **Est:** L · **Deps:** CD-124, CD-114

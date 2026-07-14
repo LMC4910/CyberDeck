@@ -11,3 +11,4 @@ export {
   type LatencyOptions,
   type FailureOptions,
 } from './dev-middleware'
+export { retryMiddleware, AbortError, type RetryOptions } from './retry-middleware'
