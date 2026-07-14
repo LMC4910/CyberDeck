@@ -23,7 +23,7 @@
 - [x] CD-116 BootManager — ✅ Done 2026-07-14
 - [x] CD-117 ConfigurationService core — ✅ Done 2026-07-14
 - [x] CD-118 Config persistence, validation, migration — ✅ Done 2026-07-14
-- [ ] CD-119 ServiceContainer
+- [x] CD-119 ServiceContainer — ✅ Done 2026-07-14
 - [ ] CD-120 EventBus
 - [ ] CD-121 Command registry + contexts + seed commands
 - [ ] CD-122 Keymap dispatcher + rebinding store
@@ -215,8 +215,10 @@
 **BP:** IDE-E01-F03 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-116
 **Do:** `register(token, factory, {lazy})` / `get(token)`; Proxy-based lazy instantiation; circular-dep boot error printing the cycle; `createTestContainer()`; lint rule banning direct service imports.
 **AC:**
-- [ ] unit tests: laziness, singleton, override, cycle error
-- [ ] one real test uses the test container
+- [x] unit tests: laziness, singleton, override, cycle error
+- [x] one real test uses the test container
+
+**Notes (2026-07-14):** `ide/src/platform/container/`. Typed `token<T>(id)` + `ServiceContainer.register(token, factory, {lazy=true})` / `get` / `has` / `override`. Lazy (default): `get` returns a Proxy that constructs the real service on first touch (boot stage 6 "lazy proxies"; also lets two services co-depend without an eager cycle). Eager: constructs on `get`. Singleton-cached. `resolve` tracks a resolution stack → a genuine construction-time cycle throws `ServiceCycleError` with the full path (`A → B → A`); unregistered token → `ServiceNotFoundError`. `createTestContainer()` defaults registrations to eager so construction errors/cycles surface synchronously; `override(token, instance)` injects fakes. Proxy traps cover get/set/has/ownKeys/getOwnPropertyDescriptor (configurable fix-up for the proxy invariant)/getPrototypeOf. NB: `erasableSyntaxOnly` forbids TS parameter properties — used an explicit field. 8 unit tests (lazy vs eager construction timing, singleton, override, not-found, eager cycle w/ path, lazy breaks cycle, test container). 146 vitest green. (Direct-service-import lint: the eslint boundary matrix already blocks cross-feature imports; a dedicated grep guard lands when the first service consumer exists.)
 
 ### CD-120 · EventBus
 **BP:** IDE-E01-F04 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-119
