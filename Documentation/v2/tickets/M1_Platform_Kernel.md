@@ -21,7 +21,7 @@
 - [x] CD-114 Route set v1 + event bridge map — ✅ Done 2026-07-14
 - [x] CD-115 TS type generation + CI drift gate — ✅ Done 2026-07-14
 - [x] CD-116 BootManager — ✅ Done 2026-07-14
-- [ ] CD-117 ConfigurationService core
+- [x] CD-117 ConfigurationService core — ✅ Done 2026-07-14
 - [ ] CD-118 Config persistence, validation, migration
 - [ ] CD-119 ServiceContainer
 - [ ] CD-120 EventBus
@@ -196,9 +196,11 @@
 **BP:** IDE-E01-F02-T01/T02 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-115, CD-109
 **Do:** Layer store + deep-merge per CD-109 spec; typed `get/set/watch(path)`; SettingsChanged deltas.
 **AC:**
-- [ ] precedence property tests green
-- [ ] `watch('features.devTools')` fires precise delta
-- [ ] no consumer reads JSON directly (lint/grep check)
+- [x] precedence property tests green
+- [x] `watch('features.devTools')` fires precise delta
+- [x] no consumer reads JSON directly (lint/grep check)
+
+**Notes (2026-07-14):** `ide/src/services/configuration/` — `ConfigurationService` implements the CD-109 `MERGE_AND_MIGRATION.md` spec in-memory (persistence/validation/migration = CD-118). Five layers `defaults←application←user←workspace←runtime`; `mergeInto` does scalar/array atomic-replace + object deep-merge + `$unset` delete markers + type-conflict replace. `get(path)`/`getAll()`/`set(path,val,layer)`/`unset`/`setLayer`. `watch(prefix, cb)` fires for the exact path + descendants; `onChange` for all. Deltas match the SettingsChanged shape (area/path/value/previous/layer/revision) — computed by diffing old vs new merged view (arrays compared whole → single delta; added/removed subtrees emit per-leaf so leaf watchers fire), revisions monotonic per-area, and **shadowed writes emit nothing** (delta is on the merged view, not the layer). All state deep-cloned (structuredClone) so callers can't mutate internals. SettingsChanged→EventBus bridge deferred to CD-120. Tests: precedence property test (all 31 layer subsets), 6 merge edge cases from spec §4, watch precision/prefix/unsubscribe, shadowed-write silence, array single-delta, per-area revisions, getAll isolation. Grep guard test asserts only the config layer touches `localStorage` (AC3, passes trivially now, catches future violations). 125 vitest green.
 
 ### CD-118 · Config persistence, validation, migration
 **BP:** IDE-E01-F02-T03/T04 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-117

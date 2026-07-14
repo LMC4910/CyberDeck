@@ -1,2 +1,2 @@
-// services layer — populated by later M1 tickets. See ide/README.md for the boundary matrix.
-export {}
+// services layer — single-responsibility platform services. See ide/README.md.
+export * from './configuration'
