@@ -35,7 +35,7 @@
 - [x] CD-128 Mock push streams + gateway selection + offline — ✅ Done 2026-07-14 (offline banner E2E deferred to shell/CD-136)
 - [x] CD-129 CacheManager — ✅ Done 2026-07-15
 - [x] CD-130 Store base + persistence contract — ✅ Done 2026-07-15
-- [ ] CD-131 Boot-critical stores
+- [x] CD-131 Boot-critical stores — ✅ Done 2026-07-15
 - [ ] CD-132 Remaining domain stores
 - [ ] CD-133 Optimistic updates + rollback
 - [ ] CD-134 Theme engine
@@ -318,8 +318,10 @@
 **BP:** IDE-E04-F02-T01 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-130, CD-118
 **Do:** Preferences, Workspace, Auth (token only — never secrets in localStorage), UI stores with exact `STORES()` rows.
 **AC:**
-- [ ] restored at declared boot stages (test)
-- [ ] secret-leak grep/test proves no credential material in web storage
+- [x] restored at declared boot stages (test)
+- [x] secret-leak grep/test proves no credential material in web storage
+
+**Notes (2026-07-15):** `ide/src/stores/boot-critical/`. Four stores per the design STORES rows: **Preferences** (persisted, `cdk-prefs`, boot-blocking, `CyberDeckUserPreferences`), **Workspace** (persisted, `cdk-layout`, boot-blocking, `CyberDeckWorkspaceLayoutConfiguration`), **Auth** (persisted, `cdk-auth`, boot-blocking, **`{token, sessionId, expiresAt}` only** — `AUTH_ALLOWED_KEYS` enforced), **UI** (temp/memory). `createBootCriticalStores()` builds all four. Tests: descriptors restore at boot-blocking (UI is temp), StoreManager restores prefs/workspace/auth from storage in order (UI skipped), auth serializes to exactly the 3 allowed keys, and the **secret-leak proof serializes what each persisted store would write and asserts no credential field name** (password/secret/apiKey/privateKey/refreshToken/credentials) appears — done on the actual persisted JSON, not a source grep (which false-matched the SECURITY comment). 245 vitest green.
 
 ### CD-132 · Remaining domain stores
 **BP:** IDE-E04-F02-T02/T03 · **Hat:** FE · **P:** P1 · **Est:** M · **Deps:** CD-130, CD-111

@@ -10,3 +10,4 @@ export {
 } from './store-base'
 export { useStore } from './use-store'
 export { StoreManager, type StoreManagerOptions, type StoreNotice } from './store-manager'
+export * from './boot-critical'
