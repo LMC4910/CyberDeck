@@ -138,7 +138,9 @@ export class MockApiGateway implements Gateway {
 
     // Control routes with no collection (runtime.log, permissions.*, *.subscribe).
     if (op === 'subscribe' || prefix === 'runtime') return { stream: true }
-    if (prefix === 'permissions') return op === 'list' ? { items: [] } : { ok: true }
+    if (prefix === 'permissions') {
+      return op === 'list' ? { items: [], page: 1, limit: 50, total: 0 } : { ok: true }
+    }
 
     throw new GatewayError('not_implemented', `mock has no handler for ${route}`, false)
   }

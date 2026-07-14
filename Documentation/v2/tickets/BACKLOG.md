@@ -29,4 +29,8 @@ Rule (from `00_INDEX.md`): anything not covered by a CD ticket lands here, not i
 - Per-widget data-provider polling configuration UI (manifest `refresh` honored; no per-instance override UI).
 - Variables import/export (design FEATURES lists it; not GA-critical).
 
+## Discovered during implementation
+
+- **Contract suite: per-field response validation vs document schemas** (2026-07-15, CD-135). The contract suite currently asserts route resolution + Page structure + the error model, but does not validate each returned document against its strict response schema. Blocker: the MockApiGateway keys docs by a top-level `id` that the document schemas (`documents/*.schema.json`, `additionalProperties:false`, no top-level `id`) reject. Fix needs a seed/schema alignment (either an id-bearing "stored entity" wrapper schema, or the mock keying id out-of-band). Revisit alongside M5 EngineGateway parity (the engine returns real docs).
+
 <!-- Append new items below with date + source ticket/gate. -->
