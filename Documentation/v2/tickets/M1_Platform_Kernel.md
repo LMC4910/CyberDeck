@@ -29,7 +29,7 @@
 - [x] CD-122 Keymap dispatcher + rebinding store — ✅ Done 2026-07-14
 - [x] CD-123 Undo/redo engine — ✅ Done 2026-07-14
 - [x] CD-124 Repository base + registry + 7 domain repos — ✅ Done 2026-07-14
-- [ ] CD-125 Middleware: composition, latency, failure injection
+- [x] CD-125 Middleware: composition, latency, failure injection — ✅ Done 2026-07-14
 - [ ] CD-126 Middleware: retry/backoff + cancellation
 - [ ] CD-127 MockApiGateway: router + fixture DB
 - [ ] CD-128 Mock push streams + gateway selection + offline
@@ -267,7 +267,9 @@
 **BP:** IDE-E03-F02-T01/T02 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-124
 **Do:** Composable, config-ordered middleware chain; latency distribution (default 15–200 ms) + ~2 % failure injection behind `devTools` flag.
 **AC:**
-- [ ] chain unit-tested; injection off in non-dev config
+- [x] chain unit-tested; injection off in non-dev config
+
+**Notes (2026-07-14):** `ide/src/repositories/middleware/`. Koa-style `compose(middlewares[])` — config decides order, first entry = outermost onion layer, guards against double-`next()`, supports short-circuit. `latencyMiddleware({enabled, minMs=15, maxMs=200, random, delay})` injects a random delay from the design's 15–200 ms window; `failureMiddleware({enabled, rate=0.02, random})` throws a retryable `GatewayError('unavailable', …, true)` (CD-113 error model) at ~2%. Both gated on `enabled` (fed by the `devTools` flag) → **passthrough when disabled**, so a non-dev config never sees synthetic latency/failures (the AC — tested with rate=1 but disabled = no failure). Injected `random`/`delay` make tests deterministic. `GatewayError` carries code/retryable/retryAfterMs for the CD-126 retry gate. 8 tests: onion order, short-circuit, latency in-window + disabled passthrough, failure inject/skip/disabled. 197 vitest green.
 
 ### CD-126 · Middleware: retry/backoff + cancellation
 **BP:** IDE-E03-F02-T03 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-125
