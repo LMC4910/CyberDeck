@@ -22,7 +22,7 @@
 - [x] CD-115 TS type generation + CI drift gate — ✅ Done 2026-07-14
 - [x] CD-116 BootManager — ✅ Done 2026-07-14
 - [x] CD-117 ConfigurationService core — ✅ Done 2026-07-14
-- [ ] CD-118 Config persistence, validation, migration
+- [x] CD-118 Config persistence, validation, migration — ✅ Done 2026-07-14
 - [ ] CD-119 ServiceContainer
 - [ ] CD-120 EventBus
 - [ ] CD-121 Command registry + contexts + seed commands
@@ -206,8 +206,10 @@
 **BP:** IDE-E01-F02-T03/T04 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-117
 **Do:** Storage adapter interface (localStorage now, Tauri fs later); write-behind debounce + flush-on-quit; schema validation on load; corrupt layer → fallback + notification; version migration hook (v1→v2 test).
 **AC:**
-- [ ] corrupt-layer fixture boots with defaults + notice (no crash)
-- [ ] migration test green
+- [x] corrupt-layer fixture boots with defaults + notice (no crash)
+- [x] migration test green
+
+**Notes (2026-07-14):** `ide/src/services/persistence/`. `StorageAdapter` interface with `MemoryStorageAdapter` (tests) + `LocalStorageAdapter` (guards absent/throwing localStorage → in-memory fallback, never crashes). `ConfigPersistence.load(spec)`: JSON.parse (corrupt→null+notice) → `applyMigrations` (single-hop registry per CD-109 §5; newer-than-app rejected; missing-step throws) → optional injected `validate` (schema-invalid→null+notice). Returns null (=use defaults) on any corruption with a typed `ConfigNotice` (corrupt-json/migration-failed/schema-invalid) — NotificationService bridge later. Write-behind: `schedule(key,doc)` debounced per key via injectable scheduler (default setTimeout), `flush()` for flush-on-quit (app wires to unload/Tauri quit). Validator is **injected** (not a hard ajv dep) so the shell bundle stays lean — tests pass an ajv validator built from the real `user-prefs.schema.json`. Tests: v1→v2 migration (the spec's keymap string→object worked example), newer-than-app + missing-step rejection, corrupt-JSON + schema-invalid fallback with notice, **corrupt-layer boots ConfigurationService on defaults (no crash)**, write-behind persist/debounce-supersede/flush. 138 vitest green.
 
 ### CD-119 · ServiceContainer
 **BP:** IDE-E01-F03 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-116
