@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberdeck.shishir.com/schemas/documents/flow.schema.json",
+  "title": "CyberDeck Flow Document (cyberdeck.flow)",
+  "description": "Automation graph: a trigger + typed nodes + branched edges. Maps 1:1 onto engine core/flow model.go (Flow/Trigger/Node/Edge) — see FLOW_MAPPING.md. Node kinds cover the Q3 default catalog. CD-112.",
+  "type": "object",
+  "required": ["id", "label", "version", "trigger", "nodes", "edges"],
+  "additionalProperties": false,
+  "$defs": {
+    "nodeId": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$" }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*_[a-z0-9][a-z0-9-]{5,}$",
+      "description": "stable flow id (referenced by project events registry)"
+    },
+    "label": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "monotonic document version (engine persists whole docs, 2D §3)"
+    },
+    "armed": {
+      "type": "boolean",
+      "default": false,
+      "description": "whether the trigger is armed (TriggerManager.Arm); reserved schedule triggers arm but never fire in V1"
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "description": "maps to flow.Trigger{Kind, Config}",
+      "properties": {
+        "kind": {
+          "enum": ["manual", "event", "stateChange", "schedule"],
+          "description": "trigger kinds from triggers.go; schedule is reserved (stored, never fires in V1)"
+        },
+        "config": {
+          "type": "object",
+          "description": "kind-specific: event→{event}, stateChange→{expr,stateId,debounce}, schedule→{cron|interval}"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "event" } } },
+          "then": {
+            "properties": {
+              "config": { "type": "object", "required": ["event"], "properties": { "event": { "type": "string", "minLength": 1 } } }
+            },
+            "required": ["config"]
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "stateChange" } } },
+          "then": {
+            "properties": {
+              "config": {
+                "type": "object",
+                "required": ["expr"],
+                "properties": {
+                  "expr": { "type": "string", "minLength": 1 },
+                  "stateId": { "type": "string" },
+                  "debounce": { "type": "integer", "minimum": 0, "description": "ms; defaults to 250 (DefaultDebounce)" }
+                }
+              }
+            },
+            "required": ["config"]
+          }
+        }
+      ]
+    },
+    "nodes": {
+      "type": "array",
+      "description": "maps to []flow.Node{ID, Kind, Params}",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/nodeId" },
+          "kind": {
+            "enum": [
+              "logic.condition",
+              "logic.branch",
+              "logic.delay",
+              "logic.gate",
+              "action.runFlow",
+              "action.setVariable",
+              "action.setState",
+              "action.notify",
+              "action.command",
+              "structure.group",
+              "structure.comment",
+              "structure.subflow",
+              "integration.obs",
+              "integration.spotify",
+              "integration.http",
+              "integration.mqtt",
+              "data.math",
+              "data.text",
+              "data.datetime"
+            ],
+            "description": "Q3 default catalog: Logic/Actions/Structure full; Integrations = OBS/Spotify/HTTP/MQTT; Data = Math/Text/DateTime. Validated against the flow-node registry (PROJ-161); per-kind param schemas land with CD-114 route set."
+          },
+          "params": {
+            "type": "object",
+            "description": "kind-specific parameters (per-kind schemas registered by the node catalog)"
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "maps to []flow.Edge{From, To, Label}",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "$ref": "#/$defs/nodeId" },
+          "to": { "$ref": "#/$defs/nodeId" },
+          "label": {
+            "enum": ["true", "false", "always"],
+            "default": "always",
+            "description": "branch selector — same field/name as flow.Edge.Label (json:\"label\"). Constrained to the true/false/always catalog; the engine accepts a superset (e.g. next)"
+          }
+        }
+      }
+    }
+  }
+}

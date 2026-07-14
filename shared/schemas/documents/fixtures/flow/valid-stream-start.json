@@ -1,0 +1,66 @@
+{
+  "id": "flow_strt0001",
+  "label": "Stream Start",
+  "version": 1,
+  "armed": true,
+  "trigger": {
+    "kind": "event",
+    "config": {
+      "event": "obs.streaming.started"
+    }
+  },
+  "nodes": [
+    {
+      "id": "cond1",
+      "kind": "logic.condition",
+      "params": {
+        "expr": "mic.muted == true"
+      }
+    },
+    {
+      "id": "unmute",
+      "kind": "action.command",
+      "params": {
+        "command": "volume.unmuteMic"
+      }
+    },
+    {
+      "id": "scene",
+      "kind": "integration.obs",
+      "params": {
+        "op": "setScene",
+        "scene": "Starting Soon"
+      }
+    },
+    {
+      "id": "notify",
+      "kind": "action.notify",
+      "params": {
+        "title": "Live!",
+        "body": "Stream started"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "cond1",
+      "to": "unmute",
+      "label": "true"
+    },
+    {
+      "from": "cond1",
+      "to": "scene",
+      "label": "false"
+    },
+    {
+      "from": "unmute",
+      "to": "scene",
+      "label": "always"
+    },
+    {
+      "from": "scene",
+      "to": "notify",
+      "label": "always"
+    }
+  ]
+}

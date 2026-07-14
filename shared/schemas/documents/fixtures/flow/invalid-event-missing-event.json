@@ -1,0 +1,11 @@
+{
+  "id": "flow_bad00001",
+  "label": "Bad",
+  "version": 1,
+  "trigger": {
+    "kind": "event",
+    "config": {}
+  },
+  "nodes": [],
+  "edges": []
+}

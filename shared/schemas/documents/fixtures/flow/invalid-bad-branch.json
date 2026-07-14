@@ -1,0 +1,25 @@
+{
+  "id": "flow_bad00003",
+  "label": "Bad",
+  "version": 1,
+  "trigger": {
+    "kind": "manual"
+  },
+  "nodes": [
+    {
+      "id": "a",
+      "kind": "logic.gate"
+    },
+    {
+      "id": "b",
+      "kind": "logic.gate"
+    }
+  ],
+  "edges": [
+    {
+      "from": "a",
+      "to": "b",
+      "label": "maybe"
+    }
+  ]
+}

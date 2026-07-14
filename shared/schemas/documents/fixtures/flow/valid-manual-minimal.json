@@ -1,0 +1,18 @@
+{
+  "id": "flow_manu0001",
+  "label": "Toggle Lights",
+  "version": 1,
+  "trigger": {
+    "kind": "manual"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "kind": "action.command",
+      "params": {
+        "command": "lights.toggle"
+      }
+    }
+  ],
+  "edges": []
+}

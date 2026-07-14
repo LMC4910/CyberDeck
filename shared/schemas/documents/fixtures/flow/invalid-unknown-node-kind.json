@@ -1,0 +1,15 @@
+{
+  "id": "flow_bad00002",
+  "label": "Bad",
+  "version": 1,
+  "trigger": {
+    "kind": "manual"
+  },
+  "nodes": [
+    {
+      "id": "x",
+      "kind": "action.teleport"
+    }
+  ],
+  "edges": []
+}

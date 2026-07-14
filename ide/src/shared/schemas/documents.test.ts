@@ -13,9 +13,10 @@ const ajv = new Ajv2020({ strict: false, allErrors: true })
 const validators = {
   project: ajv.compile(readJson(join(docsDir, 'project.schema.json'))),
   layout: ajv.compile(readJson(join(docsDir, 'layout.schema.json'))),
+  flow: ajv.compile(readJson(join(docsDir, 'flow.schema.json'))),
 } as const
 
-describe.each(['project', 'layout'] as const)('document schema: %s', (doc) => {
+describe.each(['project', 'layout', 'flow'] as const)('document schema: %s', (doc) => {
   const validate = validators[doc]
   const fixtureDir = join(docsDir, 'fixtures', doc)
   const fixtures = readdirSync(fixtureDir)

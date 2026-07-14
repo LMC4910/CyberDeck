@@ -1,0 +1,24 @@
+{
+  "id": "flow_temp0001",
+  "label": "Overheat Alert",
+  "version": 2,
+  "armed": true,
+  "trigger": {
+    "kind": "stateChange",
+    "config": {
+      "expr": "gpu.temp > 80",
+      "stateId": "gpu.temp",
+      "debounce": 500
+    }
+  },
+  "nodes": [
+    {
+      "id": "a",
+      "kind": "action.notify",
+      "params": {
+        "title": "GPU hot"
+      }
+    }
+  ],
+  "edges": []
+}

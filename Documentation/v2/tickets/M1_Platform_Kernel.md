@@ -16,7 +16,7 @@
 - [x] CD-109 Layer-merge semantics + migration convention — ✅ Done 2026-07-14 (spec pending maintainer review)
 - [x] CD-110 Schema: widget manifest v2 + canon manifests — ✅ Done 2026-07-14
 - [x] CD-111 Schemas: project doc + published layout + ID rules — ✅ Done 2026-07-14
-- [ ] CD-112 Schema: flow document + triggers
+- [x] CD-112 Schema: flow document + triggers — ✅ Done 2026-07-14
 - [ ] CD-113 Control-plane envelope + route-registry format + error model
 - [ ] CD-114 Route set v1 + event bridge map
 - [ ] CD-115 TS type generation + CI drift gate
@@ -151,7 +151,9 @@
 **BP:** CON-E01-F04 · **Hat:** BE · **P:** P0 · **Est:** M · **Deps:** CD-108
 **Do:** Flow graph schema (nodes w/ per-kind param schemas, edges w/ true/false/always branch, armed) + trigger binding spec mapped to `core/flow/triggers.go`. Fixture reproduces the design's "stream-start" flow.
 **AC:**
-- [ ] fixture validates and maps 1:1 onto `core/flow` model fields (mapping table committed)
+- [x] fixture validates and maps 1:1 onto `core/flow` model fields (mapping table committed)
+
+**Notes (2026-07-14):** `shared/schemas/documents/flow.schema.json` maps field-for-field onto engine `core/flow/model.go` (Flow/Trigger/Node/Edge). Node `kind` enum = Q3 default catalog (Logic/Actions/Structure full; Integrations OBS/Spotify/HTTP/MQTT; Data Math/Text/DateTime — 19 kinds). Trigger `kind` = manual/event/stateChange/schedule (triggers.go constants) with per-kind config constraints via if/then (event needs `event`, stateChange needs `expr` + optional stateId/debounce; schedule reserved). Edge `label` (not `branch`) constrained to true/false/always — deliberately the same field name as `Edge.Label` for a true 1:1 map, engine accepts a superset. `FLOW_MAPPING.md` has the full field table + trigger-config-by-kind + 3 deviations (armed is presentation-only, per-kind param schemas deferred to CD-114 node catalog, label is the stricter authoring subset). Fixtures: stream-start demo (event→condition→OBS+notify, all 3 branch types) + manual + stateChange + 3 invalid. Validated by ajv (72 vitest) AND a Go round-trip test (`flow.ParseFlow` on the stream-start fixture asserts header/trigger/nodes/branch-label counts) — schema and engine model provably don't drift.
 
 ### CD-113 · Control-plane envelope + route-registry format + error model
 **BP:** CON-E02-T01/T03/T04 · **Hat:** BE+FE · **P:** P0 · **Est:** S · **Deps:** CD-108
