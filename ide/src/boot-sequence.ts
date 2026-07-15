@@ -6,6 +6,8 @@ import { runBoot, type BootPhase, type BootReport } from '@/platform/boot'
 import { ConfigurationService } from '@/services/configuration'
 import { ThemeService } from '@/services/theme'
 import { WorkspaceService } from '@/services/workspace'
+import { SessionManager } from '@/services/session'
+import { LocalStorageAdapter } from '@/services/persistence'
 import { CommandRegistry, seedCommands } from '@/platform/commands'
 import { KeymapDispatcher, detectPlatform } from '@/platform/keymap'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
@@ -20,6 +22,7 @@ export interface BootedKernel {
   keymap: KeymapDispatcher
   bus: TypedEventBus
   stores: AllStores
+  session: SessionManager
   report: BootReport
 }
 
@@ -52,6 +55,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   const workspaces = new WorkspaceService({ onChanged: (id) => bus.emit('WorkspaceChanged', { workspaceId: id }) })
   const stores = createAllStores()
   const keymap = new KeymapDispatcher(commands, { platform: detectPlatform() })
+  const session = new SessionManager({ adapter: new LocalStorageAdapter() })
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -85,10 +89,33 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
     // Keymap defaults after all commands are registered (CD-209).
     { id: 'keymap', blocking: true, run: () => keymap.loadDefaults() },
+    // Session restore (CD-212, boot stage 4): restore the last workspace + editor
+    // state, then wire debounced write-behind. Corrupt blob → defaults (SessionManager notices).
+    {
+      id: 'session-restore',
+      blocking: true,
+      run: () => {
+        const blob = session.load()
+        if (blob?.activeWorkspace && workspaces.get(blob.activeWorkspace)) {
+          workspaces.setActive(blob.activeWorkspace)
+        }
+        if (blob) {
+          stores.editor.setState({ zoom: blob.zoom ?? 1, selection: blob.selection ?? [] })
+        }
+        const persist = () =>
+          session.save({
+            activeWorkspace: workspaces.active() ?? undefined,
+            selection: (stores.editor.getState() as { selection: string[] }).selection,
+            zoom: (stores.editor.getState() as { zoom: number }).zoom,
+          })
+        workspaces.subscribe(persist)
+        stores.editor.subscribe(persist)
+      },
+    },
   ]
 
   const report = await runBoot(phases, {
-    order: ['configuration', 'theme', 'commands', 'workspaces', 'keymap'],
+    order: ['configuration', 'theme', 'commands', 'workspaces', 'keymap', 'session-restore'],
     onComplete: () => {
       // mark the app interactive for the E2E / perf tooling
       try {
@@ -99,5 +126,5 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
   })
 
-  return { config, theme, workspaces, commands, keymap, bus, stores, report }
+  return { config, theme, workspaces, commands, keymap, bus, stores, session, report }
 }

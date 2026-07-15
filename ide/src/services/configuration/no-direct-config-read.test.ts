@@ -26,11 +26,17 @@ function walk(dir: string): string[] {
   return out
 }
 
+// Strip line + block comments so the guard checks real code, not prose that
+// mentions localStorage (the StorageAdapter abstraction is the sanctioned path).
+function stripComments(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+}
+
 describe('no direct config JSON reads (CD-117 grep guard)', () => {
-  it('only the config layer touches localStorage', () => {
+  it('only the config layer touches localStorage (in code, not comments)', () => {
     const offenders = walk(srcDir)
       .filter((f) => !ALLOWED.some((a) => f.includes(a)))
-      .filter((f) => /\blocalStorage\b/.test(readFileSync(f, 'utf8')))
+      .filter((f) => /\blocalStorage\b/.test(stripComments(readFileSync(f, 'utf8'))))
     expect(offenders).toEqual([])
   })
 })

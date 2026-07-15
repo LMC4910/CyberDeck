@@ -16,7 +16,7 @@
 - [x] CD-209 Keyboard pane + rebind UX — ✅ Done 2026-07-15
 - [x] CD-210 Settings search — ✅ Done 2026-07-15
 - [x] CD-211 NotificationService + toasts + drawer — ✅ Done 2026-07-15
-- [ ] CD-212 Session restore + relaunch E2E
+- [x] CD-212 Session restore + relaunch E2E — ✅ Done 2026-07-15
 - [ ] CD-213 Resizable panels
 - [ ] CD-214 DockManager model
 - [ ] CD-215 Dock UI: zones, insets, auto-hide/peek
@@ -127,8 +127,10 @@
 **BP:** IDE-E07-F06 · **Hat:** FE+QA · **P:** P0 · **Est:** S · **Deps:** CD-131, CD-136, CD-204
 **Do:** Session blob (workspace, panels, selection, zoom) written debounced, restored at boot stage 4; corrupt-session fallback + notice; Playwright relaunch test.
 **AC:**
-- [ ] quit/relaunch restores exact state (E2E green)
-- [ ] corrupt blob → defaults + notification
+- [x] quit/relaunch restores exact state (E2E green)
+- [x] corrupt blob → defaults + notification
+
+**Notes (2026-07-15):** `ide/src/services/session/`. `SessionManager` — `load()` reads `cdk-session` (parse + shape + version checks; **corrupt/unexpected/version-mismatch → null + `corrupt-session` notice**; absent → null, no notice), `save({activeWorkspace, selection, zoom})` debounced write-behind, `flush()` for quit. Wired into `boot-sequence.ts` as a **blocking `session-restore` phase (boot stage 4)**: restores the last active workspace + editor zoom/selection, then subscribes workspace + editor changes → debounced `session.save`. App flushes on `beforeunload`. Unit tests: save/load round-trip, debounce+flush, corrupt-JSON/bad-shape/bad-version → null+notice, absent→no-notice. **E2E**: switch to Flows → reload → **Flows restored** (aria-selected); and **corrupt `cdk-session` → boots to default Home, no crash**. Also **hardened the CD-117 grep guard** to strip comments (it false-matched "localStorage" in prose twice). 341 vitest + 5 E2E green.
 
 ### CD-213 · Resizable panels
 **BP:** IDE-E08-F01 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-203

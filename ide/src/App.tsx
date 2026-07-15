@@ -36,6 +36,8 @@ function App() {
       setKernel(k)
       setActive(k.workspaces.active())
       k.workspaces.subscribe((id) => setActive(id))
+      // flush the session on quit so the last change is never lost
+      window.addEventListener('beforeunload', () => k.session.flush())
     })
     return () => {
       cancelled = true
