@@ -23,3 +23,4 @@ export {
   type PreferencesTab,
   type SettingEntry,
 } from './preferences'
+export { Toaster, NotificationDrawer, type ToasterProps, type NotificationDrawerProps } from './notifications'

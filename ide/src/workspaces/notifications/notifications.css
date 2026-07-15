@@ -1,0 +1,115 @@
+.toaster {
+  position: fixed;
+  right: 16px;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: var(--z-toast, 130);
+  max-width: 360px;
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--panel2, #12121f);
+  border: 1px solid var(--line2, rgba(255, 255, 255, 0.12));
+  border-left: 3px solid var(--accent, #4cc2ff);
+  border-radius: var(--r-s, 7px);
+  color: var(--ink, #eaeaf6);
+}
+.toast-error {
+  border-left-color: var(--bad, #ff6b7d);
+}
+.toast-warn {
+  border-left-color: var(--warn, #f5b14c);
+}
+.toast-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.toast-text {
+  color: var(--ink2, #8a8cb4);
+  font-size: 12px;
+}
+.toast-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.toast-action {
+  background: transparent;
+  border: 1px solid var(--accent, #4cc2ff);
+  color: var(--accent, #4cc2ff);
+  border-radius: var(--r-s, 7px);
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.toast-dismiss {
+  background: none;
+  border: none;
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+  font-size: 16px;
+}
+.toast-action:focus-visible,
+.toast-dismiss:focus-visible,
+.ntf-drawer button:focus-visible {
+  outline: 2px solid var(--accent, #4cc2ff);
+  outline-offset: 1px;
+}
+
+.ntf-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100%;
+  background: var(--panel, #0e0e1c);
+  border-left: 1px solid var(--line2, rgba(255, 255, 255, 0.12));
+  z-index: var(--z-drawer, 95);
+  display: flex;
+  flex-direction: column;
+}
+.ntf-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+.ntf-drawer-head button {
+  background: none;
+  border: none;
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+  margin-left: 8px;
+}
+.ntf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+.ntf-item {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.06));
+}
+.ntf-item.read {
+  opacity: 0.55;
+}
+.ntf-source {
+  font-size: 11px;
+  color: var(--ink3, #6a6c92);
+  min-width: 64px;
+}
+.ntf-empty {
+  padding: 16px;
+  color: var(--ink2, #8a8cb4);
+  text-align: center;
+}

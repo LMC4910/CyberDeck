@@ -15,7 +15,7 @@
 - [x] CD-208 Preferences shell + general/appearance panes — ✅ Done 2026-07-15
 - [x] CD-209 Keyboard pane + rebind UX — ✅ Done 2026-07-15
 - [x] CD-210 Settings search — ✅ Done 2026-07-15
-- [ ] CD-211 NotificationService + toasts + drawer
+- [x] CD-211 NotificationService + toasts + drawer — ✅ Done 2026-07-15
 - [ ] CD-212 Session restore + relaunch E2E
 - [ ] CD-213 Resizable panels
 - [ ] CD-214 DockManager model
@@ -118,8 +118,10 @@
 **BP:** IDE-E07-F05 · **Hat:** FE · **P:** P1 · **Est:** M · **Deps:** CD-120, CD-130, CD-201
 **Do:** `notify({priority, source, actions})` → queue with dedupe + rate-limit; toast renderer (undoable-action affordance wired to CD-123 payloads); drawer as Notification-store projection; toast policy per AUDIT M4 (no ambient-success noise).
 **AC:**
-- [ ] dedupe/rate-limit tests; undo toast triggers undo
-- [ ] drawer mark-all-read works; keyboard operable
+- [x] dedupe/rate-limit tests; undo toast triggers undo
+- [x] drawer mark-all-read works; keyboard operable
+
+**Notes (2026-07-15):** `ide/src/services/notification/` — `NotificationService.notify(input)` returns the accepted `Notification` or **null** when deduped (same `dedupeKey` within the window) or **rate-limited** (sliding window, default 5/1000ms). **Toast policy (AUDIT M4)**: errors/warnings + anything with an action toast; **ambient success (no action) does NOT toast** — no success noise; explicit `toast` overrides. Store/bus-agnostic (emits via injected `onNotify`; wiring projects to the Notification store + bus). `ide/src/workspaces/notifications/`: `Toaster` renders `toast:true` notifications — action buttons (e.g. **Undo**, wired to CD-123 payloads via `onAction`), action-less toasts auto-dismiss; `NotificationDrawer` is a **Notification-store projection** (`useStore`, newest-first) with **mark-all-read** (disabled at 0 unread) and **Esc-to-close**. Tests: dedupe window, rate-limit slide, policy matrix, emit-with-actions; toaster undo→onAction+dismiss, auto-dismiss timer; drawer projection + mark-all-read + Escape. App wiring (bell button → drawer, service → toaster, undo-stack bridge) lands in the CD-218 honest-stub sweep. 336 vitest green.
 
 ### CD-212 · Session restore + relaunch E2E
 **BP:** IDE-E07-F06 · **Hat:** FE+QA · **P:** P0 · **Est:** S · **Deps:** CD-131, CD-136, CD-204
