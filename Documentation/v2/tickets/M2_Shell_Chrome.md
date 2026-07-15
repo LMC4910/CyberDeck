@@ -13,7 +13,7 @@
 - [x] CD-206 Command palette UI — ✅ Done 2026-07-15
 - [x] CD-207 Palette recents + groups — ✅ Done 2026-07-15
 - [x] CD-208 Preferences shell + general/appearance panes — ✅ Done 2026-07-15
-- [ ] CD-209 Keyboard pane + rebind UX
+- [x] CD-209 Keyboard pane + rebind UX — ✅ Done 2026-07-15
 - [ ] CD-210 Settings search
 - [ ] CD-211 NotificationService + toasts + drawer
 - [ ] CD-212 Session restore + relaunch E2E
@@ -102,7 +102,9 @@
 **BP:** IDE-E07-F04-T02 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-208, CD-122
 **Do:** Keyboard pane rendered from the command registry (single source); rebind flow with conflict warning; reset-to-default.
 **AC:**
-- [ ] rebind persists + takes effect without reload; conflict surfaced
+- [x] rebind persists + takes effect without reload; conflict surfaced
+
+**Notes (2026-07-15):** `ide/src/workspaces/preferences/keyboard-pane.tsx`. `KeyboardPane` renders every command **from the registry** (single source) with its effective binding label (`comboLabel`). **Rebind flow**: click Rebind → capture mode → next keydown → `dispatcher.rebind(id, tokens)`; takes effect immediately (dispatcher resolves the new combo). **Conflict warning**: `dispatcher.conflicts()` → same-combo commands get a `role="alert"` "Conflict" badge + red combo. **Reset-to-default**: `dispatcher.resetBinding(id)` removes the user override. Persistence via `onChange` (caller writes `dispatcher.userBindings()` to the keymap config layer). Added `KeymapDispatcher.resetBinding/bindingFor/userBindings` + `comboLabel`. Surfaced as a **Keyboard tab** in `PreferencesDialog` (shown when commands+dispatcher provided). `boot-sequence.ts` now creates a `KeymapDispatcher` (new `keymap` boot phase, `loadDefaults` after all commands register) on the kernel; App passes it to prefs. Tests: list-from-registry, rebind takes-effect + onChange + UI updates, conflict surfaced on both commands, reset restores default. 324 vitest + 3 E2E + build green.
 
 ### CD-210 · Settings search ∥
 **BP:** IDE-E07-F04-T03 · **Hat:** FE · **P:** P2 · **Est:** S · **Deps:** CD-208

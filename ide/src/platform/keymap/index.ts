@@ -3,6 +3,7 @@ export {
   comboFromEvent,
   comboEquals,
   comboToString,
+  comboLabel,
   detectPlatform,
   type KeyCombo,
   type Platform,

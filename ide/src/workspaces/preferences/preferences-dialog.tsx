@@ -4,17 +4,26 @@
 // also drives ThemeService so the swap is immediate.
 import type { ConfigurationService } from '@/services/configuration'
 import type { ThemeService } from '@/services/theme'
+import type { CommandRegistry } from '@/platform/commands'
+import type { KeymapDispatcher } from '@/platform/keymap'
 import { Dialog, Tabs, TabList, Tab, TabPanel } from '@/shared/a11y'
 import { useConfigValue } from './use-config-value'
+import { KeyboardPane } from './keyboard-pane'
 import './preferences.css'
+
+export type PreferencesTab = 'general' | 'appearance' | 'keyboard'
 
 export interface PreferencesDialogProps {
   config: ConfigurationService
   theme: ThemeService
   open: boolean
   onClose: () => void
-  tab: 'general' | 'appearance'
-  onTabChange: (t: 'general' | 'appearance') => void
+  tab: PreferencesTab
+  onTabChange: (t: PreferencesTab) => void
+  /** Keyboard pane inputs (optional — omit to hide the Keyboard tab). */
+  commands?: CommandRegistry
+  dispatcher?: KeymapDispatcher
+  onKeymapChange?: () => void
 }
 
 export function PreferencesDialog({
@@ -24,16 +33,21 @@ export function PreferencesDialog({
   onClose,
   tab,
   onTabChange,
+  commands,
+  dispatcher,
+  onKeymapChange,
 }: PreferencesDialogProps) {
   if (!open) return null
+  const showKeyboard = !!commands && !!dispatcher
   return (
     <Dialog open={open} onClose={onClose} label="Preferences">
       <div className="prefs">
         <h2 className="prefs-title">Preferences</h2>
-        <Tabs value={tab} onValueChange={(t) => onTabChange(t as 'general' | 'appearance')} label="Preferences">
+        <Tabs value={tab} onValueChange={(t) => onTabChange(t as PreferencesTab)} label="Preferences">
           <TabList label="Preference sections">
             <Tab value="general">General</Tab>
             <Tab value="appearance">Appearance</Tab>
+            {showKeyboard && <Tab value="keyboard">Keyboard</Tab>}
           </TabList>
           <TabPanel value="general">
             <GeneralPane config={config} />
@@ -41,6 +55,11 @@ export function PreferencesDialog({
           <TabPanel value="appearance">
             <AppearancePane config={config} theme={theme} />
           </TabPanel>
+          {showKeyboard && (
+            <TabPanel value="keyboard">
+              <KeyboardPane registry={commands} dispatcher={dispatcher} onChange={onKeymapChange} />
+            </TabPanel>
+          )}
         </Tabs>
       </div>
     </Dialog>

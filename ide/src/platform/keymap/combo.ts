@@ -50,6 +50,17 @@ export function comboToString(c: KeyCombo): string {
   return [c.mod && 'mod', c.shift && 'shift', c.alt && 'alt', c.key].filter(Boolean).join('+')
 }
 
+/** Human display label, e.g. "⌘⇧K" (mac) or "Ctrl+Shift+K" (other). */
+export function comboLabel(c: KeyCombo, platform: Platform = 'other'): string {
+  const mod = platform === 'mac' ? '⌘' : 'Ctrl'
+  const parts: string[] = []
+  if (c.mod) parts.push(mod)
+  if (c.shift) parts.push(platform === 'mac' ? '⇧' : 'Shift')
+  if (c.alt) parts.push(platform === 'mac' ? '⌥' : 'Alt')
+  parts.push(c.key.length === 1 ? c.key.toUpperCase() : c.key)
+  return platform === 'mac' ? parts.join('') : parts.join('+')
+}
+
 export function detectPlatform(): Platform {
   try {
     const p = typeof navigator !== 'undefined' ? navigator.platform : ''

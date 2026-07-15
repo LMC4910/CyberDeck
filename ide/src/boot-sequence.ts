@@ -7,6 +7,7 @@ import { ConfigurationService } from '@/services/configuration'
 import { ThemeService } from '@/services/theme'
 import { WorkspaceService } from '@/services/workspace'
 import { CommandRegistry, seedCommands } from '@/platform/commands'
+import { KeymapDispatcher, detectPlatform } from '@/platform/keymap'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
 import { createAllStores, type AllStores } from '@/stores'
 import { WORKSPACE_CONTRIBUTIONS } from '@/workspaces'
@@ -16,6 +17,7 @@ export interface BootedKernel {
   theme: ThemeService
   workspaces: WorkspaceService
   commands: CommandRegistry
+  keymap: KeymapDispatcher
   bus: TypedEventBus
   stores: AllStores
   report: BootReport
@@ -49,6 +51,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   // WorkspaceService bridges onChanged → WorkspaceChanged on the bus.
   const workspaces = new WorkspaceService({ onChanged: (id) => bus.emit('WorkspaceChanged', { workspaceId: id }) })
   const stores = createAllStores()
+  const keymap = new KeymapDispatcher(commands, { platform: detectPlatform() })
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -80,10 +83,12 @@ export async function runAppBoot(): Promise<BootedKernel> {
         })
       },
     },
+    // Keymap defaults after all commands are registered (CD-209).
+    { id: 'keymap', blocking: true, run: () => keymap.loadDefaults() },
   ]
 
   const report = await runBoot(phases, {
-    order: ['configuration', 'theme', 'commands', 'workspaces'],
+    order: ['configuration', 'theme', 'commands', 'workspaces', 'keymap'],
     onComplete: () => {
       // mark the app interactive for the E2E / perf tooling
       try {
@@ -94,5 +99,5 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
   })
 
-  return { config, theme, workspaces, commands, bus, stores, report }
+  return { config, theme, workspaces, commands, keymap, bus, stores, report }
 }

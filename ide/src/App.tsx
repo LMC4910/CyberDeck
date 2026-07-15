@@ -9,6 +9,7 @@ import {
   CommandPalette,
   PaletteRecents,
   PreferencesDialog,
+  type PreferencesTab,
 } from '@/workspaces'
 import { LocalStorageAdapter } from '@/services/persistence'
 import type { Store } from '@/stores'
@@ -26,7 +27,7 @@ function App() {
   const [active, setActive] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
-  const [prefsTab, setPrefsTab] = useState<'general' | 'appearance'>('general')
+  const [prefsTab, setPrefsTab] = useState<PreferencesTab>('general')
 
   useEffect(() => {
     let cancelled = false
@@ -120,6 +121,8 @@ function App() {
           onClose={() => setPrefsOpen(false)}
           tab={prefsTab}
           onTabChange={setPrefsTab}
+          commands={kernel.commands}
+          dispatcher={kernel.keymap}
         />
       )}
     </div>
