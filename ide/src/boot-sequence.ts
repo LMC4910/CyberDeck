@@ -55,7 +55,28 @@ export async function runAppBoot(): Promise<BootedKernel> {
       run: () => theme.apply(config.get<string>('theme.id') ?? 'cyber-dark'),
     },
     { id: 'commands', blocking: true, run: () => commands.registerAll(seedCommands()) },
-    { id: 'workspaces', blocking: true, run: () => workspaces.registerAll(WORKSPACE_CONTRIBUTIONS) },
+    {
+      id: 'workspaces',
+      blocking: true,
+      run: () => {
+        workspaces.registerAll(WORKSPACE_CONTRIBUTIONS)
+        // nav-history commands (CD-204): ⌘[ back / ⌘] forward
+        commands.register({
+          id: 'workspace.back',
+          category: 'View',
+          label: 'Back',
+          keys: ['⌘', '['],
+          handler: () => void workspaces.back(),
+        })
+        commands.register({
+          id: 'workspace.forward',
+          category: 'View',
+          label: 'Forward',
+          keys: ['⌘', ']'],
+          handler: () => void workspaces.forward(),
+        })
+      },
+    },
   ]
 
   const report = await runBoot(phases, {

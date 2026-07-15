@@ -8,7 +8,7 @@
 - [x] CD-201 A11y primitives library — ✅ Done 2026-07-15
 - [x] CD-202 WorkspaceService + contribution registry — ✅ Done 2026-07-15
 - [x] CD-203 Workspace rail + lazy pane host — ✅ Done 2026-07-15
-- [ ] CD-204 Per-workspace context preservation + nav history
+- [x] CD-204 Per-workspace context preservation + nav history — ✅ Done 2026-07-15
 - [ ] CD-205 Breadcrumb + status bar
 - [ ] CD-206 Command palette UI
 - [ ] CD-207 Palette recents + groups
@@ -58,8 +58,10 @@
 **BP:** IDE-E07-F01-T03 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-203
 **Do:** Context snapshot map (scroll/zoom/selection) per workspace; back/forward stack with ⌘[ / ⌘] commands.
 **AC:**
-- [ ] switch→return restores context (test)
-- [ ] history walk test across ≥3 workspaces
+- [x] switch→return restores context (test)
+- [x] history walk test across ≥3 workspaces
+
+**Notes (2026-07-15):** Extended `WorkspaceService`. **Context preservation**: `saveContext(id, ctx)` / `getContext(id)` — a per-workspace snapshot map (scroll/zoom/selection); switch-away then return reads the saved context back. **Nav history**: `setActive` pushes onto a back/forward stack (truncating the forward tail on a new branch); `back()`/`forward()` move the index and route without re-pushing; `canBack`/`canForward`/`historyStack()`. The `⌘[` (back) / `⌘]` (forward) commands are registered in the `workspaces` boot phase (`boot-sequence.ts`) with handlers calling `workspaces.back/forward`. 14 tests: switch→return restore, per-workspace independence, **history walk across 4 workspaces** (back×2 + forward), edge flags, forward-tail truncation, null-at-ends. 300 vitest green.
 
 ### CD-205 · Breadcrumb + status bar
 **BP:** IDE-E07-F02 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-203

@@ -46,6 +46,11 @@ export class WorkspaceService {
   private readonly listeners = new Set<(id: string) => void>()
   private readonly onChanged?: (id: string) => void
   private activeId: string | null = null
+  // Per-workspace context (scroll/zoom/selection) preserved across switches.
+  private readonly contexts = new Map<string, unknown>()
+  // Back/forward navigation stack.
+  private history: string[] = []
+  private historyIndex = -1
 
   constructor(options: WorkspaceServiceOptions = {}) {
     this.onChanged = options.onChanged
@@ -55,8 +60,12 @@ export class WorkspaceService {
     this.validate(contribution)
     if (this.workspaces.has(contribution.id)) throw new DuplicateWorkspaceError(contribution.id)
     this.workspaces.set(contribution.id, contribution)
-    // first registered workspace becomes active by default
-    if (this.activeId === null) this.activeId = contribution.id
+    // first registered workspace becomes active by default (seeds history)
+    if (this.activeId === null) {
+      this.activeId = contribution.id
+      this.history = [contribution.id]
+      this.historyIndex = 0
+    }
   }
 
   registerAll(contributions: WorkspaceContribution[]): void {
@@ -76,10 +85,62 @@ export class WorkspaceService {
     return this.activeId
   }
 
-  /** Route to a workspace: sets active, notifies subscribers, emits WorkspaceChanged. */
+  /** Route to a workspace: sets active, pushes history, emits WorkspaceChanged. */
   setActive(id: string): void {
     if (!this.workspaces.has(id)) throw new UnknownWorkspaceError(id)
     if (id === this.activeId) return
+    // truncate any forward history, then push
+    this.history = this.history.slice(0, this.historyIndex + 1)
+    this.history.push(id)
+    this.historyIndex = this.history.length - 1
+    this.route(id)
+  }
+
+  // --- context preservation ---
+
+  /** Save a workspace's context snapshot (scroll/zoom/selection). */
+  saveContext(id: string, context: unknown): void {
+    this.contexts.set(id, context)
+  }
+
+  /** Read a workspace's saved context (undefined if never saved). */
+  getContext<T = unknown>(id: string): T | undefined {
+    return this.contexts.get(id) as T | undefined
+  }
+
+  // --- nav history (⌘[ / ⌘]) ---
+
+  get canBack(): boolean {
+    return this.historyIndex > 0
+  }
+  get canForward(): boolean {
+    return this.historyIndex < this.history.length - 1
+  }
+
+  /** Navigate back in the workspace history. Returns the new active id or null. */
+  back(): string | null {
+    if (!this.canBack) return null
+    this.historyIndex--
+    const id = this.history[this.historyIndex]!
+    this.route(id)
+    return id
+  }
+
+  /** Navigate forward in the workspace history. */
+  forward(): string | null {
+    if (!this.canForward) return null
+    this.historyIndex++
+    const id = this.history[this.historyIndex]!
+    this.route(id)
+    return id
+  }
+
+  /** Current back/forward stack (for the inspector / tests). */
+  historyStack(): { entries: string[]; index: number } {
+    return { entries: [...this.history], index: this.historyIndex }
+  }
+
+  private route(id: string): void {
     this.activeId = id
     for (const l of this.listeners) l(id)
     this.onChanged?.(id)
