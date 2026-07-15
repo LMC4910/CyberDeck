@@ -1,0 +1,56 @@
+/* A11y primitives (CD-201): focus-visible ring + minimal primitive styling.
+   Everything keyboard-operable shows a consistent ring; respects reduced motion. */
+
+.a11y-btn,
+.a11y-tab,
+.a11y-treeitem {
+  cursor: pointer;
+}
+
+/* Focus-visible ring — keyboard focus only, never on mouse click. */
+.a11y-btn:focus-visible,
+.a11y-tab:focus-visible,
+.a11y-treeitem:focus-visible,
+[role='tabpanel']:focus-visible,
+.a11y-dialog:focus-visible {
+  outline: 2px solid var(--accent, #4cc2ff);
+  outline-offset: 2px;
+}
+
+.a11y-tablist {
+  display: flex;
+  gap: 4px;
+}
+
+.a11y-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.a11y-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-palette, 100);
+}
+
+.a11y-dialog {
+  background: var(--panel, #0e0e1c);
+  color: var(--ink, #eaeaf6);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: var(--r-m, 10px);
+  padding: 16px;
+  min-width: 320px;
+  max-width: 90vw;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

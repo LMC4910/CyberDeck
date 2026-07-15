@@ -5,7 +5,7 @@
 
 ## Board
 
-- [ ] CD-201 A11y primitives library
+- [x] CD-201 A11y primitives library — ✅ Done 2026-07-15
 - [ ] CD-202 WorkspaceService + contribution registry
 - [ ] CD-203 Workspace rail + lazy pane host
 - [ ] CD-204 Per-workspace context preservation + nav history
@@ -31,8 +31,10 @@
 **BP:** IDE-E20-T01 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-139
 **Do:** Focus-visible ring styles; `Button/Tab/Tree/Dialog` primitives with roles+labels; focus-trap + focus-restore hook; Enter/Space activation helper; reduced-motion hook. Everything below builds on these.
 **AC:**
-- [ ] primitives unit-tested (trap cycles, restore, activation)
-- [ ] axe clean on a demo page of all primitives
+- [x] primitives unit-tested (trap cycles, restore, activation)
+- [x] axe clean on a demo page of all primitives
+
+**Notes (2026-07-15):** `ide/src/shared/a11y/` (in `shared` so every layer can use it). `focus.ts`: `getFocusable` (attribute-based hidden checks, **not** offsetParent — jsdom-safe), `useFocusTrap(ref, active)` (cycles Tab/Shift+Tab at both ends, moves focus in, restores on deactivate/unmount), `useFocusRestore`. `activation.ts`: `activateOnKey(run)` fires on Enter/Space + preventDefault. `reduced-motion.ts`: `useReducedMotion` (guards absent matchMedia). `primitives.tsx`: **Button** (aria-label, focus-visible), **Tabs/TabList/Tab/TabPanel** (roving tabindex, aria-selected/controls/labelledby), **Tree/TreeItem** (role tree/treeitem, aria-expanded/selected), **Dialog** (aria-modal, focus-trapped, Esc-to-close, backdrop). `a11y.css`: focus-visible ring (`--accent`), reduced-motion media query. 7 tests: activation Enter/Space + ignore, focus-trap move-in/cycle-both-ends/restore, Tabs roving+panel-swap, and **axe clean on a demo page of all primitives** (0 violations). 281 vitest green.
 
 ### CD-202 · WorkspaceService + contribution registry
 **BP:** IDE-E07-F01-T01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-139
