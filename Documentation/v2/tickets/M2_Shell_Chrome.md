@@ -22,7 +22,7 @@
 - [x] CD-215 Dock UI: zones, insets, auto-hide/peek — ✅ Done 2026-07-16
 - [x] CD-216 Declarative dock registration + proof window — ✅ Done 2026-07-16
 - [x] CD-217 Layout presets — ✅ Done 2026-07-16
-- [ ] CD-218 Honest-stub sweep + placeholder panes
+- [x] CD-218 Honest-stub sweep + placeholder panes — ✅ Done 2026-07-16
 - [ ] CD-219 **M2 gate review**
 
 ---
@@ -177,7 +177,9 @@
 **BP:** IDE-E07 AC / AUDIT C5 · **Hat:** FE+DES · **P:** P1 · **Est:** S · **Deps:** CD-203, CD-211
 **Do:** Placeholder content for all seven panes ("arrives in M3/M4" affordance); sweep chrome for dead controls — each works, is disabled-with-tooltip, or is removed.
 **AC:**
-- [ ] click-everything audit recorded: zero silent controls
+- [x] click-everything audit recorded: zero silent controls
+
+**Notes (2026-07-16):** Wired the last unwired chrome (CD-211 notifications + undo were built but not hooked up). `boot-sequence.ts` now assembles an `UndoStack` + `NotificationService` (onNotify → drawer store + transient toast store) and emits a welcome notification. **App**: a **notification bell** in the top bar (unread badge) toggles the `NotificationDrawer`; the `Toaster` renders toast notifications (undo action → `undo.undo()`); **⌘Z/⇧⌘Z** + palette undo/redo/drawer/togL/togR/prefs all route to real behavior. **Click-everything audit (recorded)**: every visible shell control is operable — rail (7 workspaces), breadcrumb (navigates), bell (drawer), palette (⌘K, executes), prefs (⌘,, 3 panes + search), keyboard rebind, panel toggles/resize (⌘B/⌘J), dock controls (pin/unpin/peek/float/dock-back), preset menu (apply/save/delete), mark-all-read. **Zero silent controls.** All 7 panes carry an honest "arrives in a later milestone" placeholder (never blank). **E2E audit** (`chrome-audit.spec.ts`): bell opens drawer + welcome notification + mark-all-read disables; every pane shows its named honest placeholder. 369 vitest + **9 E2E** green.
 
 ### CD-219 · **M2 gate review**
 **BP:** Blueprint M2 gate · **Hat:** PM+QA · **P:** P0 · **Est:** S · **Deps:** CD-201…218

@@ -37,6 +37,32 @@
 .shell-brand {
   font-weight: 600;
 }
+.shell-topbar {
+  gap: 12px;
+}
+.shell-bell {
+  margin-left: auto;
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+.shell-bell:focus-visible {
+  outline: 2px solid var(--accent, #4cc2ff);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.shell-bell-badge {
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  background: var(--bad, #ff6b7d);
+  color: #fff;
+  font-size: 9px;
+  border-radius: 8px;
+  padding: 0 4px;
+}
 
 .panel-placeholder {
   color: var(--ink2, #8a8cb4);

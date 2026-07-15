@@ -11,7 +11,9 @@ import { LocalStorageAdapter } from '@/services/persistence'
 import { CommandRegistry, seedCommands } from '@/platform/commands'
 import { KeymapDispatcher, detectPlatform } from '@/platform/keymap'
 import { DockManager } from '@/platform/dock'
+import { UndoStack } from '@/platform/undo'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
+import { NotificationService, type Notification } from '@/services/notification'
 import { createAllStores, createStore, StoreManager, type AllStores, type Store } from '@/stores'
 import { WORKSPACE_CONTRIBUTIONS, type PanelsState, type LayoutPreset } from '@/workspaces'
 
@@ -27,6 +29,11 @@ export interface BootedKernel {
   panels: Store<PanelsState>
   userPresets: Store<{ presets: LayoutPreset[] }>
   dock: DockManager
+  undo: UndoStack
+  notifications: NotificationService
+  /** Drawer projection (all notifications) + active toasts. */
+  notificationStore: Store<{ items: Notification[] }>
+  toastStore: Store<{ items: Notification[] }>
   /** Persist the current dock layout (call after a dock transition). */
   saveDock: () => void
   /** Flush all pending write-behind persistence (wire to beforeunload / quit). */
@@ -77,6 +84,17 @@ export async function runAppBoot(): Promise<BootedKernel> {
     { name: 'dock', kind: 'persisted', location: 'cdk-dock' },
   )
   const saveDock = () => dockStore.setState({ rows: dock.serialize() })
+  // Undo/redo + notifications (CD-218 wiring). onNotify projects to the drawer
+  // store and, for toast-flagged notifications, the transient toast store.
+  const undo = new UndoStack()
+  const notificationStore = createStore<{ items: Notification[] }>({ items: [] }, { name: 'notification', kind: 'derived' })
+  const toastStore = createStore<{ items: Notification[] }>({ items: [] }, { name: 'toasts', kind: 'temp' })
+  const notifications = new NotificationService({
+    onNotify: (n) => {
+      notificationStore.setState((s) => ({ items: [n, ...s.items] }))
+      if (n.toast) toastStore.setState((s) => ({ items: [n, ...s.items] }))
+    },
+  })
   // User-saved layout presets (CD-217), persisted.
   const userPresets = createStore<{ presets: LayoutPreset[] }>(
     { presets: [] },
@@ -170,5 +188,10 @@ export async function runAppBoot(): Promise<BootedKernel> {
     session.flush()
     storeManager.flush()
   }
-  return { config, theme, workspaces, commands, keymap, bus, stores, session, panels, userPresets, dock, saveDock, flush, report }
+  // A welcome notification so the drawer isn't empty on first run (info, no toast).
+  notifications.notify({ level: 'info', source: 'CyberDeck', title: 'Welcome to CyberDeck', body: 'The shell is ready.' })
+  return {
+    config, theme, workspaces, commands, keymap, bus, stores, session, panels, userPresets,
+    dock, undo, notifications, notificationStore, toastStore, saveDock, flush, report,
+  }
 }

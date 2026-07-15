@@ -15,6 +15,8 @@ import {
   togglePanel,
   DockHost,
   LayoutPresetMenu,
+  Toaster,
+  NotificationDrawer,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -64,9 +66,12 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [prefsTab, setPrefsTab] = useState<PreferencesTab>('general')
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [dockRows, setDockRows] = useState(kernel.dock.list())
   const panelsState = useStore(kernel.panels, (s) => s)
   const userPresets = useStore(kernel.userPresets, (s) => s)
+  const toasts = useStore(kernel.toastStore, (s) => s.items)
+  const unread = useStore(kernel.notificationStore, (s) => s.items.filter((n) => !n.read).length)
 
   useEffect(() => kernel.workspaces.subscribe((id) => setActive(id)), [kernel])
 
@@ -89,6 +94,12 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
       } else if (mod && e.key.toLowerCase() === 'j') {
         e.preventDefault()
         toggleSide('right')
+      } else if (mod && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        kernel.undo.undo()
+      } else if (mod && e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        kernel.undo.redo()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -111,6 +122,14 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
           context={{ projectName: 'Untitled', leaf: activeLabel }}
           onNavigate={(id) => kernel.workspaces.setActive(id)}
         />
+        <button
+          className="shell-bell"
+          data-testid="notifications-bell"
+          aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ''}`}
+          onClick={() => setDrawerOpen((v) => !v)}
+        >
+          🔔{unread > 0 && <span className="shell-bell-badge">{unread}</span>}
+        </button>
       </header>
       <div className="shell-body">
         <WorkspaceRail service={kernel.workspaces} active={active} />
@@ -169,6 +188,9 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
           if (id === 'prefs') setPrefsOpen(true)
           else if (id === 'togL') toggleSide('left')
           else if (id === 'togR') toggleSide('right')
+          else if (id === 'drawer') setDrawerOpen((v) => !v)
+          else if (id === 'undo') kernel.undo.undo()
+          else if (id === 'redo') kernel.undo.redo()
           else void kernel.commands.execute(id, undefined, commandContext)
         }}
         recents={paletteRecents.list()}
@@ -183,6 +205,23 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         onTabChange={setPrefsTab}
         commands={kernel.commands}
         dispatcher={kernel.keymap}
+      />
+      <Toaster
+        toasts={toasts}
+        onDismiss={(id) =>
+          kernel.toastStore.setState((s) => ({ items: s.items.filter((t) => t.id !== id) }))
+        }
+        onAction={(_id, actionId) => {
+          if (actionId === 'undo') kernel.undo.undo()
+        }}
+      />
+      <NotificationDrawer
+        store={kernel.notificationStore}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onMarkAllRead={() =>
+          kernel.notificationStore.setState((s) => ({ items: s.items.map((n) => ({ ...n, read: true })) }))
+        }
       />
     </div>
   )
