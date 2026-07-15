@@ -2,3 +2,4 @@
 export * from './configuration'
 export * from './persistence'
 export * from './theme'
+export * from './workspace'

@@ -6,7 +6,7 @@
 ## Board
 
 - [x] CD-201 A11y primitives library — ✅ Done 2026-07-15
-- [ ] CD-202 WorkspaceService + contribution registry
+- [x] CD-202 WorkspaceService + contribution registry — ✅ Done 2026-07-15
 - [ ] CD-203 Workspace rail + lazy pane host
 - [ ] CD-204 Per-workspace context preservation + nav history
 - [ ] CD-205 Breadcrumb + status bar
@@ -40,8 +40,10 @@
 **BP:** IDE-E07-F01-T01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-139
 **Do:** Workspaces declared as config contributions `{id, icon, order, lazyPane}`; WorkspaceService routes via Workspace store; emits WorkspaceChanged; validates contributions.
 **AC:**
-- [ ] adding a workspace = config entry only (proven by a test workspace)
-- [ ] unit tests: routing, invalid contribution rejected
+- [x] adding a workspace = config entry only (proven by a test workspace)
+- [x] unit tests: routing, invalid contribution rejected
+
+**Notes (2026-07-15):** `ide/src/services/workspace/`. `WorkspaceContribution {id, label, icon, order, lazyPane}` where `lazyPane: () => Promise<{default}>` is the dynamic-import loader. `WorkspaceService`: `register`/`registerAll` (validates id pattern `^[a-z][a-z0-9-]*$`, non-empty label/icon, numeric order, function lazyPane → `InvalidWorkspaceError`; dupes → `DuplicateWorkspaceError`), `list()` sorted by order, `active()`/`setActive(id)` (unknown → `UnknownWorkspaceError`; no-op if already active; notifies subscribers + `onChanged`), `subscribe`. **Store-agnostic by design** (services may not import stores): the service owns active-workspace routing state and emits via the injected `onChanged` callback; app-shell wiring mirrors active↔Workspace store and bridges onChanged→WorkspaceChanged on the bus. Test proves **adding a workspace is a config entry only** (a `test-ws` just appears + routes, no other code change). 8 tests: config-entry-only, order sort, invalid/dup rejection, default-active, route+notify+event, unknown-id throw, unsubscribe. 289 vitest green.
 
 ### CD-203 · Workspace rail + lazy pane host
 **BP:** IDE-E07-F01-T02 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-202, CD-201
