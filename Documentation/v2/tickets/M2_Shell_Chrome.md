@@ -11,7 +11,7 @@
 - [x] CD-204 Per-workspace context preservation + nav history — ✅ Done 2026-07-15
 - [x] CD-205 Breadcrumb + status bar — ✅ Done 2026-07-15
 - [x] CD-206 Command palette UI — ✅ Done 2026-07-15
-- [ ] CD-207 Palette recents + groups
+- [x] CD-207 Palette recents + groups — ✅ Done 2026-07-15
 - [ ] CD-208 Preferences shell + general/appearance panes
 - [ ] CD-209 Keyboard pane + rebind UX
 - [ ] CD-210 Settings search
@@ -85,7 +85,9 @@
 **BP:** IDE-E07-F03-T02 · **Hat:** FE · **P:** P2 · **Est:** S · **Deps:** CD-206
 **Do:** Recent-weighting (persisted), category group headers matching design.
 **AC:**
-- [ ] recents float after use; groups match design ordering
+- [x] recents float after use; groups match design ordering
+
+**Notes (2026-07-15):** `PaletteRecents` (`palette-recents.ts`) — persisted MRU list of command ids (StorageAdapter, deduped, capped 8, survives reload). The palette's **empty-query view** now renders grouped: a **"Recently used"** group first (recent commands lifted out of their categories so each appears exactly once — unique DOM ids), then category groups in **design order** (General/Edit/Design/Project/View/Platform). A **non-empty query** drops groups → flat fuzzy-ranked list. Keyboard nav works over the flattened order; `onUse(id)` records recency. Grouped results use `div role="listbox"` > `div role="group"` (aria-labelledby header) > `div role="option"` for valid ARIA containment (the earlier ul/li nesting broke axe). Wired into App with a `LocalStorageAdapter`-backed recents. Tests: MRU record/dedupe/cap/persist, groups in design order, recents float to top group (once each), query drops groups, onUse fires. 316 vitest green.
 
 ### CD-208 · Preferences shell + general/appearance panes
 **BP:** IDE-E07-F04-T01 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-118, CD-134, CD-201

@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { runAppBoot, type BootedKernel } from '@/boot-sequence'
-import { WorkspaceRail, PaneHost, Breadcrumb, StatusBar, CommandPalette } from '@/workspaces'
+import { WorkspaceRail, PaneHost, Breadcrumb, StatusBar, CommandPalette, PaletteRecents } from '@/workspaces'
+import { LocalStorageAdapter } from '@/services/persistence'
 import type { Store } from '@/stores'
 import type { WhenContext } from '@/platform/commands'
+
+const paletteRecents = new PaletteRecents({ storage: new LocalStorageAdapter() })
 
 /**
  * Shell (progressively assembled through M2). Boots the kernel, then renders the
@@ -89,6 +92,8 @@ function App() {
           open={paletteOpen}
           onClose={() => setPaletteOpen(false)}
           onExecute={(id) => void kernel.commands.execute(id, undefined, commandContext)}
+          recents={paletteRecents.list()}
+          onUse={(id) => paletteRecents.record(id)}
         />
       )}
     </div>

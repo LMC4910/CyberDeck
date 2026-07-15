@@ -54,3 +54,18 @@
   color: var(--ink2, #8a8cb4);
   text-align: center;
 }
+.palette-group {
+  list-style: none;
+}
+.palette-group-header {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink3, #6a6c92);
+  padding: 8px 10px 2px;
+}
+.palette-group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
