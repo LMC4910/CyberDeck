@@ -18,7 +18,7 @@
 - [x] CD-211 NotificationService + toasts + drawer — ✅ Done 2026-07-15
 - [x] CD-212 Session restore + relaunch E2E — ✅ Done 2026-07-15
 - [x] CD-213 Resizable panels — ✅ Done 2026-07-15
-- [ ] CD-214 DockManager model
+- [x] CD-214 DockManager model — ✅ Done 2026-07-15
 - [ ] CD-215 Dock UI: zones, insets, auto-hide/peek
 - [ ] CD-216 Declarative dock registration + proof window
 - [ ] CD-217 Layout presets
@@ -144,7 +144,9 @@
 **BP:** IDE-E08-F02-T01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-130
 **Do:** Tool-window state machine `{mode: float|docked, side, size, pinned, autohidden}`; transitions (float↔dock↔pin↔auto-hide↔peek); persistence rows in Workspace store.
 **AC:**
-- [ ] state machine fully unit-tested (every transition + illegal transitions rejected)
+- [x] state machine fully unit-tested (every transition + illegal transitions rejected)
+
+**Notes (2026-07-15):** `ide/src/platform/dock/`. `DockManager` — pure serializable state machine; each `ToolWindow {id, mode:float|docked, side:left|right|bottom, size, pinned, autohidden, peeking}`. `register` (docked+pinned default, size clamped to minSize; dupe rejected). Transitions: `float`/`dock(side)`/`moveZone(side)`/`pin`/`unpin`(→auto-hidden edge tab)/`peek`/`unpeek`/`resize`(minSize clamp). **Illegal transitions throw `DockError`**: float-when-floating, dock-same-side, move/pin/unpin on a floating window, pin-when-pinned, unpin-when-unpinned, peek-a-pinned-window, unpeek-when-not-peeking, unknown-window. `serialize`/`hydrate` round-trip for persistence as Workspace-store rows. 14 tests covering every legal transition + all illegal rejections + persistence round-trip. Dock **UI** (zones/insets/auto-hide/peek rendering) is CD-215; declarative registration proof is CD-216. 361 vitest green.
 
 ### CD-215 · Dock UI: zones, insets, auto-hide/peek
 **BP:** IDE-E08-F02-T02 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-214, CD-213
