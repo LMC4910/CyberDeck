@@ -12,7 +12,7 @@
 - [x] CD-205 Breadcrumb + status bar — ✅ Done 2026-07-15
 - [x] CD-206 Command palette UI — ✅ Done 2026-07-15
 - [x] CD-207 Palette recents + groups — ✅ Done 2026-07-15
-- [ ] CD-208 Preferences shell + general/appearance panes
+- [x] CD-208 Preferences shell + general/appearance panes — ✅ Done 2026-07-15
 - [ ] CD-209 Keyboard pane + rebind UX
 - [ ] CD-210 Settings search
 - [ ] CD-211 NotificationService + toasts + drawer
@@ -93,8 +93,10 @@
 **BP:** IDE-E07-F04-T01 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-118, CD-134, CD-201
 **Do:** Prefs window (focus-trapped); General + Appearance panes; every control writes through ConfigurationService (no local state); theme picker drives ThemeService.
 **AC:**
-- [ ] round-trip persist test (change → relaunch → value holds)
-- [ ] zero local component state for settings (review checklist)
+- [x] round-trip persist test (change → relaunch → value holds)
+- [x] zero local component state for settings (review checklist)
+
+**Notes (2026-07-15):** `ide/src/workspaces/preferences/`. `useConfigValue(config, path, fallback)` — `useSyncExternalStore` subscribing to `config.watch(path)`, reading `config.get(path)`: the control renders the LIVE config value with **zero local state** (config is the single source of truth). `PreferencesDialog` — focus-trapped `Dialog` with `Tabs` (General/Appearance). General: telemetry switch + density select, each `config.set(path, val, 'user')`. Appearance: theme radiogroup — selecting `config.set('theme.id')` **and** `theme.apply(id)` for the immediate swap. Wired into App (⌘, keydown + the `prefs` palette command open it). Tests: telemetry toggle writes config + control mirrors (no local state), density writes, **round-trip persist** (toggle → persist user layer via ConfigPersistence → reload through the migration gate into a fresh config → value holds), theme picker writes config + drives ThemeService. (Boot-level config write-behind wiring lands with CD-212 session restore.) 320 vitest green.
 
 ### CD-209 · Keyboard pane + rebind UX
 **BP:** IDE-E07-F04-T02 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-208, CD-122

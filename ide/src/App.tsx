@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { runAppBoot, type BootedKernel } from '@/boot-sequence'
-import { WorkspaceRail, PaneHost, Breadcrumb, StatusBar, CommandPalette, PaletteRecents } from '@/workspaces'
+import {
+  WorkspaceRail,
+  PaneHost,
+  Breadcrumb,
+  StatusBar,
+  CommandPalette,
+  PaletteRecents,
+  PreferencesDialog,
+} from '@/workspaces'
 import { LocalStorageAdapter } from '@/services/persistence'
 import type { Store } from '@/stores'
 import type { WhenContext } from '@/platform/commands'
@@ -17,6 +25,8 @@ function App() {
   const [kernel, setKernel] = useState<BootedKernel | null>(null)
   const [active, setActive] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [prefsOpen, setPrefsOpen] = useState(false)
+  const [prefsTab, setPrefsTab] = useState<'general' | 'appearance'>('general')
 
   useEffect(() => {
     let cancelled = false
@@ -37,6 +47,9 @@ function App() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         setPaletteOpen((v) => !v)
+      } else if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault()
+        setPrefsOpen(true)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -91,9 +104,22 @@ function App() {
           context={commandContext}
           open={paletteOpen}
           onClose={() => setPaletteOpen(false)}
-          onExecute={(id) => void kernel.commands.execute(id, undefined, commandContext)}
+          onExecute={(id) => {
+            if (id === 'prefs') setPrefsOpen(true)
+            else void kernel.commands.execute(id, undefined, commandContext)
+          }}
           recents={paletteRecents.list()}
           onUse={(id) => paletteRecents.record(id)}
+        />
+      )}
+      {kernel && (
+        <PreferencesDialog
+          config={kernel.config}
+          theme={kernel.theme}
+          open={prefsOpen}
+          onClose={() => setPrefsOpen(false)}
+          tab={prefsTab}
+          onTabChange={setPrefsTab}
         />
       )}
     </div>

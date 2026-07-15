@@ -13,3 +13,4 @@ export {
 } from './chrome/breadcrumb-segments'
 export { CommandPalette, type CommandPaletteProps } from './palette'
 export { fuzzyScore, fuzzyFilter, PaletteRecents } from './palette'
+export { PreferencesDialog, useConfigValue, type PreferencesDialogProps } from './preferences'
