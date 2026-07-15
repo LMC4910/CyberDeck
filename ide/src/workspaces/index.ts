@@ -17,6 +17,9 @@ export {
   PreferencesDialog,
   KeyboardPane,
   useConfigValue,
+  searchSettings,
+  SETTINGS_INDEX,
   type PreferencesDialogProps,
   type PreferencesTab,
+  type SettingEntry,
 } from './preferences'

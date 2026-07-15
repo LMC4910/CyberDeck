@@ -14,7 +14,7 @@
 - [x] CD-207 Palette recents + groups — ✅ Done 2026-07-15
 - [x] CD-208 Preferences shell + general/appearance panes — ✅ Done 2026-07-15
 - [x] CD-209 Keyboard pane + rebind UX — ✅ Done 2026-07-15
-- [ ] CD-210 Settings search
+- [x] CD-210 Settings search — ✅ Done 2026-07-15
 - [ ] CD-211 NotificationService + toasts + drawer
 - [ ] CD-212 Session restore + relaunch E2E
 - [ ] CD-213 Resizable panels
@@ -110,7 +110,9 @@
 **BP:** IDE-E07-F04-T03 · **Hat:** FE · **P:** P2 · **Est:** S · **Deps:** CD-208
 **Do:** Search filters panes/rows by label + keywords.
 **AC:**
-- [ ] matches pane content; keyboard navigable results
+- [x] matches pane content; keyboard navigable results
+
+**Notes (2026-07-15):** `settings-index.ts`: `SETTINGS_INDEX` (each row: id/pane/label/keywords) + `searchSettings(query)` (fuzzy over label+keywords). The `SettingsSearch` searchbox in `PreferencesDialog` shows a `listbox` of matches while querying; Arrow up/down navigate, Enter/click **jumps to the owning pane** (calls onTabChange) and clears. Tests: keyword+label matching (privacy→telemetry, theme, rebind→keyboard), empty/no-match, Enter jumps to pane, Arrow navigation, click jumps. **Refactor**: moved the fuzzy scorer from `workspaces/palette/` to `shared/fuzzy/` — preferences importing it from palette was a cross-feature boundary violation (workspace→workspace); now both palette and preferences import `@/shared/fuzzy`. 328 vitest green.
 
 ### CD-211 · NotificationService + toasts + drawer
 **BP:** IDE-E07-F05 · **Hat:** FE · **P:** P1 · **Est:** M · **Deps:** CD-120, CD-130, CD-201

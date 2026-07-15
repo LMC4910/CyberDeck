@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CommandDescriptor, CommandRegistry, WhenContext } from '@/platform/commands'
 import { Dialog } from '@/shared/a11y'
-import { fuzzyFilter } from './fuzzy'
+import { fuzzyFilter } from '@/shared/fuzzy'
 import './palette.css'
 
 // Design category ordering for the empty-query grouped view.
