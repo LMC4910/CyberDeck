@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { runAppBoot, type BootedKernel } from '@/boot-sequence'
-import { WorkspaceRail, PaneHost, Breadcrumb, StatusBar } from '@/workspaces'
+import { WorkspaceRail, PaneHost, Breadcrumb, StatusBar, CommandPalette } from '@/workspaces'
 import type { Store } from '@/stores'
+import type { WhenContext } from '@/platform/commands'
 
 /**
  * Shell (progressively assembled through M2). Boots the kernel, then renders the
@@ -12,6 +13,7 @@ import type { Store } from '@/stores'
 function App() {
   const [kernel, setKernel] = useState<BootedKernel | null>(null)
   const [active, setActive] = useState<string | null>(null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -26,8 +28,24 @@ function App() {
     }
   }, [])
 
+  // ⌘K / Ctrl+K opens the palette
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const booted = kernel !== null
   const activeLabel = (active && kernel?.workspaces.get(active)?.label) || ''
+  const commandContext: WhenContext = {
+    workspace: active ?? undefined,
+    flags: kernel?.config.get<Record<string, boolean>>('features'),
+  }
 
   return (
     <div className="shell" data-boot={booted ? 'interactive' : 'booting'} data-testid="shell">
@@ -63,6 +81,15 @@ function App() {
         />
       ) : (
         <footer className="shell-statusbar">starting</footer>
+      )}
+      {kernel && (
+        <CommandPalette
+          registry={kernel.commands}
+          context={commandContext}
+          open={paletteOpen}
+          onClose={() => setPaletteOpen(false)}
+          onExecute={(id) => void kernel.commands.execute(id, undefined, commandContext)}
+        />
       )}
     </div>
   )

@@ -11,3 +11,5 @@ export {
   type CrumbSegment,
   type CrumbContext,
 } from './chrome/breadcrumb-segments'
+export { CommandPalette, type CommandPaletteProps } from './palette'
+export { fuzzyScore, fuzzyFilter } from './palette'

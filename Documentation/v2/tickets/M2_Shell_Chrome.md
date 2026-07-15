@@ -10,7 +10,7 @@
 - [x] CD-203 Workspace rail + lazy pane host — ✅ Done 2026-07-15
 - [x] CD-204 Per-workspace context preservation + nav history — ✅ Done 2026-07-15
 - [x] CD-205 Breadcrumb + status bar — ✅ Done 2026-07-15
-- [ ] CD-206 Command palette UI
+- [x] CD-206 Command palette UI — ✅ Done 2026-07-15
 - [ ] CD-207 Palette recents + groups
 - [ ] CD-208 Preferences shell + general/appearance panes
 - [ ] CD-209 Keyboard pane + rebind UX
@@ -76,8 +76,10 @@
 **BP:** IDE-E07-F03-T01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-121, CD-201
 **Do:** ⌘K overlay (focus-trapped) rendering context-filtered registry commands; fuzzy scorer; virtualized list; Enter executes / Esc restores focus; shortcut hints from keymap.
 **AC:**
-- [ ] every registered command reachable + executable from the palette (test iterates registry)
-- [ ] keyboard-complete; axe clean
+- [x] every registered command reachable + executable from the palette (test iterates registry)
+- [x] keyboard-complete; axe clean
+
+**Notes (2026-07-15):** `ide/src/workspaces/palette/`. `fuzzy.ts`: `fuzzyScore` (subsequence match + consecutive/word-start bonuses, null on non-match) + `fuzzyFilter` (drop+sort). `CommandPalette`: `Dialog`-based focus-trapped ⌘K overlay; `combobox` input + `listbox`/`option` results with `aria-activedescendant`; **context-filtered** (only `registry.canExecute(id, ctx)` commands); Arrow up/down move highlight, Enter executes, Esc closes (Dialog restores focus); keymap shortcut hints via `shortcutFor`. **Wired into App**: ⌘K/Ctrl+K toggles it (window keydown), executes through `kernel.commands.execute`. Tests: fuzzy ranking, **every context-available command reachable + executable (iterates the registry)**, context filtering hides gated commands, Arrow+Enter keyboard run, Esc close, **axe clean**. E2E: Ctrl+K opens → filter → Enter → closes. Virtualization deferred (BACKLOG — ~26 commands render fine). 311 vitest + 3 E2E green.
 
 ### CD-207 · Palette recents + groups ∥
 **BP:** IDE-E07-F03-T02 · **Hat:** FE · **P:** P2 · **Est:** S · **Deps:** CD-206
