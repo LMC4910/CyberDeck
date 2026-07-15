@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { runAppBoot, type BootedKernel } from '@/boot-sequence'
-import { WorkspaceRail, PaneHost } from '@/workspaces'
+import { WorkspaceRail, PaneHost, Breadcrumb, StatusBar } from '@/workspaces'
+import type { Store } from '@/stores'
 
 /**
- * Shell (CD-102 placeholder → CD-136 boot-wired → CD-203 workspace shell). Boots
- * the kernel, then renders the workspace rail + lazy pane host. Real chrome
- * (breadcrumb, status bar, palette, prefs) fills in across M2.
+ * Shell (progressively assembled through M2). Boots the kernel, then renders the
+ * workspace rail, breadcrumb, lazy pane host, and status bar. Palette/prefs/dock
+ * land in later M2 tickets.
  */
 function App() {
   const [kernel, setKernel] = useState<BootedKernel | null>(null)
@@ -26,10 +27,20 @@ function App() {
   }, [])
 
   const booted = kernel !== null
+  const activeLabel = (active && kernel?.workspaces.get(active)?.label) || ''
 
   return (
     <div className="shell" data-boot={booted ? 'interactive' : 'booting'} data-testid="shell">
-      <header className="shell-topbar">CyberDeck IDE</header>
+      <header className="shell-topbar">
+        <span className="shell-brand">CyberDeck IDE</span>
+        {kernel && (
+          <Breadcrumb
+            activeWorkspace={active}
+            context={{ projectName: 'Untitled', leaf: activeLabel }}
+            onNavigate={(id) => kernel.workspaces.setActive(id)}
+          />
+        )}
+      </header>
       <div className="shell-body">
         {kernel ? (
           <WorkspaceRail service={kernel.workspaces} active={active} />
@@ -44,7 +55,15 @@ function App() {
           </main>
         )}
       </div>
-      <footer className="shell-statusbar">{booted ? 'ready' : 'starting'}</footer>
+      {kernel ? (
+        <StatusBar
+          activeWorkspaceLabel={activeLabel}
+          editorStore={kernel.stores.editor as unknown as Store<{ selection: string[] }>}
+          savedLabel="Ready"
+        />
+      ) : (
+        <footer className="shell-statusbar">starting</footer>
+      )}
     </div>
   )
 }

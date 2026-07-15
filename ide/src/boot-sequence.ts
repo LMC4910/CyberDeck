@@ -8,6 +8,7 @@ import { ThemeService } from '@/services/theme'
 import { WorkspaceService } from '@/services/workspace'
 import { CommandRegistry, seedCommands } from '@/platform/commands'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
+import { createAllStores, type AllStores } from '@/stores'
 import { WORKSPACE_CONTRIBUTIONS } from '@/workspaces'
 
 export interface BootedKernel {
@@ -16,6 +17,7 @@ export interface BootedKernel {
   workspaces: WorkspaceService
   commands: CommandRegistry
   bus: TypedEventBus
+  stores: AllStores
   report: BootReport
 }
 
@@ -46,6 +48,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   const bus = new TypedEventBus(new EventBus())
   // WorkspaceService bridges onChanged → WorkspaceChanged on the bus.
   const workspaces = new WorkspaceService({ onChanged: (id) => bus.emit('WorkspaceChanged', { workspaceId: id }) })
+  const stores = createAllStores()
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -91,5 +94,5 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
   })
 
-  return { config, theme, workspaces, commands, bus, report }
+  return { config, theme, workspaces, commands, bus, stores, report }
 }

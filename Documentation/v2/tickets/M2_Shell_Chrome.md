@@ -9,7 +9,7 @@
 - [x] CD-202 WorkspaceService + contribution registry — ✅ Done 2026-07-15
 - [x] CD-203 Workspace rail + lazy pane host — ✅ Done 2026-07-15
 - [x] CD-204 Per-workspace context preservation + nav history — ✅ Done 2026-07-15
-- [ ] CD-205 Breadcrumb + status bar
+- [x] CD-205 Breadcrumb + status bar — ✅ Done 2026-07-15
 - [ ] CD-206 Command palette UI
 - [ ] CD-207 Palette recents + groups
 - [ ] CD-208 Preferences shell + general/appearance panes
@@ -67,8 +67,10 @@
 **BP:** IDE-E07-F02 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-203
 **Do:** Breadcrumb (`Project › Workspace › Selection`, clickable) and status bar as pure store subscribers; per-workspace segment registry (design mapping); saved-state indicator from ConfigurationService write-behind.
 **AC:**
-- [ ] no imperative sync calls (subscriber pattern only — code review checklist)
-- [ ] segments swap per workspace; crumb segments navigate
+- [x] no imperative sync calls (subscriber pattern only — code review checklist)
+- [x] segments swap per workspace; crumb segments navigate
+
+**Notes (2026-07-15):** `ide/src/workspaces/chrome/`. `breadcrumb-segments.ts`: `BREADCRUMB_SEGMENTS` maps each of the 7 workspaces to its `Project › Workspace › Selection` segments (design mapping); `crumbFor(id, ctx)` builds them. `Breadcrumb` renders segments — non-leaf navigable ones are `<button>` calling `onNavigate`, the leaf is `aria-current="page"`. **Pure subscriber**: `StatusBar` reads selection count via `useStore(editorStore, …)` (updates reactively on store mutation, no imperative sync — the AC), plus active workspace + saved-state label. Both **wired into `App.tsx`** (breadcrumb in the top bar, status bar as the footer) — `boot-sequence.ts` now also assembles `createAllStores()` and exposes them on the kernel (also sets up CD-212). Tests: segments swap per workspace, crumb click → onNavigate (leaf not clickable), aria-current on leaf, and **StatusBar reflects Editor-store changes reactively**. 304 vitest + 2 E2E green.
 
 ### CD-206 · Command palette UI
 **BP:** IDE-E07-F03-T01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-121, CD-201
