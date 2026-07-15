@@ -68,6 +68,9 @@ export async function runAppBoot(): Promise<BootedKernel> {
   // Dock tool windows (CD-214/215): the Live Mirror tool window, persisted.
   const dock = new DockManager()
   dock.register({ id: 'mirror', defaultSide: 'right', minSize: 220, defaultSize: 280 })
+  // A second tool window registered purely declaratively (CD-216) — zero new dock
+  // code: it docks/pins/peeks/floats through the same DockManager + DockHost.
+  dock.register({ id: 'minimap', defaultSide: 'left', minSize: 160, defaultSize: 200 })
   const dockStore = createStore<{ rows: ReturnType<DockManager['serialize']> }>(
     { rows: [] },
     { name: 'dock', kind: 'persisted', location: 'cdk-dock' },

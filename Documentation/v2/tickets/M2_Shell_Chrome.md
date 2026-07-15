@@ -20,7 +20,7 @@
 - [x] CD-213 Resizable panels — ✅ Done 2026-07-15
 - [x] CD-214 DockManager model — ✅ Done 2026-07-15
 - [x] CD-215 Dock UI: zones, insets, auto-hide/peek — ✅ Done 2026-07-16
-- [ ] CD-216 Declarative dock registration + proof window
+- [x] CD-216 Declarative dock registration + proof window — ✅ Done 2026-07-16
 - [ ] CD-217 Layout presets
 - [ ] CD-218 Honest-stub sweep + placeholder panes
 - [ ] CD-219 **M2 gate review**
@@ -161,7 +161,9 @@
 **BP:** IDE-E08-F02-T03 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-214
 **Do:** `dock.register({id, defaultSide, minSize})`; register a dummy second tool window proving zero new dock code per window.
 **AC:**
-- [ ] dummy window docks/pins/peeks purely via registration
+- [x] dummy window docks/pins/peeks purely via registration
+
+**Notes (2026-07-16):** `DockManager.register({id, defaultSide, minSize, defaultSize?})` is the declarative contribution point (built in CD-214). Proof: registered a second **Minimap** tool window in `boot-sequence.ts` (`defaultSide: left`) — the ONLY per-window code is the registration + a content entry in the DockHost map; it docks/pins/peeks/floats through the same `DockManager` + `DockHost` with **zero bespoke component code**. `declarative-registration.test.tsx` registers a brand-new `dummy` window and drives its full lifecycle (rail → auto-hide → peek → re-pin → float) via the generic host. Shell now hosts two tool windows; build + all 7 E2E green. 364 vitest green.
 
 ### CD-217 · Layout presets
 **BP:** IDE-E08-F03 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-213, CD-215

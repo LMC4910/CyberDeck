@@ -128,7 +128,10 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         <DockHost
           manager={kernel.dock}
           windows={dockRows}
-          content={{ mirror: <div className="panel-placeholder">Live Mirror — device preview arrives in M4.</div> }}
+          content={{
+            mirror: <div className="panel-placeholder">Live Mirror — device preview arrives in M4.</div>,
+            minimap: <div className="panel-placeholder">Minimap — arrives in M3.</div>,
+          }}
           onChange={() => {
             setDockRows(kernel.dock.list())
             kernel.saveDock()
