@@ -49,3 +49,52 @@
   outline: 2px solid var(--accent, #4cc2ff);
   outline-offset: -2px;
 }
+.preset-menu {
+  position: relative;
+}
+.preset-current {
+  background: none;
+  border: none;
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+  font-size: 12px;
+}
+.preset-current:focus-visible,
+.preset-list button:focus-visible {
+  outline: 2px solid var(--accent, #4cc2ff);
+  outline-offset: 1px;
+}
+.preset-list {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  min-width: 180px;
+  background: var(--panel, #0e0e1c);
+  border: 1px solid var(--line2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--r-s, 7px);
+  padding: 4px;
+  z-index: var(--z-popover, 120);
+}
+.preset-row {
+  display: flex;
+  justify-content: space-between;
+}
+.preset-item {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.preset-item.on {
+  color: var(--ink, #eaeaf6);
+}
+.preset-save,
+.preset-row button[data-preset-delete] {
+  background: none;
+  border: none;
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+}

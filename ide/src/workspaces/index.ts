@@ -40,3 +40,13 @@ export {
   type PanelsState,
 } from './panels'
 export { DockHost, computeInsets, type DockHostProps, type Insets } from './dock'
+export {
+  LayoutPresetMenu,
+  BUILTIN_PRESETS,
+  applyPreset,
+  currentPresetName,
+  capturePreset,
+  CUSTOM,
+  type LayoutPresetMenuProps,
+  type LayoutPreset,
+} from './panels'

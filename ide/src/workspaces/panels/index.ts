@@ -1,4 +1,13 @@
 export { ResizablePanel, type ResizablePanelProps } from './resizable-panel'
+export { LayoutPresetMenu, type LayoutPresetMenuProps } from './layout-preset-menu'
+export {
+  BUILTIN_PRESETS,
+  applyPreset,
+  currentPresetName,
+  capturePreset,
+  CUSTOM,
+  type LayoutPreset,
+} from './layout-presets'
 export {
   panelFor,
   setPanelWidth,

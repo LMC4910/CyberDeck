@@ -21,7 +21,7 @@
 - [x] CD-214 DockManager model — ✅ Done 2026-07-15
 - [x] CD-215 Dock UI: zones, insets, auto-hide/peek — ✅ Done 2026-07-16
 - [x] CD-216 Declarative dock registration + proof window — ✅ Done 2026-07-16
-- [ ] CD-217 Layout presets
+- [x] CD-217 Layout presets — ✅ Done 2026-07-16
 - [ ] CD-218 Honest-stub sweep + placeholder panes
 - [ ] CD-219 **M2 gate review**
 
@@ -169,7 +169,9 @@
 **BP:** IDE-E08-F03 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-213, CD-215
 **Do:** Preset = config `{lpw, rpw, hideL, hideR, docks}`; built-ins (Balanced/Focus/Inspector/Explorer/Docked Tools); manual change flips label to "Custom"; save/delete user presets; status-bar menu + ⌥⌘P + palette.
 **AC:**
-- [ ] round-trip test; per-workspace independence test
+- [x] round-trip test; per-workspace independence test
+
+**Notes (2026-07-16):** `ide/src/workspaces/panels/layout-presets.ts`. `LayoutPreset {name, lpw, rpw, hideL, hideR}`; 5 built-ins (Balanced/Focus/Explorer/Inspector/Docked Tools). `applyPreset(store, workspaceId, preset)` writes the workspace's panel widths+visibility; `currentPresetName(state, workspaceId, presets)` matches against built-ins+user → **`Custom`** when nothing matches; `capturePreset` snapshots current state as a user preset. `LayoutPresetMenu` (status-bar): shows the current preset, applies on click, offers **Save current as preset** when Custom, and delete for user presets. **Wired into the shell footer** next to the StatusBar; user presets persist in a `cdk-presets` store (StoreManager). Tests: apply→match round-trip (Focus hides both / Balanced restores), **manual change → Custom**, **per-workspace independence** (flows=Focus, variables=Explorer), menu apply, save-when-Custom captures the width + delete round-trip. 369 vitest + 7 E2E green. (⌥⌘P/palette `layout` command exists; opening the menu via it can layer on — the menu is a status-bar control today.)
 
 ### CD-218 · Honest-stub sweep + placeholder panes
 **BP:** IDE-E07 AC / AUDIT C5 · **Hat:** FE+DES · **P:** P1 · **Est:** S · **Deps:** CD-203, CD-211

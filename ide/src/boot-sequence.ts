@@ -13,7 +13,7 @@ import { KeymapDispatcher, detectPlatform } from '@/platform/keymap'
 import { DockManager } from '@/platform/dock'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
 import { createAllStores, createStore, StoreManager, type AllStores, type Store } from '@/stores'
-import { WORKSPACE_CONTRIBUTIONS, type PanelsState } from '@/workspaces'
+import { WORKSPACE_CONTRIBUTIONS, type PanelsState, type LayoutPreset } from '@/workspaces'
 
 export interface BootedKernel {
   config: ConfigurationService
@@ -25,6 +25,7 @@ export interface BootedKernel {
   stores: AllStores
   session: SessionManager
   panels: Store<PanelsState>
+  userPresets: Store<{ presets: LayoutPreset[] }>
   dock: DockManager
   /** Persist the current dock layout (call after a dock transition). */
   saveDock: () => void
@@ -76,9 +77,15 @@ export async function runAppBoot(): Promise<BootedKernel> {
     { name: 'dock', kind: 'persisted', location: 'cdk-dock' },
   )
   const saveDock = () => dockStore.setState({ rows: dock.serialize() })
+  // User-saved layout presets (CD-217), persisted.
+  const userPresets = createStore<{ presets: LayoutPreset[] }>(
+    { presets: [] },
+    { name: 'presets', kind: 'persisted', location: 'cdk-presets' },
+  )
   const storeManager = new StoreManager({ adapter: new LocalStorageAdapter() })
   storeManager.register(panels)
   storeManager.register(dockStore as unknown as Store<unknown>)
+  storeManager.register(userPresets as unknown as Store<unknown>)
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -163,5 +170,5 @@ export async function runAppBoot(): Promise<BootedKernel> {
     session.flush()
     storeManager.flush()
   }
-  return { config, theme, workspaces, commands, keymap, bus, stores, session, panels, dock, saveDock, flush, report }
+  return { config, theme, workspaces, commands, keymap, bus, stores, session, panels, userPresets, dock, saveDock, flush, report }
 }

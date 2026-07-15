@@ -43,6 +43,20 @@
   font-size: 12px;
 }
 
+.shell-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+}
+.shell-footer .statusbar {
+  border-top: none;
+  flex: 1;
+}
+.shell-footer .preset-menu {
+  padding: 0 12px;
+}
+
 .shell-statusbar {
   flex: none;
   height: 24px;

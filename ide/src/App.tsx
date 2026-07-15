@@ -14,6 +14,7 @@ import {
   setPanelWidth,
   togglePanel,
   DockHost,
+  LayoutPresetMenu,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -65,6 +66,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   const [prefsTab, setPrefsTab] = useState<PreferencesTab>('general')
   const [dockRows, setDockRows] = useState(kernel.dock.list())
   const panelsState = useStore(kernel.panels, (s) => s)
+  const userPresets = useStore(kernel.userPresets, (s) => s)
 
   useEffect(() => kernel.workspaces.subscribe((id) => setActive(id)), [kernel])
 
@@ -138,11 +140,26 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
           }}
         />
       </div>
-      <StatusBar
-        activeWorkspaceLabel={activeLabel}
-        editorStore={kernel.stores.editor as unknown as Store<{ selection: string[] }>}
-        savedLabel="Ready"
-      />
+      <div className="shell-footer">
+        <StatusBar
+          activeWorkspaceLabel={activeLabel}
+          editorStore={kernel.stores.editor as unknown as Store<{ selection: string[] }>}
+          savedLabel="Ready"
+        />
+        {active && (
+          <LayoutPresetMenu
+            store={kernel.panels}
+            workspaceId={active}
+            userPresets={userPresets.presets}
+            onSaveUserPreset={(p) =>
+              kernel.userPresets.setState((s) => ({ presets: [...s.presets, p] }))
+            }
+            onDeleteUserPreset={(name) =>
+              kernel.userPresets.setState((s) => ({ presets: s.presets.filter((x) => x.name !== name) }))
+            }
+          />
+        )}
+      </div>
       <CommandPalette
         registry={kernel.commands}
         context={commandContext}
