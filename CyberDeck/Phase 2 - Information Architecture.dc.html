@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+html,body{margin:0;background:#07070f}
+.doc{min-height:100vh;background:#07070f;color:#EAEAF6;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;--accent:#4CC2FF;--accent-rgb:76,194,255;--good:#37e08a;--warn:#f5b14c;--bad:#ff6b7d;--vio:#c08bff;--pink:#ff8bb3;--panel:#0e0e1c;--panel2:#12121f;--elev:#1a1b2e;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);--ink:#EAEAF6;--ink2:#8a8cb4;--ink3:#6a6c92}
+.wrap{max-width:1280px;margin:0 auto;padding:56px 40px 90px}
+.mono{font-family:'JetBrains Mono',monospace}
+.dim{color:var(--ink3)}.muted{color:var(--ink2)}
+.kicker{font-size:11px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--accent)}
+.h1{font-size:34px;font-weight:800;letter-spacing:-.5px;margin:10px 0 0;line-height:1.15}
+.lede{font-size:15px;line-height:1.65;color:var(--ink2);max-width:760px;margin-top:14px;text-wrap:pretty}
+.secn{font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:10px;margin:58px 0 6px}
+.secn b{color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600}
+.secn i{flex:1;height:1px;background:var(--line)}
+.h2{font-size:21px;font-weight:700;margin:4px 0 8px;letter-spacing:-.2px}
+.sub{font-size:13.5px;line-height:1.6;color:var(--ink2);max-width:740px;margin:0 0 22px;text-wrap:pretty}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.kbd{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink2);background:rgba(255,255,255,.05);padding:1px 6px;border-radius:5px;border:1px solid var(--line);white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.8px;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.b-ws{background:rgba(76,194,255,.13);color:#4CC2FF}
+.b-panel{background:rgba(55,224,138,.12);color:#37e08a}
+.b-win{background:rgba(192,139,255,.13);color:#c08bff}
+.b-svc{background:rgba(255,139,179,.13);color:#ff8bb3}
+/* ---- shell schematic ---- */
+.shell{border:1px solid var(--line2);border-radius:16px;overflow:hidden;background:#0a0a16;display:flex;flex-direction:column;height:600px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.z{position:relative;display:flex;align-items:center;justify-content:center}
+.zlab{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:7px}
+.znum{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#06121c;font-size:10.5px;font-weight:800;display:grid;place-items:center;font-family:'JetBrains Mono',monospace}
+.sh-tbar{height:42px;flex:none;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02);display:flex;align-items:center;gap:12px;padding:0 14px}
+.sh-body{flex:1;display:flex;min-height:0}
+.sh-rail{width:56px;flex:none;border-right:1px solid var(--line);background:rgba(76,194,255,.045);display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 0}
+.sh-ldock{width:190px;flex:none;border-right:1px dashed rgba(55,224,138,.35);background:rgba(55,224,138,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.sh-stage{flex:1;display:flex;flex-direction:column;min-width:0}
+.sh-stagetabs{height:32px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:2px;padding:0 10px}
+.sh-canvas{flex:1;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,rgba(76,194,255,.06),transparent 60%)}
+.sh-bdock{height:86px;flex:none;border-top:1px dashed rgba(55,224,138,.35);background:rgba(55,224,138,.04);display:flex;align-items:center;justify-content:center;gap:8px}
+.sh-rdock{width:210px;flex:none;border-left:1px dashed rgba(55,224,138,.35);background:rgba(55,224,138,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.sh-sbar{height:28px;flex:none;border-top:1px solid var(--line);background:rgba(255,255,255,.02);display:flex;align-items:center;gap:14px;padding:0 14px;font-size:10px;color:var(--ink3)}
+.sh-chip{font-size:10px;color:var(--ink2);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:3px 8px;white-space:nowrap}
+.sh-chip.a{color:var(--accent);background:rgba(var(--accent-rgb),.1);border-color:rgba(var(--accent-rgb),.3)}
+.sh-rb{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--ink3);font-size:9px}
+.sh-rb i{width:16px;height:16px}
+.sh-rb.on{background:rgba(var(--accent-rgb),.16);color:var(--accent)}
+.sh-tab{font-size:10.5px;padding:5px 12px;border-radius:7px 7px 0 0;color:var(--ink3)}
+.sh-tab.on{background:rgba(255,255,255,.05);color:var(--ink)}
+.sh-search{flex:1;max-width:320px;margin:0 auto;height:24px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:flex;align-items:center;gap:7px;padding:0 10px;font-size:10px;color:var(--ink3)}
+.sh-search i{width:11px;height:11px}
+.sh-ovl{position:absolute;inset:0;pointer-events:none}
+.sh-palette{position:absolute;left:50%;top:88px;transform:translateX(-50%);width:340px;border-radius:12px;background:rgba(26,27,46,.92);border:1px solid rgba(var(--accent-rgb),.4);box-shadow:0 20px 50px rgba(0,0,0,.6);padding:10px 12px;backdrop-filter:blur(6px)}
+.sh-drawer{position:absolute;right:0;top:42px;bottom:28px;width:150px;background:rgba(255,139,179,.06);border-left:1px dashed rgba(255,139,179,.4);display:flex;align-items:flex-start;justify-content:center;padding-top:14px}
+/* callouts */
+.callg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.callo{display:flex;gap:12px;padding:14px 16px;align-items:flex-start}
+.callo .znum{flex:none;margin-top:2px}
+.callo b{font-size:13px;font-weight:700;display:block;margin-bottom:3px}
+.callo p{margin:0;font-size:12px;line-height:1.55;color:var(--ink2);text-wrap:pretty}
+.callo .own{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap}
+/* nav map */
+.navg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.nw{padding:15px 16px 13px;display:flex;flex-direction:column;gap:9px}
+.nw-h{display:flex;align-items:center;gap:9px}
+.nw-h i{width:16px;height:16px;color:var(--accent)}
+.nw-h b{font-size:14px;font-weight:700;flex:1}
+.nw ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.nw li{font-size:11.5px;color:var(--ink2);line-height:1.45;display:flex;gap:7px;align-items:baseline}
+.nw li s{text-decoration:none;color:var(--ink3);font-family:'JetBrains Mono',monospace;font-size:9.5px;flex:none;padding-top:1px}
+.nw li b{color:var(--ink);font-weight:600}
+.absorb{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
+.abt{font-size:9.5px;font-weight:600;color:var(--ink3);background:rgba(255,255,255,.05);border-radius:5px;padding:2px 7px}
+.abt.hot{color:var(--accent);background:rgba(var(--accent-rgb),.1)}
+.nwide{grid-column:span 4;display:flex;gap:0;padding:0}
+.nws{flex:1;padding:14px 16px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.nws:first-child{border-left:none}
+.nws b{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+.nws b i{width:13px;height:13px;color:var(--pink)}
+.nws span{font-size:11px;color:var(--ink2);line-height:1.5}
+/* registry */
+.reg{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:0;align-items:stretch}
+.regcol{display:flex;flex-direction:column;gap:8px;justify-content:center}
+.regbox{padding:10px 13px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:11.5px;color:var(--ink2);display:flex;align-items:center;gap:9px}
+.regbox i{width:13px;height:13px;color:var(--ink3);flex:none}
+.regbox b{color:var(--ink);font-weight:600}
+.regmid{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:0 26px}
+.regcore{width:100%;border-radius:14px;border:1px solid rgba(var(--accent-rgb),.5);background:linear-gradient(150deg,rgba(var(--accent-rgb),.12),transparent 60%),var(--panel);padding:18px 20px;text-align:center;box-shadow:0 0 40px rgba(var(--accent-rgb),.12)}
+.regcore b{font-size:15px;font-weight:800;display:block}
+.regcore s{text-decoration:none;font-size:11px;color:var(--ink2);display:block;margin-top:5px;line-height:1.5}
+.regarr{display:flex;align-items:center;color:var(--ink3)}
+.rtab{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:22px;background:var(--panel)}
+.rrow{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(160px,1.4fr) minmax(90px,.8fr) minmax(90px,.8fr) minmax(150px,1.2fr);border-bottom:1px solid var(--line);font-size:12px}
+.rrow:last-child{border-bottom:none}
+.rrow>div{padding:9px 13px;border-left:1px solid var(--line);color:var(--ink2);min-width:0;line-height:1.5}
+.rrow>div:first-child{border-left:none}
+.rrow.h{background:var(--panel2);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink3)}
+/* search mock */
+.pal{max-width:560px;border-radius:14px;border:1px solid rgba(var(--accent-rgb),.35);background:var(--elev);box-shadow:0 30px 70px rgba(0,0,0,.55);overflow:hidden}
+.pal-in{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--ink)}
+.pal-in i{width:15px;height:15px;color:var(--ink3)}
+.pal-in .cursor{width:1.5px;height:16px;background:var(--accent);animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.pal-scopes{display:flex;gap:5px;padding:9px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.psc{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.05);color:var(--ink3)}
+.psc.on{background:rgba(var(--accent-rgb),.14);color:var(--accent)}
+.pal-r{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:12.5px;color:var(--ink2)}
+.pal-r i{width:14px;height:14px;color:var(--ink3);flex:none}
+.pal-r b{color:var(--ink);font-weight:600}
+.pal-r .go{margin-left:auto;font-size:10px;color:var(--ink3);display:flex;gap:6px;align-items:center}
+.pal-r.on{background:rgba(var(--accent-rgb),.1)}
+.pal-r.on i{color:var(--accent)}
+.scopes{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.scp{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink2);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 11px}
+.scp i{width:12px;height:12px;color:var(--ink3)}
+/* event bus */
+.bus{display:flex;flex-direction:column}
+.busr{display:grid;grid-template-columns:230px 46px 1fr;gap:14px;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line)}
+.busr:last-child{border-bottom:none}
+.bsrc{display:flex;align-items:center;gap:11px}
+.bsrc .bi{width:34px;height:34px;border-radius:9px;background:rgba(var(--accent-rgb),.1);display:grid;place-items:center;flex:none}
+.bsrc .bi i{width:16px;height:16px;color:var(--accent)}
+.bsrc b{font-size:13px;font-weight:700;display:block}
+.bsrc s{text-decoration:none;font-size:10.5px;color:var(--ink3);font-family:'JetBrains Mono',monospace}
+.busa{display:grid;place-items:center;color:var(--ink3)}
+.busa i{width:16px;height:16px}
+.bsub{display:flex;gap:6px;flex-wrap:wrap}
+.sut{display:flex;align-items:baseline;gap:6px;font-size:11px;color:var(--ink2);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:7px;padding:5px 9px}
+.sut b{color:var(--ink);font-weight:600;font-size:11px}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pre{padding:14px 16px;display:flex;flex-direction:column;gap:7px}
+.pre b{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.pre b i{width:14px;height:14px;color:var(--accent)}
+.pre p{margin:0;font-size:11.5px;line-height:1.55;color:var(--ink2)}
+.foot{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);display:flex;gap:14px;align-items:center;font-size:11.5px;color:var(--ink3)}
+</style>
+</helmet>
+<div class="doc" ref="{{ rootRef }}">
+<div class="wrap">
+<div class="kicker">CyberDeck Designer · UX Architecture · Phase 2 of 4</div>
+<h1 class="h1">Information Architecture — The Unified Shell</h1>
+<p class="lede">One window, seven workspaces, four dock zones, one command registry. This blueprint defines the shell every surface from the Phase 1 matrix plugs into: the persistent chrome, where panels may dock, how navigation works, and the registry that makes every feature searchable and executable from anywhere.</p>
+
+<div class="secn"><b>01</b>SHELL ANATOMY · 8 ZONES<i></i></div>
+<h2 class="h2">Everything shares this frame</h2>
+<p class="sub">Zones <b style="color:var(--ink)">1, 2 and 7</b> are permanent chrome — identical in every workspace. Zones <b style="color:var(--ink)">3, 5 and 6</b> are dock zones (dashed green): any dockable panel can live in any of them, float, or collapse. Zone <b style="color:var(--ink)">4</b> is the stage each workspace owns. Zone <b style="color:var(--ink)">8</b> (pink) is the overlay layer for global services.</p>
+<div class="shell">
+<div class="sh-tbar"><span class="zlab"><span class="znum">1</span>Title bar</span><span class="sh-chip">brand</span><span class="sh-chip">crumb: Battlestation › Dashboard</span><div class="sh-search"><i data-lucide="search"></i>Universal search · ⌘K</div><span class="sh-chip">avatars</span><span class="sh-chip a">bell · 3</span><span class="sh-chip a">Share</span></div>
+<div class="sh-body">
+<div class="sh-rail"><span class="znum">2</span><div class="sh-rb"><i data-lucide="layout-grid"></i></div><div class="sh-rb on"><i data-lucide="pen-tool"></i></div><div class="sh-rb"><i data-lucide="workflow"></i></div><div class="sh-rb"><i data-lucide="braces"></i></div><div class="sh-rb"><i data-lucide="layout-panel-top"></i></div><div class="sh-rb"><i data-lucide="monitor-smartphone"></i></div><div class="sh-rb"><i data-lucide="activity"></i></div><div style="flex:1"></div><div class="sh-rb"><i data-lucide="command"></i></div><div class="sh-rb"><i data-lucide="settings"></i></div></div>
+<div class="sh-ldock"><span class="zlab"><span class="znum">3</span>Left dock</span><span class="sh-chip">Explorer</span><span class="sh-chip">Layers</span><span class="sh-chip">Components</span><span class="sh-chip" style="border-style:dashed">any panel</span></div>
+<div class="sh-stage">
+<div class="sh-stagetabs"><span class="zlab" style="margin-right:8px"><span class="znum">4</span>Stage</span><span class="sh-tab on">Dashboard</span><span class="sh-tab">Theme Studio</span><span class="sh-tab">OBS · Integration</span><span class="sh-tab">＋</span></div>
+<div class="sh-canvas"><span class="sh-chip a" style="padding:14px 22px;font-size:11px">workspace stage · canvas / table / graph / mockups — tabs split &amp; reorder</span></div>
+<div class="sh-bdock"><span class="zlab"><span class="znum">6</span>Bottom dock</span><span class="sh-chip">Asset strip</span><span class="sh-chip">Diagnostics</span><span class="sh-chip">Execution log</span></div>
+</div>
+<div class="sh-rdock"><span class="zlab"><span class="znum">5</span>Right dock</span><span class="sh-chip">Inspector</span><span class="sh-chip">Timeline ⌘⇧H</span><span class="sh-chip">Notification drawer</span></div>
+</div>
+<div class="sh-sbar"><span class="zlab" style="font-size:9.5px"><span class="znum" style="width:16px;height:16px;font-size:9.5px">7</span>Status bar</span><span>● engine ok</span><span>2 devices live</span><span>plugin dots ●●●●○</span><span style="flex:1"></span><span>theme: Dark Cyber</span><span>saved · 09:41</span></div>
+<div class="sh-ovl"><div class="sh-drawer"><span class="zlab" style="color:var(--pink)"><span class="znum" style="background:var(--pink)">8</span>Overlay</span></div></div>
+</div>
+<div class="callg">
+<div class="callo card"><span class="znum">1</span><div><b>Title bar — identity &amp; reach</b><p>Brand, workspace breadcrumb, universal search, collaborators, notification bell, Share. Identical everywhere; the breadcrumb is the only part that changes per workspace.</p></div></div>
+<div class="callo card"><span class="znum">2</span><div><b>Workspace rail — 7 + 2</b><p>Projects ⌘1 · Design ⌘2 · Flows ⌘3 · Variables ⌘4 · Library ⌘5 · Devices ⌘6 · Runtime ⌘7, then palette and Preferences. Switching never reloads chrome — only zones 3–6 swap contents. The old "App" escape hatch is deleted.</p></div></div>
+<div class="callo card"><span class="znum">3</span><div><b>Left dock — navigation panels</b><p>Workspace's primary nav: Explorer/Layers/Components in Design, scope list in Variables, node library in Flows, folders in Projects.<span class="own"><span class="badge b-panel">DOCK L/R/BOTTOM</span><span class="badge b-panel">FLOAT</span><span class="badge b-panel">COLLAPSE · AUTO-HIDE</span></span></p></div></div>
+<div class="callo card"><span class="znum">4</span><div><b>Center stage — tabbed documents</b><p>Each workspace owns its stage (canvas, node graph, table, device mockups). Stage tabs behave like editor tabs: pin, split right, reorder, close others. Theme Studio and Integration Center open here as tabs.</p></div></div>
+<div class="callo card"><span class="znum">5</span><div><b>Right dock — context panels</b><p>The shared Inspector (one component, many schemas), the Timeline panel and the pinned Notification drawer. Inspector always reflects the global selection, whatever workspace produced it.</p></div></div>
+<div class="callo card"><span class="znum">6</span><div><b>Bottom dock — horizontal panels</b><p>Asset strip in Design, execution log + Diagnostics in Runtime, connection log in Devices. Panels here support multi-tab and drag out to float.</p></div></div>
+<div class="callo card"><span class="znum">7</span><div><b>Status bar — live truth</b><p>Engine state, live device count, plugin health dots, active theme pill, save/sync pill, cursor and grid state. Every item click-navigates to its owner; right-click customizes visibility.</p></div></div>
+<div class="callo card"><span class="znum" style="background:var(--pink)">8</span><div><b>Overlay layer — global services</b><p>Command palette, universal search, Dialog Framework, notification toasts, onboarding spotlight, context menus. Strict z-order: menus &gt; dialogs &gt; palette &gt; drawer &gt; toasts &gt; tour.</p></div></div>
+</div>
+
+<div class="secn"><b>02</b>NAVIGATION MODEL · WORKSPACES &amp; VIEWS<i></i></div>
+<h2 class="h2">Seven workspaces, one global layer</h2>
+<div class="navg">
+<div class="nw card"><div class="nw-h"><i data-lucide="layout-grid"></i><b>Projects</b><span class="kbd">⌘1</span></div><ul><li s><s>view</s><span><b>Home</b> — hero, continue, pinned + recent, templates</span></li><li><s>view</s><span><b>Browse</b> — folders, cloud, shared, archived, table/grid</span></li><li><s>insp</s><span>Project details, stats, version teaser, actions</span></li></ul><div class="absorb"><span class="abt hot">Welcome</span><span class="abt hot">Project Manager</span><span class="abt">Wizard launches here</span></div></div>
+<div class="nw card"><div class="nw-h"><i data-lucide="pen-tool"></i><b>Design</b><span class="kbd">⌘2</span></div><ul><li><s>left</s><span>Explorer · Layers · Components</span></li><li><s>stage</s><span>Canvas — artboards, tools, minimap, Live Mirror</span></li><li><s>right</s><span>Inspector — layout, appearance, bindings, states, events</span></li><li><s>bottom</s><span>Asset strip (dockable, from Asset Browser)</span></li></ul><div class="absorb"><span class="abt">unchanged core</span><span class="abt hot">+ asset strip</span></div></div>
+<div class="nw card"><div class="nw-h"><i data-lucide="workflow"></i><b>Flows</b><span class="kbd">⌘3</span></div><ul><li><s>left</s><span>Node library — triggers, logic, data, integrations</span></li><li><s>stage</s><span>Flow tabs — node graph, test run, armed toggle</span></li><li><s>right</s><span>Node inspector</span></li></ul><div class="absorb"><span class="abt">unchanged core</span><span class="abt hot">+ plugin events deep-link</span></div></div>
+<div class="nw card"><div class="nw-h"><i data-lucide="braces"></i><b>Variables</b><span class="kbd">⌘4</span></div><ul><li><s>left</s><span>Scopes — global, page, runtime, computed, plugin…</span></li><li><s>stage</s><span>Table + dependency graph toggle</span></li><li><s>right</s><span>Variable inspector — details, history, references</span></li></ul><div class="absorb"><span class="abt">unchanged core</span><span class="abt hot">+ plugin vars from Integration Center</span></div></div>
+<div class="nw card"><div class="nw-h"><i data-lucide="layout-panel-top"></i><b>Library</b><span class="kbd">⌘5</span></div><ul><li><s>tab</s><span><b>Components</b> — gallery, categories, my components</span></li><li><s>tab</s><span><b>Assets</b> — Asset Browser: grid, collections, smart folders</span></li><li><s>tab</s><span><b>Themes</b> — Theme Studio: tokens, live preview, marketplace</span></li></ul><div class="absorb"><span class="abt hot">Asset Manager</span><span class="abt hot">Theme Manager</span><span class="abt">Library mode</span></div></div>
+<div class="nw card"><div class="nw-h"><i data-lucide="monitor-smartphone"></i><b>Devices</b><span class="kbd">⌘6</span></div><ul><li><s>left</s><span>Device rail — cards, pairing, scan network</span></li><li><s>stage</s><span>Live mockups — synced preview, rotate, latency</span></li><li><s>right</s><span>Device inspector — calibration, profiles, capabilities</span></li></ul><div class="absorb"><span class="abt hot">Device Manager</span><span class="abt hot">Preview mode</span></div></div>
+<div class="nw card"><div class="nw-h"><i data-lucide="activity"></i><b>Runtime</b><span class="kbd">⌘7</span></div><ul><li><s>left</s><span>Running flows · queue · timers</span></li><li><s>stage</s><span>Execution log — live, step, filter</span></li><li><s>bottom</s><span><b>Diagnostics</b> — CPU/GPU/FPS, system info, engine log</span></li></ul><div class="absorb"><span class="abt">Runtime mode</span><span class="abt hot">+ Diagnostics from About</span></div></div>
+<div class="nw card" style="border-style:dashed"><div class="nw-h"><i data-lucide="app-window" style="color:var(--vio)"></i><b>Floating windows</b></div><ul><li><s>⌘,</s><span><b>Preferences</b> — 20 searchable panes, deep-linked</span></li><li><s>⌘K⌘S</s><span><b>Keyboard Manager</b> — Preferences › Keyboard</span></li><li><s>⌘N</s><span><b>New Project wizard</b> — Dialog Framework modal</span></li></ul><div class="absorb"><span class="abt hot">Settings</span><span class="abt hot">Shortcuts</span><span class="abt hot">Wizard</span><span class="abt hot">About</span></div></div>
+<div class="nwide card">
+<div class="nws"><b><i data-lucide="command"></i>Palette ⌘K</b><span>Every command from the registry. Prefix filters: <span class="kbd">&gt;</span> commands · <span class="kbd">@</span> variables · <span class="kbd">#</span> pages · <span class="kbd">/</span> docs.</span></div>
+<div class="nws"><b><i data-lucide="search"></i>Universal search</b><span>Same input, entity results across all 16 scopes with jump-to-owner navigation.</span></div>
+<div class="nws"><b><i data-lucide="bell"></i>Notification drawer</b><span>Bell in title bar · ⌘⇧N. Toasts escalate per routing rules; actions deep-link to owners.</span></div>
+<div class="nws"><b><i data-lucide="message-square"></i>Dialog Framework</b><span>One modal system: rename, delete, unsaved, auth, conflicts, crash recovery, export.</span></div>
+<div class="nws"><b><i data-lucide="mouse-pointer-click"></i>Interaction FW</b><span>Context menus everywhere, fed by the registry — shortcuts always match the palette.</span></div>
+<div class="nws"><b><i data-lucide="graduation-cap"></i>Tour service</b><span>Spotlight anchors registered by each workspace; checklist pins as floating card.</span></div>
+</div>
+</div>
+
+<div class="secn"><b>03</b>COMMAND REGISTRY · ONE SOURCE OF TRUTH<i></i></div>
+<h2 class="h2">Register once, surface everywhere</h2>
+<p class="sub">Every workspace and plugin registers commands into a single registry. The palette, context menus, toolbars, keyboard manager and universal search are all <b style="color:var(--ink)">consumers of the same table</b> — a shortcut edited in the Keyboard Manager instantly updates every tooltip and menu.</p>
+<div class="reg">
+<div class="regcol">
+<div class="regbox"><i data-lucide="layout-grid"></i><span><b>Workspaces</b> register core commands</span></div>
+<div class="regbox"><i data-lucide="plug"></i><span><b>Plugins</b> contribute actions on connect</span></div>
+<div class="regbox"><i data-lucide="workflow"></i><span><b>Flows</b> expose armed flows as commands</span></div>
+<div class="regbox"><i data-lucide="settings-2"></i><span><b>Preferences panes</b> self-register</span></div>
+</div>
+<div class="regmid">
+<div class="regarr" style="position:absolute;left:-2px"><i data-lucide="chevrons-right"></i></div>
+<div class="regcore"><b>Command Registry</b><s>id · title · category · shortcut · context (when-clause) · handler</s></div>
+<div class="regarr" style="position:absolute;right:-2px"><i data-lucide="chevrons-right"></i></div>
+</div>
+<div class="regcol">
+<div class="regbox"><i data-lucide="command"></i><span><b>Palette ⌘K</b> — fuzzy, context-ranked</span></div>
+<div class="regbox"><i data-lucide="mouse-pointer-click"></i><span><b>Context menus</b> — filtered by target</span></div>
+<div class="regbox"><i data-lucide="keyboard"></i><span><b>Keyboard Manager</b> — bind &amp; resolve</span></div>
+<div class="regbox"><i data-lucide="search"></i><span><b>Search</b> — commands as a result scope</span></div>
+</div>
+</div>
+<div class="rtab">
+<div class="rrow h"><div>Command ID</div><div>Title</div><div>Owner</div><div>Shortcut</div><div>Context (when)</div></div>
+<div class="rrow"><div class="mono">project.create</div><div>Create Project</div><div>Projects</div><div><span class="kbd">⌘N</span></div><div>always</div></div>
+<div class="rrow"><div class="mono">theme.switch</div><div>Switch Theme…</div><div>Theme Studio</div><div><span class="kbd">⌘⇧T</span></div><div>always</div></div>
+<div class="rrow"><div class="mono">device.pair</div><div>Pair Device</div><div>Devices</div><div>—</div><div>engine.online</div></div>
+<div class="rrow"><div class="mono">flow.testRun</div><div>Test Run Flow</div><div>Flows</div><div><span class="kbd">⌘↵</span></div><div>workspace == flows</div></div>
+<div class="rrow"><div class="mono">variable.new</div><div>New Variable</div><div>Variables</div><div><span class="kbd">⌘⇧V</span></div><div>project.open</div></div>
+<div class="rrow"><div class="mono">integration.connect.github</div><div>Connect GitHub</div><div>Integration Center</div><div>—</div><div>!github.connected</div></div>
+<div class="rrow"><div class="mono">version.snapshot</div><div>Snapshot Now</div><div>Timeline</div><div><span class="kbd">⌘⇧H</span></div><div>project.open</div></div>
+<div class="rrow"><div class="mono">notifications.dnd</div><div>Toggle Do Not Disturb</div><div>Notifications</div><div><span class="kbd">⌘⇧N</span></div><div>always</div></div>
+</div>
+
+<div class="secn"><b>04</b>UNIVERSAL SEARCH · 16 SCOPES<i></i></div>
+<h2 class="h2">One input, every entity</h2>
+<div class="fx" style="display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap">
+<div class="pal">
+<div class="pal-in"><i data-lucide="search"></i>gpu<span class="cursor"></span></div>
+<div class="pal-scopes"><span class="psc on">All</span><span class="psc">Commands</span><span class="psc">Variables</span><span class="psc">Widgets</span><span class="psc">Flows</span><span class="psc">Settings</span><span class="psc">Docs</span></div>
+<div class="pal-r on"><i data-lucide="braces"></i><span><b>gpu.temp</b> — runtime · 62°C</span><span class="go">Variables <i data-lucide="corner-down-left" style="width:11px;height:11px"></i></span></div>
+<div class="pal-r"><i data-lucide="gauge"></i><span><b>GPU Load gauge</b> — Dashboard › Perf row</span><span class="go">Design</span></div>
+<div class="pal-r"><i data-lucide="workflow"></i><span><b>GPU alert</b> — armed flow · 2 triggers</span><span class="go">Flows</span></div>
+<div class="pal-r"><i data-lucide="settings-2"></i><span><b>GPU acceleration</b> — Preferences › Performance</span><span class="go">⌘,</span></div>
+<div class="pal-r"><i data-lucide="activity"></i><span><b>3 log entries</b> — "gpu" in last hour</span><span class="go">Runtime</span></div>
+</div>
+<div style="flex:1;min-width:300px">
+<p class="sub" style="margin-bottom:12px">Results group by scope and rank by the active workspace — searching "gpu" in Design ranks widgets first, in Runtime the log first. Enter jumps to the owning surface with the entity selected; the inspector follows.</p>
+<div class="scopes">
+<span class="scp"><i data-lucide="layout-grid"></i>Projects</span><span class="scp"><i data-lucide="file"></i>Pages</span><span class="scp"><i data-lucide="square"></i>Widgets</span><span class="scp"><i data-lucide="braces"></i>Variables</span><span class="scp"><i data-lucide="workflow"></i>Flows</span><span class="scp"><i data-lucide="git-fork"></i>Nodes</span><span class="scp"><i data-lucide="monitor-smartphone"></i>Devices</span><span class="scp"><i data-lucide="image"></i>Assets</span><span class="scp"><i data-lucide="palette"></i>Themes</span><span class="scp"><i data-lucide="plug"></i>Plugins</span><span class="scp"><i data-lucide="zap"></i>Actions</span><span class="scp"><i data-lucide="settings-2"></i>Settings panes</span><span class="scp"><i data-lucide="bell"></i>Notifications</span><span class="scp"><i data-lucide="scroll-text"></i>Logs</span><span class="scp"><i data-lucide="book-open"></i>Docs</span><span class="scp"><i data-lucide="command"></i>Commands</span>
+</div>
+</div>
+</div>
+
+<div class="secn"><b>05</b>EVENT BUS · EVERYTHING TALKS TO EVERYTHING<i></i></div>
+<h2 class="h2">Selection is global state</h2>
+<p class="sub">Workspaces never message each other directly — they publish to a selection/event bus and subscribe to what they care about. No isolated screens, no stale panels.</p>
+<div class="bus card">
+<div class="busr"><div class="bsrc"><div class="bi"><i data-lucide="tablet"></i></div><div><b>Select a device</b><s>bus.select(device:ipad)</s></div></div><div class="busa"><i data-lucide="arrow-right"></i></div><div class="bsub"><span class="sut"><b>Design</b>artboard adopts frame + grid</span><span class="sut"><b>Devices</b>mockup focused</span><span class="sut"><b>Variables</b>device.* scope filtered</span><span class="sut"><b>Runtime</b>device log lane</span><span class="sut"><b>Inspector</b>calibration + profile</span><span class="sut"><b>Status bar</b>latency badge</span></div></div>
+<div class="busr"><div class="bsrc"><div class="bi"><i data-lucide="plug"></i></div><div><b>Connect a plugin</b><s>bus.event(plugin:obs:connected)</s></div></div><div class="busa"><i data-lucide="arrow-right"></i></div><div class="bsub"><span class="sut"><b>Variables</b>+12 obs.* exposed</span><span class="sut"><b>Flows</b>node library gains OBS nodes</span><span class="sut"><b>Palette</b>OBS actions registered</span><span class="sut"><b>Integration Center</b>health + events</span><span class="sut"><b>Status bar</b>plugin dot turns green</span></div></div>
+<div class="busr"><div class="bsrc"><div class="bi"><i data-lucide="palette"></i></div><div><b>Activate a theme</b><s>bus.event(theme:apply)</s></div></div><div class="busa"><i data-lucide="arrow-right"></i></div><div class="bsub"><span class="sut"><b>Entire IDE</b>tokens swap live, no reload</span><span class="sut"><b>Canvas</b>widgets restyle</span><span class="sut"><b>Devices</b>mockups resync</span><span class="sut"><b>Status bar</b>theme pill updates</span></div></div>
+<div class="busr"><div class="bsrc"><div class="bi"><i data-lucide="braces"></i></div><div><b>Select a variable</b><s>bus.select(var:fps.target)</s></div></div><div class="busa"><i data-lucide="arrow-right"></i></div><div class="bsub"><span class="sut"><b>Inspector</b>details + history</span><span class="sut"><b>Design</b>bound widgets highlight</span><span class="sut"><b>Flows</b>referencing nodes glow</span><span class="sut"><b>Timeline</b>value history pin</span></div></div>
+</div>
+
+<div class="secn"><b>06</b>LAYOUT PERSISTENCE · PRESETS<i></i></div>
+<h2 class="h2">Layouts are data</h2>
+<div class="presets">
+<div class="pre card"><b><i data-lucide="save"></i>Session restore</b><p>Dock sizes, open stage tabs, panel visibility and the active workspace persist per project and restore on open.</p></div>
+<div class="pre card"><b><i data-lucide="layout-template"></i>Workspace presets</b><p>Named layouts — "Streaming", "Debugging", "Minimal" — snapshot all dock state. Switchable from the palette or status bar.</p></div>
+<div class="pre card"><b><i data-lucide="monitor"></i>Detach &amp; multi-monitor</b><p>Any dock panel detaches into an OS window and rejoins by drag. Floating windows remember their display.</p></div>
+</div>
+<div class="foot"><span class="mono">CYBERDECK · INTEGRATION ARCHITECTURE · PHASE 2</span><span style="flex:1"></span><span>next: Phase 3 — workspace migration · July 2026</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#4CC2FF&quot;,&quot;options&quot;:[&quot;#4CC2FF&quot;,&quot;#6D8BFF&quot;,&quot;#37e08a&quot;,&quot;#f5b14c&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;}}">
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  componentDidMount(){
+    try{ window.lucide && lucide.createIcons(); }catch(e){}
+    this.applyProps();
+  }
+  componentDidUpdate(){ this.applyProps(); }
+  applyProps(){
+    const r = this.rootRef.current; if(!r) return;
+    const a = this.props.accent ?? '#4CC2FF';
+    r.style.setProperty('--accent', a);
+    const m = a.match(/^#(..)(..)(..)$/);
+    if(m) r.style.setProperty('--accent-rgb', m.slice(1).map(h=>parseInt(h,16)).join(','));
+  }
+  renderVals(){ return { rootRef: this.rootRef }; }
+}
+</script>
+</body>
+</html>

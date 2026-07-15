@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+html,body{margin:0;background:#07070f}
+.doc{min-height:100vh;background:#07070f;color:#EAEAF6;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;--accent:#4CC2FF;--accent-rgb:76,194,255;--good:#37e08a;--warn:#f5b14c;--bad:#ff6b7d;--vio:#c08bff;--pink:#ff8bb3;--panel:#0e0e1c;--panel2:#12121f;--elev:#1a1b2e;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);--ink:#EAEAF6;--ink2:#8a8cb4;--ink3:#6a6c92}
+.wrap{max-width:1280px;margin:0 auto;padding:56px 40px 90px}
+.mono{font-family:'JetBrains Mono',monospace}
+.dim{color:var(--ink3)}.muted{color:var(--ink2)}
+.kicker{font-size:11px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--accent)}
+.h1{font-size:34px;font-weight:800;letter-spacing:-.5px;margin:10px 0 0;line-height:1.15}
+.lede{font-size:15px;line-height:1.65;color:var(--ink2);max-width:760px;margin-top:14px;text-wrap:pretty}
+.secn{font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:10px;margin:58px 0 6px}
+.secn b{color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600}
+.secn i{flex:1;height:1px;background:var(--line)}
+.h2{font-size:21px;font-weight:700;margin:4px 0 8px;letter-spacing:-.2px}
+.sub{font-size:13.5px;line-height:1.6;color:var(--ink2);max-width:740px;margin:0 0 22px;text-wrap:pretty}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.8px;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.b-ws{background:rgba(76,194,255,.13);color:#4CC2FF}
+.b-panel{background:rgba(55,224,138,.12);color:#37e08a}
+.b-win{background:rgba(192,139,255,.13);color:#c08bff}
+.b-modal{background:rgba(245,177,76,.13);color:#f5b14c}
+.b-svc{background:rgba(255,139,179,.13);color:#ff8bb3}
+.b-fw{background:rgba(255,255,255,.08);color:#8a8cb4}
+.sumrow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:22px}
+.sum{padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px}
+.sum b{font-size:26px;font-weight:800}
+.sum s{text-decoration:none;font-size:11px;color:var(--ink3);line-height:1.45}
+.rails{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.railpill{display:flex;align-items:center;gap:9px;padding:9px 15px;border-radius:11px;background:var(--panel2);border:1px solid var(--line2);font-size:13px;font-weight:600}
+.railpill i{width:15px;height:15px;color:var(--accent)}
+.railpill s{text-decoration:none;font-size:10.5px;color:var(--ink3);font-family:'JetBrains Mono',monospace;font-weight:500}
+.railpill.ghost{border-style:dashed;color:var(--ink2)}
+.railpill.ghost i{color:var(--ink3)}
+.mx{border:1px solid var(--line);border-radius:14px;overflow-x:auto;background:var(--panel)}
+.mxr{display:grid;grid-template-columns:minmax(140px,1.3fr) minmax(190px,1.8fr) minmax(140px,1.4fr) minmax(96px,.9fr) minmax(110px,1fr) minmax(94px,.9fr) minmax(140px,1.4fr) minmax(76px,.7fr);gap:0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;min-width:1000px}
+.mxr:last-child{border-bottom:none}
+.mxr>div{padding:11px 12px;border-left:1px solid var(--line);min-width:0}
+.mxr>div:first-child{border-left:none}
+.mxh{background:var(--panel2);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink3)}
+.mxh>div{padding:10px 12px}
+.mxn{font-weight:600;color:var(--ink);display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.mxhome{color:var(--ink2)}
+.mxhome b{color:var(--ink);font-weight:600}
+.mxc{color:var(--ink2)}
+.kbd{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink2);background:rgba(255,255,255,.05);padding:1px 6px;border-radius:5px;border:1px solid var(--line);white-space:nowrap}
+.yes{color:var(--good);font-weight:600}
+.no{color:var(--ink3)}
+.mxgroup{background:rgba(76,194,255,.05);font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent);padding:7px 12px;border-bottom:1px solid var(--line)}
+.inv{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.ic{padding:15px 16px 13px;display:flex;flex-direction:column;gap:8px}
+.ic-h{display:flex;align-items:center;gap:8px}
+.ic-h b{font-size:13.5px;font-weight:700;flex:1}
+.ic p{margin:0;font-size:12px;line-height:1.55;color:var(--ink2);text-wrap:pretty}
+.ikv{display:grid;grid-template-columns:58px 1fr;gap:3px 10px;font-size:11px;line-height:1.5;margin-top:2px}
+.ikv s{text-decoration:none;color:var(--ink3);font-weight:600;font-size:10px;letter-spacing:.6px;text-transform:uppercase;padding-top:1px}
+.ikv d{color:var(--ink2)}
+.dedup{display:flex;flex-direction:column}
+.dd{display:grid;grid-template-columns:1fr 30px 1fr 1.35fr;gap:14px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);font-size:12.5px}
+.dd:last-child{border-bottom:none}
+.dd .from{color:var(--ink2)}
+.dd .from b{color:var(--ink);font-weight:600;display:block}
+.dd .arr{display:grid;place-items:center;color:var(--accent)}
+.dd .arr i{width:15px;height:15px}
+.dd .why{color:var(--ink3);font-size:11.5px;line-height:1.5}
+.dd .keep b{color:var(--good);font-weight:600;display:block}
+.dd .keep{color:var(--ink2)}
+.ph{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.pc{padding:16px 17px 15px;display:flex;flex-direction:column;gap:8px;position:relative}
+.pc.cur{border-color:rgba(76,194,255,.45);background:linear-gradient(150deg,rgba(76,194,255,.08),transparent 55%),var(--panel)}
+.pc .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink3);font-weight:600}
+.pc.cur .n{color:var(--accent)}
+.pc b{font-size:14px;font-weight:700}
+.pc p{margin:0;font-size:11.5px;line-height:1.55;color:var(--ink2)}
+.pc .tagd{position:absolute;top:14px;right:14px}
+.foot{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);display:flex;gap:14px;align-items:center;font-size:11.5px;color:var(--ink3)}
+.leg{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+@media print{.doc{background:#fff}}
+</style>
+</helmet>
+<div class="doc" ref="{{ rootRef }}">
+<div class="wrap">
+<div class="kicker">CyberDeck Designer · UX Architecture · Phase 1 of 4</div>
+<h1 class="h1">App Surfaces → IDE Integration Matrix</h1>
+<p class="lede">Complete inventory of all 18 App Surfaces and the 6 existing Designer workspaces, with a binding decision for where every surface lives in the unified application. Nothing remains a standalone page: each surface becomes a workspace, a dockable panel, a floating window, a modal, a global service, or a framework pattern. This document is the contract for Phases 2–4.</p>
+<div class="sumrow">
+<div class="sum card"><span class="badge b-ws">WORKSPACE</span><b>5</b><s>surfaces absorbed into rail workspaces</s></div>
+<div class="sum card"><span class="badge b-panel">DOCK PANEL</span><b>3</b><s>become dockable panels or drawers</s></div>
+<div class="sum card"><span class="badge b-win">WINDOW</span><b>2</b><s>floating windows (Preferences, Keyboard)</s></div>
+<div class="sum card"><span class="badge b-modal">MODAL</span><b>1</b><s>wizard via Dialog Framework</s></div>
+<div class="sum card"><span class="badge b-svc">SERVICE</span><b>4</b><s>global services (boot, tour, dialogs, menus)</s></div>
+<div class="sum card"><span class="badge b-fw">FRAMEWORK</span><b>3</b><s>pattern systems baked into every surface</s></div>
+</div>
+
+<div class="secn"><b>01</b>TARGET SHELL · ONE RAIL, SEVEN WORKSPACES<i></i></div>
+<h2 class="h2">The unified workspace rail</h2>
+<p class="sub">The existing rail (Design · Flows · Library · Vars · Runtime · Preview) absorbs every screen-sized App Surface. Preview and Device Manager merge into one <b style="color:var(--ink)">Devices</b> workspace; Welcome and Project Manager merge into one <b style="color:var(--ink)">Projects</b> workspace; Themes, Assets and the component gallery become tabs of <b style="color:var(--ink)">Library</b>. Everything else is chrome shared by all workspaces — one title bar, one status bar, one inspector, one dock system.</p>
+<div class="rails">
+<div class="railpill"><i data-lucide="layout-grid"></i>Projects<s>⌘1</s></div>
+<div class="railpill"><i data-lucide="pen-tool"></i>Design<s>⌘2</s></div>
+<div class="railpill"><i data-lucide="workflow"></i>Flows<s>⌘3</s></div>
+<div class="railpill"><i data-lucide="braces"></i>Variables<s>⌘4</s></div>
+<div class="railpill"><i data-lucide="layout-panel-top"></i>Library<s>⌘5 · components / assets / themes</s></div>
+<div class="railpill"><i data-lucide="monitor-smartphone"></i>Devices<s>⌘6 · manager + live preview</s></div>
+<div class="railpill"><i data-lucide="activity"></i>Runtime<s>⌘7 · log + diagnostics</s></div>
+<div class="railpill ghost"><i data-lucide="command"></i>Palette ⌘K · Search · Bell · Prefs ⌘, — global, not workspaces</div>
+</div>
+
+<div class="secn"><b>02</b>INTEGRATION MATRIX · ALL 18 SURFACES<i></i></div>
+<h2 class="h2">Where every surface lands</h2>
+<div class="leg"><span class="badge b-ws">WS · Workspace</span><span class="badge b-panel">PANEL · Dockable</span><span class="badge b-win">WIN · Floating window</span><span class="badge b-modal">MODAL · Wizard</span><span class="badge b-svc">SVC · Global service</span><span class="badge b-fw">FW · Framework pattern</span></div>
+<div class="mx">
+<div class="mxr mxh"><div>App Surface</div><div>New Home</div><div>Navigation</div><div>Dockable</div><div>Shared Inspector</div><div>Toolbar</div><div>Command Palette</div><div>Shortcut</div></div>
+<div class="mxgroup">Absorbed into workspaces</div>
+<div class="mxr"><div class="mxn">Welcome<span class="badge b-ws">WS</span></div><div class="mxhome"><b>Projects workspace</b> — Home view: hero, pinned/recent, templates</div><div class="mxc">Rail · auto when no project is open</div><div class="mxc">Workspace stage</div><div class="mxc yes">✓ project card → inspector</div><div class="mxc yes">✓</div><div class="mxc">Continue Last Session · New From Template</div><div><span class="kbd">⌘1</span></div></div>
+<div class="mxr"><div class="mxn">Project Manager<span class="badge b-ws">WS</span></div><div class="mxhome"><b>Projects workspace</b> — Browse view: folders, table/grid, cloud &amp; archive</div><div class="mxc">Rail · breadcrumb project name</div><div class="mxc">Sidebar + stage split</div><div class="mxc yes">✓ project details, stats, actions</div><div class="mxc yes">✓</div><div class="mxc">Open Project… · Import Project</div><div><span class="kbd">⌘1</span> <span class="kbd">⌘O</span></div></div>
+<div class="mxr"><div class="mxn">Theme Manager<span class="badge b-ws">WS</span></div><div class="mxhome"><b>Theme Studio</b> — Library › Themes tab; live theme pill in status bar</div><div class="mxc">Library rail · status-bar pill · explorer › Themes</div><div class="mxc yes">✓ token panel docks/floats</div><div class="mxc yes">✓ token editor + live preview</div><div class="mxc yes">✓</div><div class="mxc">Switch Theme… · Import Theme · Duplicate Theme</div><div><span class="kbd">⌘⇧T</span></div></div>
+<div class="mxr"><div class="mxn">Asset Manager<span class="badge b-ws">WS</span></div><div class="mxhome"><b>Asset Browser</b> — Library › Assets tab + bottom dock strip in Design</div><div class="mxc">Library rail · drop files on any workspace</div><div class="mxc yes">✓ bottom / left / float</div><div class="mxc yes">✓ metadata, references, optimize</div><div class="mxc yes">✓</div><div class="mxc">Add Assets · Find Unused Assets</div><div><span class="kbd">⌘5</span></div></div>
+<div class="mxr"><div class="mxn">Device Manager<span class="badge b-ws">WS</span></div><div class="mxhome"><b>Devices workspace</b> — merged with Preview: cards + live mockups in one stage</div><div class="mxc">Rail · status-bar device count · explorer › Devices</div><div class="mxc yes">✓ device rail docks · Live Mirror floats</div><div class="mxc yes">✓ calibration, profiles, capabilities</div><div class="mxc yes">✓</div><div class="mxc">Pair Device · Scan Network · Present to Devices</div><div><span class="kbd">⌘6</span></div></div>
+<div class="mxgroup">Dockable panels &amp; drawers</div>
+<div class="mxr"><div class="mxn">Connection Center<span class="badge b-panel">PANEL</span></div><div class="mxhome"><b>Integration Center</b> — center-stage tab, like a VS Code extensions view; plugin dots in status bar</div><div class="mxc">Status-bar plugin dots · explorer › Plugins · palette</div><div class="mxc yes">✓ opens as tab · splits right</div><div class="mxc yes">✓ auth, permissions, host settings</div><div class="mxc yes">✓</div><div class="mxc">Add Integration · Connect GitHub / OBS / MQTT…</div><div><span class="kbd">⌘⇧I</span></div></div>
+<div class="mxr"><div class="mxn">Version History<span class="badge b-panel">PANEL</span></div><div class="mxhome"><b>Timeline panel</b> — right dock in any workspace; compare view opens in stage</div><div class="mxc">Toolbar history icon · project inspector link</div><div class="mxc yes">✓ right / float / pin</div><div class="mxc yes">✓ version details, changes, conflicts</div><div class="mxc">Snapshot Now</div><div class="mxc">Snapshot Now · Restore Version… · Compare</div><div><span class="kbd">⌘⇧H</span></div></div>
+<div class="mxr"><div class="mxn">Notification Center<span class="badge b-panel">PANEL</span></div><div class="mxhome"><b>Notification drawer</b> — slides from bell; toasts via Motion system</div><div class="mxc">Bell in title bar (any workspace) · toast click-through</div><div class="mxc yes">✓ right drawer · pins open</div><div class="mxc no">— actions inline on cards</div><div class="mxc">Mark all read · DND</div><div class="mxc">Open Notifications · Toggle Do Not Disturb</div><div><span class="kbd">⌘⇧N</span></div></div>
+<div class="mxgroup">Floating windows &amp; modals</div>
+<div class="mxr"><div class="mxn">Settings<span class="badge b-win">WIN</span></div><div class="mxhome"><b>Preferences window</b> — floating, searchable, 20 panes; per-device/plugin config moves to workspace inspectors</div><div class="mxc">Gear · palette · deep links from every workspace</div><div class="mxc yes">✓ floats · remembers pane</div><div class="mxc no">—</div><div class="mxc">Pane search · Restore defaults</div><div class="mxc">Preferences: {pane} — one command per pane</div><div><span class="kbd">⌘,</span></div></div>
+<div class="mxr"><div class="mxn">Keyboard Shortcuts<span class="badge b-win">WIN</span></div><div class="mxhome"><b>Keyboard Manager</b> — full editor as Preferences › Keyboard; profiles, conflicts, key map</div><div class="mxc">Preferences · palette · "Edit shortcut" on any command</div><div class="mxc yes">✓ with Preferences window</div><div class="mxc no">—</div><div class="mxc">Profile switcher · Import/Export</div><div class="mxc">Open Keyboard Shortcuts · Switch Keymap Profile</div><div><span class="kbd">⌘K ⌘S</span></div></div>
+<div class="mxr"><div class="mxn">New Project Wizard<span class="badge b-modal">MODAL</span></div><div class="mxhome"><b>Dialog Framework wizard</b> — 4-step modal over any workspace</div><div class="mxc">⌘N anywhere · Projects toolbar · palette · templates</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc">Create Project · New From Template…</div><div><span class="kbd">⌘N</span></div></div>
+<div class="mxgroup">Global services</div>
+<div class="mxr"><div class="mxn">Splash<span class="badge b-svc">SVC</span></div><div class="mxhome"><b>Boot service</b> — overlay inside the main window while engine + plugins load</div><div class="mxc">Automatic on launch · never navigable</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="no">—</div></div>
+<div class="mxr"><div class="mxn">Onboarding Tour<span class="badge b-svc">SVC</span></div><div class="mxhome"><b>Tour service</b> — spotlight overlay on the real IDE + pinnable Getting Started checklist</div><div class="mxc">First launch · Help menu · palette</div><div class="mxc yes">✓ checklist floats/pins</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc">Start Welcome Tour · Open Getting Started</div><div class="no">—</div></div>
+<div class="mxr"><div class="mxn">Dialog System<span class="badge b-svc">SVC</span></div><div class="mxhome"><b>Global Dialog Framework</b> — rename, delete, unsaved, auth, conflict, crash, export</div><div class="mxc">Invoked by actions in any workspace</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc no">—</div><div><span class="kbd">esc</span> <span class="kbd">↵</span></div></div>
+<div class="mxr"><div class="mxn">Context Menus<span class="badge b-svc">SVC</span></div><div class="mxhome"><b>Interaction Framework</b> — one menu system: canvas, layers, variables, nodes, devices, tabs, status bar</div><div class="mxc">Right-click everywhere</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc no">—</div><div class="mxc">Every menu item is also a palette command</div><div><span class="kbd">⇧F10</span></div></div>
+<div class="mxgroup">Framework patterns · absorbed into design system</div>
+<div class="mxr"><div class="mxn">About &amp; Diagnostics<span class="badge b-fw">FW</span></div><div class="mxhome"><b>Split:</b> About → Preferences › About · Diagnostics → bottom dock panel in Runtime</div><div class="mxc">Preferences · Runtime workspace · palette</div><div class="mxc yes">✓ diagnostics docks bottom</div><div class="mxc no">—</div><div class="mxc">Copy Diagnostics</div><div class="mxc">Copy Diagnostics · Report a Bug · Open Logs</div><div class="no">—</div></div>
+<div class="mxr"><div class="mxn">Empty States<span class="badge b-fw">FW</span></div><div class="mxhome"><b>Pattern library</b> — 12 states owned by the panels they appear in</div><div class="mxc">Rendered in-place by every panel</div><div class="mxc no">n/a</div><div class="mxc no">n/a</div><div class="mxc no">n/a</div><div class="mxc no">n/a</div><div class="no">—</div></div>
+<div class="mxr"><div class="mxn">Micro-interactions<span class="badge b-fw">FW</span></div><div class="mxhome"><b>Motion Design System</b> — tokens for hover, drag, selection, toasts, sync states</div><div class="mxc">Applied globally via theme tokens</div><div class="mxc no">n/a</div><div class="mxc no">n/a</div><div class="mxc no">n/a</div><div class="mxc no">n/a</div><div class="no">—</div></div>
+</div>
+
+<div class="secn"><b>03</b>SURFACE INVENTORY · PURPOSE &amp; DEPENDENCIES<i></i></div>
+<h2 class="h2">Every surface, analyzed</h2>
+<p class="sub">Entry and exit points assume the unified shell — no surface ever leaves the main window except the two floating windows, and even those share theme, typography and the command palette.</p>
+<div class="inv">
+<div class="ic card"><div class="ic-h"><b>Splash</b><span class="badge b-svc">SVC</span></div><p>Engine + plugin host boot progress. Becomes a 1–2s overlay, never a "screen".</p><div class="ikv"><s>Entry</s><d>App launch only</d><s>Exit</s><d>Auto → last session or Projects</d><s>Needs</s><d>Engine status, plugin host</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Welcome</b><span class="badge b-ws">WS</span></div><p>Re-entry hub: continue session, pinned/recent projects, templates. Becomes the Home view of Projects.</p><div class="ikv"><s>Entry</s><d>Boot with no project · ⌘1</d><s>Exit</s><d>Open project → Design</d><s>Needs</s><d>Project index, device/flow counts, templates</d></div></div>
+<div class="ic card"><div class="ic-h"><b>New Project Wizard</b><span class="badge b-modal">MODAL</span></div><p>4 steps: template, details, features, summary. Stays a wizard — the only true modal flow.</p><div class="ikv"><s>Entry</s><d>⌘N · Projects toolbar · palette</d><s>Exit</s><d>Create → Design · Cancel</d><s>Needs</s><d>Templates, folders, devices, themes, plugins</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Project Manager</b><span class="badge b-ws">WS</span></div><p>Full library: folders, cloud, shared, archive, per-project inspector. Merges with Welcome into one workspace with two views.</p><div class="ikv"><s>Entry</s><d>⌘1 · breadcrumb · palette</d><s>Exit</s><d>Open → Design · stays resident</d><s>Needs</s><d>Project files, sync state, version index</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Settings</b><span class="badge b-win">WIN</span></div><p>20 panes of app-level defaults. Device/plugin instance config moves out to workspace inspectors; panes deep-link both ways.</p><div class="ikv"><s>Entry</s><d>⌘, · gear · deep links</d><s>Exit</s><d>Close window · changes apply live</d><s>Needs</s><d>Prefs store, theme list, keymap profiles</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Theme Manager</b><span class="badge b-ws">WS</span></div><p>Token editor with live preview + marketplace. Becomes Theme Studio in Library; activating a theme restyles the entire IDE instantly.</p><div class="ikv"><s>Entry</s><d>Library › Themes · ⌘⇧T · status pill</d><s>Exit</s><d>Apply/close tab · stays docked</d><s>Needs</s><d>142 tokens, theme files, marketplace</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Asset Manager</b><span class="badge b-ws">WS</span></div><p>Grid, collections, smart folders, per-asset references and optimization. Full view in Library; slim strip docks at the bottom of Design for drag-to-canvas.</p><div class="ikv"><s>Entry</s><d>Library › Assets · file drop anywhere</d><s>Exit</s><d>Drag to canvas · close tab</d><s>Needs</s><d>Asset index, usage refs, optimizer</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Device Manager</b><span class="badge b-ws">WS</span></div><p>Pairing, calibration, profiles, connection log. Merges with Preview: one Devices workspace — cards on the left, live mockups in the stage.</p><div class="ikv"><s>Entry</s><d>⌘6 · status-bar count · explorer</d><s>Exit</s><d>Present · back to Design</d><s>Needs</s><d>mDNS discovery, engine port, profiles</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Connection Center</b><span class="badge b-panel">PANEL</span></div><p>Per-integration overview, variables, events→flows, permissions, logs. Becomes Integration Center: a stage tab + status-bar health dots.</p><div class="ikv"><s>Entry</s><d>⌘⇧I · plugin dots · explorer</d><s>Exit</s><d>Bind var → Variables · attach → Flows</d><s>Needs</s><d>Plugin SDK, auth vault, event bus</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Version History</b><span class="badge b-panel">PANEL</span></div><p>Timeline, named snapshots, visual diff, conflict resolution. Right-dock Timeline panel available in every workspace; compare opens in the stage.</p><div class="ikv"><s>Entry</s><d>⌘⇧H · toolbar · project inspector</d><s>Exit</s><d>Restore → active workspace</d><s>Needs</s><d>Snapshot store, diff engine, cloud sync</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Keyboard Shortcuts</b><span class="badge b-win">WIN</span></div><p>Search, rebind, conflicts, profiles, key map. Becomes the Keyboard pane of Preferences — every palette command exposes "Edit shortcut".</p><div class="ikv"><s>Entry</s><d>⌘K ⌘S · Preferences · palette</d><s>Exit</s><d>Save profile · close</d><s>Needs</s><d>Command registry (single source)</d></div></div>
+<div class="ic card"><div class="ic-h"><b>About &amp; Diagnostics</b><span class="badge b-fw">FW</span></div><p>Splits: version/license/credits → Preferences › About; live CPU/GPU/log feed → Diagnostics panel docked in Runtime.</p><div class="ikv"><s>Entry</s><d>Preferences · Runtime · palette</d><s>Exit</s><d>Copy diagnostics · report bug</d><s>Needs</s><d>Engine telemetry, system info, plugin versions</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Onboarding Tour</b><span class="badge b-svc">SVC</span></div><p>9-step spotlight tour + 7-item checklist. Runs over the real IDE, not a mock — checklist pins as a floating card until dismissed.</p><div class="ikv"><s>Entry</s><d>First launch · Help · palette</d><s>Exit</s><d>Finish/skip · resume any time</d><s>Needs</s><d>Anchor registry for spotlights</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Notification Center</b><span class="badge b-panel">PANEL</span></div><p>Filtered inbox with inline actions (retry flow, re-auth, install update). Becomes a right drawer from the bell + toast layer; count in title bar.</p><div class="ikv"><s>Entry</s><d>Bell · ⌘⇧N · toast click</d><s>Exit</s><d>Inline action → owning workspace</d><s>Needs</s><d>Event bus, per-source routing prefs</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Empty States</b><span class="badge b-fw">FW</span></div><p>12 patterns (no projects, offline, device dropped…). Not a screen — each pattern is owned and rendered by its host panel.</p><div class="ikv"><s>Entry</s><d>In-place, automatic</d><s>Exit</s><d>CTA → relevant action</d><s>Needs</s><d>Pattern components in design system</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Dialog System</b><span class="badge b-svc">SVC</span></div><p>Rename, destructive delete with reference warnings, unsaved changes, auth, sync conflict, crash recovery, export. One global framework, one API.</p><div class="ikv"><s>Entry</s><d>Invoked by any workspace</d><s>Exit</s><d>Confirm/cancel · esc/↵</d><s>Needs</s><d>Focus trap, reference counts, kbd map</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Context Menus</b><span class="badge b-svc">SVC</span></div><p>8 menu types → one Interaction Framework. Items pull from the same command registry as the palette, so shortcuts always match.</p><div class="ikv"><s>Entry</s><d>Right-click · ⇧F10</d><s>Exit</s><d>Action or dismiss</d><s>Needs</s><d>Command registry, submenu support</d></div></div>
+<div class="ic card"><div class="ic-h"><b>Micro-interactions</b><span class="badge b-fw">FW</span></div><p>Button states, drag ghosts, selection rings, sync pills, tooltips, toasts. Becomes the Motion Design System — timing/easing as theme tokens.</p><div class="ikv"><s>Entry</s><d>Global, token-driven</d><s>Exit</s><d>n/a</d><s>Needs</s><d>Motion tokens, reduce-motion pref</d></div></div>
+</div>
+
+<div class="secn"><b>04</b>DEDUPLICATION · ONE TASK, ONE PLACE<i></i></div>
+<h2 class="h2">Merged &amp; removed duplicates</h2>
+<div class="dedup card">
+<div class="dd"><div class="from"><b>Welcome + Project Manager</b>two overlapping project lists</div><div class="arr"><i data-lucide="arrow-right"></i></div><div class="keep"><b>Projects workspace</b>Home view + Browse view</div><div class="why">Same data, two densities. Welcome hero becomes the returning-user state of the workspace; the table is one toggle away.</div></div>
+<div class="dd"><div class="from"><b>Settings › Devices / Plugins panes</b>vs Device Manager &amp; Connection Center</div><div class="arr"><i data-lucide="arrow-right"></i></div><div class="keep"><b>Workspace inspectors</b>Preferences keeps app defaults only</div><div class="why">Instance config (calibration, auth, permissions) lives with the instance; Preferences keeps global policy (discovery, auto-update) and deep-links out.</div></div>
+<div class="dd"><div class="from"><b>Settings › Appearance theme picker</b>vs Theme Manager</div><div class="arr"><i data-lucide="arrow-right"></i></div><div class="keep"><b>Theme Studio</b>picker stays, editing links out</div><div class="why">Choosing a theme is a preference; making one is authoring. The dropdown keeps a "Manage themes…" row into the Studio.</div></div>
+<div class="dd"><div class="from"><b>Explorer sections</b>Themes, Plugins, Devices, Assets in the Design left panel</div><div class="arr"><i data-lucide="arrow-right"></i></div><div class="keep"><b>Launchers, not copies</b>same stores, one canonical editor each</div><div class="why">Explorer rows show live status and open the canonical surface — they never grow their own editing UI.</div></div>
+<div class="dd"><div class="from"><b>Project inspector › Version History</b>3-row mini list</div><div class="arr"><i data-lucide="arrow-right"></i></div><div class="keep"><b>Timeline panel</b>mini list links to full panel</div><div class="why">One snapshot store, one diff engine. The inspector keeps a 3-item teaser with "Open full history".</div></div>
+<div class="dd"><div class="from"><b>About screen + Settings › About</b>duplicated version/license info</div><div class="arr"><i data-lucide="arrow-right"></i></div><div class="keep"><b>Preferences › About</b>diagnostics move to Runtime</div><div class="why">Live telemetry belongs with the Runtime observability workspace, next to the execution log it explains.</div></div>
+<div class="dd"><div class="from"><b>Notification prefs</b>in Center header + Settings pane</div><div class="arr"><i data-lucide="arrow-right"></i></div><div class="keep"><b>Preferences › Notifications</b>drawer's gear deep-links to it</div><div class="why">Routing rules are policy, not inbox state. One pane, linked from the drawer.</div></div>
+</div>
+
+<div class="secn"><b>05</b>ROADMAP · PHASES 2–4<i></i></div>
+<h2 class="h2">What happens next</h2>
+<div class="ph">
+<div class="pc card cur"><span class="n">PHASE 1</span><span class="badge b-ws tagd" style="background:rgba(55,224,138,.13);color:var(--good)">THIS DOC</span><b>Inventory &amp; Matrix</b><p>All 18 surfaces classified, deduplicated and assigned a home, a nav path, palette commands and shortcuts.</p></div>
+<div class="pc card"><span class="n">PHASE 2</span><b>Information Architecture</b><p>Redesign the shell: 7-workspace rail, shared title/status bar, dock system zones, command registry, universal search scopes.</p></div>
+<div class="pc card"><span class="n">PHASE 3</span><b>Workspace Migration</b><p>Rebuild each surface in its new home: Projects, Theme Studio, Asset Browser, Devices, Integration Center, Timeline, drawer, Preferences.</p></div>
+<div class="pc card"><span class="n">PHASE 4</span><b>Interaction Polish</b><p>Docking behaviors, palette + search wired to every command, cross-workspace selection sync, motion tokens, onboarding over the real IDE.</p></div>
+</div>
+<div class="foot"><span class="mono">CYBERDECK · INTEGRATION ARCHITECTURE · PHASE 1</span><span style="flex:1"></span><span>18 surfaces · 0 standalone pages remaining · July 2026</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#4CC2FF&quot;,&quot;options&quot;:[&quot;#4CC2FF&quot;,&quot;#6D8BFF&quot;,&quot;#37e08a&quot;,&quot;#f5b14c&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;comfortable&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;}}">
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  componentDidMount(){
+    try{ window.lucide && lucide.createIcons(); }catch(e){}
+    this.applyProps();
+  }
+  componentDidUpdate(){ this.applyProps(); }
+  applyProps(){
+    const r = this.rootRef.current; if(!r) return;
+    const a = this.props.accent ?? '#4CC2FF';
+    r.style.setProperty('--accent', a);
+    const m = a.match(/^#(..)(..)(..)$/);
+    if(m) r.style.setProperty('--accent-rgb', m.slice(1).map(h=>parseInt(h,16)).join(','));
+    r.style.fontSize = (this.props.density ?? 'comfortable') === 'compact' ? '93%' : '';
+  }
+  renderVals(){ return { rootRef: this.rootRef }; }
+}
+</script>
+</body>
+</html>

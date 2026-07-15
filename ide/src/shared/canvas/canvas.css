@@ -1,0 +1,35 @@
+/* PanZoomSurface (CD-301). The surface clips and captures gestures; the world layer
+   is transformed as a single element (GPU-composited) so panning/zooming never
+   reflows children. Overlay sits in screen space above the world. */
+.pz-surface {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  touch-action: none;
+  contain: strict;
+  background: var(--canvas-bg, #1a1a1e);
+}
+
+.pz-surface:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus-ring, #4c9aff);
+}
+
+.pz-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.pz-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pz-overlay > * {
+  pointer-events: auto;
+}

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;700;800&family=Exo+2:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#06060e;font-family:'Inter',system-ui,sans-serif;color:#EAEAF6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:8px;border:3px solid transparent;background-clip:padding-box}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.16);background-clip:padding-box}
+.viewport{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden;background:#04040a}
+.app{width:1920px;height:1080px;flex:none;display:flex;flex-direction:column;overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.07);transform-origin:center center;--accent:#4CC2FF;--accent2:#6D8BFF;--glow:76,194,255;background:radial-gradient(1200px 700px at 18% -8%,rgba(var(--glow),.10),transparent 60%),radial-gradient(900px 600px at 108% 12%,rgba(var(--glow),.07),transparent 55%),#06060e;box-shadow:0 40px 120px rgba(0,0,0,.6)}
+/* titlebar */
+.titlebar{height:38px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(8,8,16,.55);border-bottom:1px solid rgba(255,255,255,.05)}
+.tb-l{display:flex;align-items:center;gap:9px;font-family:'JetBrains Mono';font-size:12px;color:#7d7fa6}
+.tb-l b{width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.tb-win{display:flex;gap:20px;color:#6a6c92}
+.tb-win i{width:15px;height:15px;cursor:pointer}.tb-win i:hover{color:#cdd0ee}
+.shell{flex:1;display:flex;min-height:0}
+/* rail */
+.rail{width:86px;flex:none;display:flex;flex-direction:column;align-items:center;padding:16px 0 14px;gap:5px;background:rgba(10,10,19,.7);border-right:1px solid rgba(255,255,255,.05);z-index:5}
+.brand{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(140deg,var(--accent),var(--accent2));box-shadow:0 8px 22px rgba(var(--glow),.45),inset 0 1px 0 rgba(255,255,255,.4);margin-bottom:12px;transition:.3s}
+.brand i{width:24px;height:24px;color:#fff}
+.nav{display:flex;flex-direction:column;gap:5px;flex:1}
+.nav-btn{width:64px;min-height:58px;border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#7a7ca2;background:transparent;border:1px solid transparent;cursor:pointer;font-family:'Exo 2';font-size:9.5px;font-weight:600;letter-spacing:.5px;text-align:center;line-height:1.15;padding:6px 2px;transition:.16s}
+.nav-btn i{width:21px;height:21px}
+.nav-btn:hover{background:rgba(255,255,255,.045);color:#cfd1ef}
+.nav-btn.active{color:#fff;background:linear-gradient(155deg,rgba(var(--glow),.22),rgba(var(--glow),.06));border-color:rgba(var(--glow),.45);box-shadow:0 0 0 1px rgba(var(--glow),.15),0 8px 24px rgba(var(--glow),.22)}
+.nav-btn.active i{color:var(--accent);filter:drop-shadow(0 0 6px rgba(var(--glow),.7))}
+.rail-foot{display:flex;flex-direction:column;gap:4px;align-items:center}
+.rail-ic{width:46px;height:42px;border-radius:13px;display:grid;place-items:center;color:#7a7ca2;cursor:pointer;transition:.16s}
+.rail-ic:hover{background:rgba(255,255,255,.045);color:#cfd1ef}
+.rail-ic.pwr:hover{color:#ff6b7d}
+.rail-ic i{width:19px;height:19px}
+/* main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{flex:none;display:flex;align-items:flex-start;justify-content:space-between;padding:22px 30px 16px}
+.tt h1{margin:0;font-family:'Rajdhani';font-weight:700;font-size:31px;letter-spacing:.5px;color:#fff;line-height:1}
+.tt p{margin:7px 0 0;font-size:13px;color:#8a8cb4;font-weight:500}
+.topbar-r{display:flex;align-items:center;gap:18px}
+.clock{text-align:right}
+.clock .t{font-family:'Rajdhani';font-weight:700;font-size:28px;color:#fff;line-height:1;letter-spacing:1px}
+.clock .d{font-size:12px;color:#8a8cb4;margin-top:3px;font-family:'JetBrains Mono'}
+.tb-act{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:#b6b8da;cursor:pointer;transition:.16s}
+.tb-act:hover{color:#fff;border-color:var(--accent);box-shadow:0 0 16px rgba(var(--glow),.3)}
+.tb-act i{width:17px;height:17px}
+.pill{display:flex;align-items:center;gap:8px;padding:8px 15px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-family:'JetBrains Mono';font-size:13px;color:#cdd0ee}
+.pill .pd{width:8px;height:8px;border-radius:50%;background:#37e08a;box-shadow:0 0 10px #37e08a}
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 30px 34px;position:relative}
+.screen{display:none}
+.screen.active{display:block}
+/* glass + widget primitives */
+.glass{background:linear-gradient(158deg,rgba(40,41,66,.5),rgba(20,21,38,.46));border:1px solid rgba(255,255,255,.09);border-radius:20px;box-shadow:0 14px 36px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08);position:relative}
+.pad{padding:20px}
+.wh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.wh-l{display:flex;align-items:center;gap:9px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 9px var(--accent)}
+.label{font-family:'Exo 2';font-size:11px;font-weight:600;letter-spacing:1.7px;text-transform:uppercase;color:#9698c2}
+.wh-a{font-family:'JetBrains Mono';font-size:11px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+.live{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:1.5px;color:#37e08a}
+.live::before{content:'';width:7px;height:7px;border-radius:50%;background:#37e08a;box-shadow:0 0 9px #37e08a;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* launch tiles */
+.tiles{display:grid;gap:16px}
+.tile{height:138px;border-radius:20px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 12px 26px rgba(0,0,0,.4);transition:transform .18s,box-shadow .18s}
+.tile:hover{transform:translateY(-4px) scale(1.015);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 18px 34px rgba(0,0,0,.5)}
+.tile::after{content:'';position:absolute;inset:0;background:linear-gradient(177deg,rgba(255,255,255,.22),transparent 42%);pointer-events:none}
+.tile img{width:42%;height:42%;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));z-index:1}
+.lettermark{font-family:'Rajdhani';font-weight:700;font-size:38px;color:#fff;z-index:1;letter-spacing:1px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+.tile i{width:38%;height:38%;color:#fff;z-index:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+.tile-cap{text-align:center;font-size:13px;font-weight:600;color:#dcdef4;margin-top:10px}
+.launch-item{display:flex;flex-direction:column}
+/* control tile */
+.ctile{border-radius:16px;background:rgba(255,255,255,.028);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;color:#c4c6e6;cursor:pointer;transition:.16s;padding:16px 8px;min-height:92px}
+.ctile:hover{background:rgba(var(--glow),.08);border-color:rgba(var(--glow),.55);color:#fff;box-shadow:inset 0 0 0 1px rgba(var(--glow),.25),0 0 22px rgba(var(--glow),.2);transform:translateY(-2px)}
+.ctile i{width:22px;height:22px}
+.ctile span{font-size:12px;font-weight:500;letter-spacing:.2px}
+/* media player */
+.mp{display:flex;flex-direction:column;gap:16px}
+.mp-top{display:flex;align-items:center;gap:16px}
+.mp-art{width:62px;height:62px;border-radius:15px;flex:none;display:grid;place-items:center;background:linear-gradient(140deg,var(--accent),var(--accent2));box-shadow:0 8px 20px rgba(var(--glow),.4)}
+.mp-art i{width:30px;height:30px;color:#fff}
+.mp-meta{flex:1;min-width:0}
+.mp-meta h3{margin:0;font-size:17px;font-weight:700;color:#fff;font-family:'Rajdhani';letter-spacing:.3px}
+.mp-meta p{margin:3px 0 0;font-size:13px;color:#8a8cb4}
+.eq{display:flex;align-items:flex-end;gap:3px;height:34px}
+.eq b{flex:1;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:2px;opacity:.85;animation:eqb 1s ease-in-out infinite;transform-origin:bottom}
+@keyframes eqb{0%,100%{transform:scaleY(.32)}50%{transform:scaleY(1)}}
+.mp-prog{display:flex;flex-direction:column;gap:7px}
+.mp-bar{height:5px;border-radius:3px;background:rgba(255,255,255,.1);position:relative;overflow:hidden}
+.mp-bar i{position:absolute;inset:0;width:48%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;box-shadow:0 0 12px rgba(var(--glow),.6)}
+.mp-time{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:11px;color:#8a8cb4}
+.mp-ctrl{display:flex;align-items:center;justify-content:center;gap:26px;color:#b6b8da}
+.mp-ctrl i{width:20px;height:20px;cursor:pointer;transition:.15s}.mp-ctrl i:hover{color:#fff}
+.mp-play{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,var(--accent),var(--accent2));box-shadow:0 8px 22px rgba(var(--glow),.5);cursor:pointer}
+.mp-play i{width:24px;height:24px;color:#fff}
+/* volume vertical */
+.vcol{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:18px}
+.vtrack{width:7px;flex:1;min-height:160px;background:rgba(255,255,255,.09);border-radius:4px;position:relative}
+.vfill{position:absolute;bottom:0;left:0;width:100%;border-radius:4px;background:linear-gradient(0deg,var(--accent2),var(--accent));box-shadow:0 0 16px rgba(var(--glow),.6)}
+.vknob{position:absolute;left:50%;width:20px;height:20px;border-radius:50%;background:#fff;transform:translate(-50%,50%);box-shadow:0 0 0 4px rgba(var(--glow),.25),0 4px 10px rgba(0,0,0,.5)}
+.vval{font-family:'Rajdhani';font-weight:700;font-size:24px;color:var(--accent)}
+/* histogram */
+.histo{display:flex;align-items:flex-end;gap:6px;height:120px}
+.histo b{flex:1;border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,var(--accent),rgba(var(--glow),.25));box-shadow:0 0 12px rgba(var(--glow),.25)}
+/* gauge */
+.gauge{position:relative;width:160px;height:160px;margin:0 auto}
+.gauge svg{width:100%;height:100%;transform:rotate(135deg)}
+.g-track{fill:none;stroke:rgba(255,255,255,.07);stroke-width:9;stroke-linecap:round}
+.g-arc{fill:none;stroke:url(#gg);stroke-width:9;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(var(--glow),.7))}
+.g-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.g-val{font-family:'Rajdhani';font-weight:700;font-size:30px;color:var(--accent);line-height:1}
+.g-sub{font-size:11px;color:#8a8cb4;letter-spacing:.5px}
+.g-stats{display:flex;flex-direction:column;gap:9px}
+.g-stat{display:flex;justify-content:space-between;gap:24px;font-family:'JetBrains Mono';font-size:13px}
+.g-stat span{color:#8a8cb4}.g-stat b{color:#dcdef4;font-weight:600}
+.gauge-card{display:flex;flex-direction:column;gap:16px}
+.gauge-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.spark{width:100%;height:42px;margin-top:auto}
+/* status list */
+.slist{display:flex;flex-direction:column}
+.srow{display:flex;align-items:center;gap:13px;padding:13px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.srow:last-child{border-bottom:0}
+.srow .si{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(var(--glow),.12);color:var(--accent);flex:none}
+.srow .si i{width:16px;height:16px}
+.srow .sl{flex:1;font-size:14px;color:#c4c6e6;font-weight:500}
+.srow .sv{font-family:'JetBrains Mono';font-size:13px;color:var(--accent);font-weight:500}
+.grid{display:grid}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:26px 2px 14px}
+.section-head .label{font-size:12px;letter-spacing:2px}
+/* toggle */
+.tgl{width:48px;height:27px;border-radius:14px;background:rgba(255,255,255,.13);position:relative;cursor:pointer;transition:.2s;flex:none}
+.tgl::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#cfd0ee;transition:.2s}
+.tgl.on{background:linear-gradient(90deg,var(--accent2),var(--accent));box-shadow:0 0 14px rgba(var(--glow),.5)}
+.tgl.on::after{left:24px;background:#fff}
+.tgl-row{display:flex;align-items:center;gap:14px}
+.tgl-row .tl{font-size:14px;color:#dcdef4;font-weight:500}
+/* horizontal slider */
+.hsl{height:6px;border-radius:3px;background:rgba(255,255,255,.1);position:relative;margin:12px 0}
+.hsl>i{position:absolute;left:0;top:0;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent2),var(--accent));box-shadow:0 0 12px rgba(var(--glow),.5)}
+.hsl>b{position:absolute;top:50%;width:17px;height:17px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(var(--glow),.22),0 2px 6px rgba(0,0,0,.5)}
+/* segmented bar */
+.seg{display:flex;gap:3px;height:15px;margin-top:6px}
+.seg s{flex:1;border-radius:2px;background:rgba(255,255,255,.08)}
+.seg s.on{background:linear-gradient(180deg,var(--accent),var(--accent2));box-shadow:0 0 5px rgba(var(--glow),.4)}
+/* ring */
+.ring{position:relative;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .rt{fill:none;stroke:rgba(255,255,255,.08);stroke-width:8}
+.ring .ra{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(var(--glow),.65))}
+.ring .rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.ring .rv{font-family:'Rajdhani';font-weight:700;color:var(--accent);line-height:1}
+.ring .rs{font-size:10px;color:#8a8cb4;letter-spacing:.5px}
+.r-sm{width:90px;height:90px}.r-sm .rv{font-size:19px}
+.r-md{width:120px;height:120px}.r-md .rv{font-size:26px}
+.r-lg{width:150px;height:150px}.r-lg .rv{font-size:30px}
+/* poster (media/game art) */
+.poster{border-radius:18px;position:relative;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 24px rgba(0,0,0,.4);display:flex;flex-direction:column;justify-content:flex-end;padding:14px;min-height:150px;transition:transform .18s}
+.poster:hover{transform:translateY(-4px)}
+.poster::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.55))}
+.poster .pglyph{position:absolute;top:0;left:0;right:0;bottom:34px;display:grid;place-items:center;color:rgba(255,255,255,.85)}
+.poster .pglyph i{width:38px;height:38px}
+.poster .pbadge{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;color:#fff;z-index:2;border:1px solid rgba(255,255,255,.3)}
+.poster .pbadge i{width:15px;height:15px}
+.poster .pt{position:relative;font-family:'Rajdhani';font-weight:700;font-size:16px;color:#fff;z-index:1}
+.poster .ps{position:relative;font-size:12px;color:rgba(255,255,255,.75);z-index:1;margin-top:2px}
+/* mode card */
+.mode{border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);padding:16px;display:flex;flex-direction:column;gap:8px}
+.mode.active{border-color:rgba(var(--glow),.55);background:rgba(var(--glow),.08);box-shadow:0 0 22px rgba(var(--glow),.18)}
+.mode-h{display:flex;align-items:center;gap:9px;font-family:'Exo 2';font-weight:600;font-size:14px;color:#fff}
+.mode-h i{width:18px;height:18px;color:var(--accent)}
+.mode-d{font-size:12px;color:#8a8cb4;flex:1}
+.mbtn{margin-top:4px;padding:9px;border-radius:10px;text-align:center;font-family:'Exo 2';font-weight:600;font-size:11px;letter-spacing:1.5px;border:1px solid rgba(255,255,255,.12);color:#b6b8da;cursor:pointer;text-transform:uppercase}
+.mbtn:hover{border-color:var(--accent);color:#fff}
+.mbtn.on{background:linear-gradient(90deg,var(--accent2),var(--accent));border-color:transparent;color:#fff;box-shadow:0 0 16px rgba(var(--glow),.4)}
+/* shortcut row */
+.scut{display:flex;align-items:center;gap:13px;padding:11px 6px;border-radius:10px;cursor:pointer}
+.scut:hover{background:rgba(255,255,255,.04)}
+.scut .si{width:18px;height:18px;color:var(--accent)}
+.scut .sl{flex:1;font-size:14px;color:#cdd0ee}
+.scut .sa{width:15px;height:15px;color:#6a6c92}
+/* notif row */
+.notif{display:flex;align-items:flex-start;gap:13px;padding:13px 4px;border-bottom:1px solid rgba(255,255,255,.05)}
+.notif:last-child{border-bottom:0}
+.notif .ni{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;background:rgba(var(--glow),.12);color:var(--accent)}
+.notif .ni i{width:17px;height:17px}
+.notif .nb{flex:1;min-width:0}
+.notif .nt{font-size:14px;font-weight:600;color:#eceefb}
+.notif .nd{font-size:12.5px;color:#8a8cb4;margin-top:2px}
+.notif .nx{font-family:'JetBrains Mono';font-size:11px;color:#6a6c92;flex:none}
+/* big number / mini stat */
+.bignum{display:flex;flex-direction:column;gap:10px}
+.bignum .bi{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(var(--glow),.12);color:var(--accent)}
+.bignum .bi i{width:18px;height:18px}
+.bignum .bv{font-family:'Rajdhani';font-weight:700;font-size:30px;color:#fff;line-height:1}
+.bignum .bv s{font-family:'Inter';font-weight:600;font-size:13px;color:#8a8cb4;text-decoration:none;margin-left:4px}
+.bignum .bl{font-family:'Exo 2';font-size:10px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:#8a8cb4}
+.minstat{border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);padding:15px;display:flex;flex-direction:column;gap:9px}
+.minstat .mi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(var(--glow),.14);color:var(--accent)}
+.minstat .mi i{width:16px;height:16px}
+.minstat .mv{font-family:'Rajdhani';font-weight:700;font-size:25px;color:#fff;line-height:1}
+.minstat .mv s{font-family:'Inter';font-weight:600;font-size:12px;color:#8a8cb4;text-decoration:none;margin-left:3px}
+.minstat .ml{font-family:'Exo 2';font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#8a8cb4}
+/* scene tile */
+.scene{border-radius:15px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:.16s}
+.scene:hover{background:rgba(var(--glow),.08);border-color:rgba(var(--glow),.45);box-shadow:0 0 18px rgba(var(--glow),.18)}
+.scene i{width:21px;height:21px;color:var(--accent)}
+.scene span{font-size:12px;color:#cdd0ee;font-weight:500}
+/* room card */
+.room{border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.028);padding:16px;display:flex;flex-direction:column;gap:14px}
+.room.on{border-color:rgba(var(--glow),.4);background:rgba(var(--glow),.06)}
+.room-t{display:flex;align-items:center;gap:11px}
+.room-t .ri{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(var(--glow),.14);color:var(--accent);flex:none}
+.room-t .ri i{width:18px;height:18px}
+.room-t .rn{font-family:'Exo 2';font-weight:600;font-size:14px;color:#fff}
+.room-t .rd{font-family:'JetBrains Mono';font-size:12px;color:#8a8cb4}
+/* tabs + buttons */
+.tabs{display:flex;gap:8px}
+.tab{padding:11px 16px;border-radius:12px;font-size:13px;font-weight:600;color:#9698c2;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);cursor:pointer;display:flex;align-items:center;gap:7px}
+.tab i{width:15px;height:15px}
+.tab.on{color:#fff;background:rgba(var(--glow),.14);border-color:rgba(var(--glow),.5)}
+.tab.amber{color:#ffc070}
+.btn{padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;background:linear-gradient(90deg,var(--accent2),var(--accent));border:none;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(var(--glow),.35)}
+.btn i{width:15px;height:15px}
+.btn-ghost{padding:13px;border-radius:12px;text-align:center;font-size:13px;font-weight:600;color:#cdd0ee;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);cursor:pointer}
+.btn-ghost:hover{border-color:var(--accent);color:#fff}
+/* process + cam + event rows */
+.prow{display:flex;align-items:center;justify-content:space-between;padding:12px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.prow:last-child{border-bottom:0}
+.prow .pn{font-family:'JetBrains Mono';font-size:13px;color:#cdd0ee}
+.prow .pp{font-family:'JetBrains Mono';font-size:13px;color:var(--accent);font-weight:600}
+.crow{display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.crow:last-child{border-bottom:0}
+.crow .ci{color:#37e08a;width:18px;height:18px}
+.crow .cl{flex:1;font-size:14px;color:#cdd0ee;font-weight:500}
+.crow .clive{font-family:'JetBrains Mono';font-size:11px;letter-spacing:1.5px;color:#37e08a;display:flex;align-items:center;gap:6px}
+.crow .clive::before{content:'';width:6px;height:6px;border-radius:50%;background:#37e08a;box-shadow:0 0 8px #37e08a}
+.actrow{display:flex;align-items:flex-start;gap:12px;padding:12px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.actrow:last-child{border-bottom:0}
+.actrow .ai{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;background:rgba(var(--glow),.12);color:var(--accent)}
+.actrow .ai i{width:15px;height:15px}
+.actrow .ab{flex:1}
+.actrow .at{font-size:13px;font-weight:600;color:#eceefb}
+.actrow .as{font-size:12px;color:#8a8cb4;margin-top:1px}
+.actrow .ax{font-family:'JetBrains Mono';font-size:11px;color:#6a6c92}
+.launchrow{display:flex;align-items:center;gap:13px;padding:12px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.launchrow:last-child{border-bottom:0}
+.launchrow .li{width:18px;height:18px;color:var(--accent)}
+.launchrow .ll{flex:1;font-size:14px;color:#cdd0ee;font-weight:500}
+.launchrow .la{font-family:'Exo 2';font-size:11px;font-weight:600;letter-spacing:1px;color:var(--accent);text-transform:uppercase;cursor:pointer}
+.divtitle{font-family:'JetBrains Mono';font-size:13px;color:#cdd0ee}
+.colgap{display:flex;flex-direction:column;gap:20px}
+.spark2{width:100%;height:46px}
+</style>
+</helmet>
+<div class="viewport"><div class="app" ref="{{ rootRef }}">
+<div class="titlebar"><div class="tb-l"><b></b><span>cyberdeck_client</span></div><div class="tb-win"><i data-lucide="minus"></i><i data-lucide="square"></i><i data-lucide="x"></i></div></div>
+<div class="shell">
+<div class="rail">
+<div class="brand"><i data-lucide="zap"></i></div>
+<div class="nav">
+<button class="nav-btn" data-name="dashboard" onClick="{{ onNav }}"><i data-lucide="layout-dashboard"></i>Dashboard</button>
+<button class="nav-btn" data-name="system" onClick="{{ onNav }}"><i data-lucide="sliders-horizontal"></i>System</button>
+<button class="nav-btn" data-name="media" onClick="{{ onNav }}"><i data-lucide="play-circle"></i>Media</button>
+<button class="nav-btn" data-name="gaming" onClick="{{ onNav }}"><i data-lucide="gamepad-2"></i>Gaming</button>
+<button class="nav-btn" data-name="smarthome" onClick="{{ onNav }}"><i data-lucide="home"></i>Smart Home</button>
+<button class="nav-btn" data-name="overview" onClick="{{ onNav }}"><i data-lucide="activity"></i>Overview</button>
+<button class="nav-btn" data-name="notifications" onClick="{{ onNav }}"><i data-lucide="bell"></i>Alerts</button>
+</div>
+<div class="rail-foot"><div class="rail-ic"><i data-lucide="settings"></i></div><div class="rail-ic pwr"><i data-lucide="power"></i></div></div>
+</div>
+<div class="main">
+<div class="topbar">
+<div class="tt"><h1 ref="{{ titleRef }}">Dashboard</h1><p ref="{{ subRef }}">Quick launch · media · system monitor</p></div>
+<div class="topbar-r"><div class="clock"><div class="t" ref="{{ clockRef }}">13:14</div><div class="d" ref="{{ dateRef }}">Tue 30 Jun</div></div><div class="tb-act"><i data-lucide="pencil"></i></div><div class="tb-act"><i data-lucide="settings"></i></div><div class="pill"><span class="pd"></span>demo</div></div>
+</div>
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent2)"/></linearGradient></defs></svg>
+<div class="stage">
+<section class="screen active" data-name="dashboard">
+<div class="grid" style="grid-template-columns:1fr 360px;gap:20px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="glass pad">
+<div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Quick Launch</span></div><span class="wh-a">Edit</span></div>
+<div class="tiles" style="grid-template-columns:repeat(5,1fr)">
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#1a4fd6,#3aa0ff)"><span class="lettermark">D+</span></div><div class="tile-cap">Disney+</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#0b6cff,#19d3e6)"><span class="lettermark" style="font-size:24px">prime</span></div><div class="tile-cap">Prime Video</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#b51d2e,#e3102a)"><img src="https://cdn.simpleicons.org/netflix/white" data-fb="N" alt=""></div><div class="tile-cap">Netflix</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#1f8f6b,#2bd4a8)"><img src="https://cdn.simpleicons.org/googlechrome/white" data-fb="C" alt=""></div><div class="tile-cap">Chrome</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#0f7a66,#19c39b)"><span class="lettermark">GPT</span></div><div class="tile-cap">ChatGPT</div></div>
+</div>
+</div>
+<div class="grid" style="grid-template-columns:178px 1fr 178px;gap:16px">
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+<div class="ctile"><i data-lucide="pause"></i><span>Play/Pause</span></div>
+<div class="ctile"><i data-lucide="skip-back"></i><span>Previous</span></div>
+<div class="ctile"><i data-lucide="lock"></i><span>Lock System</span></div>
+<div class="ctile"><i data-lucide="terminal"></i><span>Terminal</span></div>
+</div>
+<div class="glass pad mp">
+<div class="mp-top"><div class="mp-art"><i data-lucide="disc-3"></i></div><div class="mp-meta"><h3>Blinding Lights</h3><p>The Weeknd</p></div><div class="eq" ref="{{ eqRef }}"></div></div>
+<div class="mp-prog"><div class="mp-bar"><i></i></div><div class="mp-time"><span>1:40</span><span>3:20</span></div></div>
+<div class="mp-ctrl"><i data-lucide="shuffle"></i><i data-lucide="skip-back"></i><div class="mp-play"><i data-lucide="pause"></i></div><i data-lucide="skip-forward"></i><i data-lucide="repeat"></i></div>
+</div>
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+<div class="ctile"><i data-lucide="skip-forward"></i><span>Next</span></div>
+<div class="ctile"><i data-lucide="volume-x"></i><span>Mute</span></div>
+<div class="ctile"><i data-lucide="folder"></i><span>Files</span></div>
+<div class="ctile"><i data-lucide="settings-2"></i><span>Control</span></div>
+</div>
+</div>
+<div>
+<div class="section-head"><span class="label">System Monitor</span></div>
+<div class="grid" style="grid-template-columns:repeat(3,1fr);gap:20px">
+<div class="glass pad gauge-card"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">CPU Temp</span></div></div><div class="gauge-row"><div class="gauge"><svg viewBox="0 0 160 160"><circle class="g-track" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:75 100"></circle><circle class="g-arc" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:42.6 100"></circle></svg><div class="g-center"><div class="g-val">56.8°</div><div class="g-sub">Normal</div></div></div><div class="g-stats"><div class="g-stat"><span>Min</span><b>35°</b></div><div class="g-stat"><span>Max</span><b>48°</b></div><div class="g-stat"><span>Avg</span><b>42.4°</b></div></div></div><svg class="spark" viewBox="0 0 300 42" preserveAspectRatio="none"><polyline points="0,32 40,28 80,30 120,24 160,26 200,18 240,22 300,14" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg></div>
+<div class="glass pad gauge-card"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">GPU Temp</span></div></div><div class="gauge-row"><div class="gauge"><svg viewBox="0 0 160 160"><circle class="g-track" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:75 100"></circle><circle class="g-arc" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:48 100"></circle></svg><div class="g-center"><div class="g-val">64.3°</div><div class="g-sub">Normal</div></div></div><div class="g-stats"><div class="g-stat"><span>Min</span><b>48°</b></div><div class="g-stat"><span>Max</span><b>62°</b></div><div class="g-stat"><span>Avg</span><b>54°</b></div></div></div><svg class="spark" viewBox="0 0 300 42" preserveAspectRatio="none"><polyline points="0,30 40,32 80,26 120,28 160,20 200,24 240,16 300,18" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg></div>
+<div class="glass pad gauge-card"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">RAM Usage</span></div></div><div class="gauge-row"><div class="gauge"><svg viewBox="0 0 160 160"><circle class="g-track" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:75 100"></circle><circle class="g-arc" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:47.9 100"></circle></svg><div class="g-center"><div class="g-val">63.9%</div><div class="g-sub">Used</div></div></div><div class="g-stats"><div class="g-stat"><span>Min</span><b>58%</b></div><div class="g-stat"><span>Max</span><b>78%</b></div><div class="g-stat"><span>Avg</span><b>63.7%</b></div></div></div><svg class="spark" viewBox="0 0 300 42" preserveAspectRatio="none"><polyline points="0,28 40,24 80,30 120,22 160,26 200,20 240,24 300,16" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg></div>
+</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="glass pad" style="display:flex;flex-direction:column;min-height:300px"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Volume</span></div><i data-lucide="volume-2" style="width:16px;height:16px;color:#8a8cb4"></i></div><div class="vcol"><div class="vtrack"><div class="vfill" style="height:70%"><span class="vknob"></span></div></div><div class="vval">70%</div></div></div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Audio Spectrum</span></div></div><div class="histo"><b style="height:30%"></b><b style="height:58%"></b><b style="height:38%"></b><b style="height:74%"></b><b style="height:92%"></b><b style="height:80%"></b><b style="height:50%"></b><b style="height:34%"></b><b style="height:44%"></b></div></div>
+<div class="glass pad" style="flex:1"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">System Status</span></div></div><div class="slist"><div class="srow"><span class="si"><i data-lucide="zap"></i></span><span class="sl">Power Plan</span><span class="sv">Balanced</span></div><div class="srow"><span class="si"><i data-lucide="wifi"></i></span><span class="sl">Network</span><span class="sv">Connected</span></div><div class="srow"><span class="si"><i data-lucide="hard-drive"></i></span><span class="sl">Storage</span><span class="sv">512 GB Free</span></div><div class="srow"><span class="si"><i data-lucide="clock"></i></span><span class="sl">Uptime</span><span class="sv">2d 14h 36m</span></div></div></div>
+</div>
+</div>
+</section>
+<section class="screen" data-name="system">
+<div class="colgap">
+<div class="grid" style="grid-template-columns:1.5fr 1fr 1fr;gap:20px;align-items:start">
+<div class="glass pad">
+<div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Power & Utilities</span></div></div>
+<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px">
+<div class="ctile"><i data-lucide="rotate-ccw"></i><span>Restart</span></div>
+<div class="ctile"><i data-lucide="power"></i><span>Shut Down</span></div>
+<div class="ctile"><i data-lucide="moon"></i><span>Sleep</span></div>
+<div class="ctile"><i data-lucide="snowflake"></i><span>Hibernate</span></div>
+<div class="ctile"><i data-lucide="lock"></i><span>Lock PC</span></div>
+<div class="ctile"><i data-lucide="log-out"></i><span>Log Off</span></div>
+<div class="ctile"><i data-lucide="x-octagon"></i><span>Kill Process</span></div>
+<div class="ctile"><i data-lucide="list-checks"></i><span>Task Mgr</span></div>
+<div class="ctile"><i data-lucide="eraser"></i><span>Clear Cache</span></div>
+<div class="ctile"><i data-lucide="hard-drive"></i><span>Disk Cleanup</span></div>
+<div class="ctile"><i data-lucide="trash-2"></i><span>Recycle Bin</span></div>
+<div class="ctile"><i data-lucide="info"></i><span>System Info</span></div>
+</div>
+</div>
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+<div class="mode"><div class="mode-h"><i data-lucide="volume-x"></i>Silent Mode</div><div class="mode-d">Reduces fan speed and power usage</div><div class="mbtn">Activate</div></div>
+<div class="mode active"><div class="mode-h"><i data-lucide="check-circle-2"></i>Balanced Mode</div><div class="mode-d">Balanced performance and efficiency</div><div class="mbtn on">Active</div></div>
+<div class="mode"><div class="mode-h"><i data-lucide="zap"></i>Performance</div><div class="mode-d">Higher performance and fan speed</div><div class="mbtn">Activate</div></div>
+<div class="mode"><div class="mode-h"><i data-lucide="flame"></i>Turbo Mode</div><div class="mode-d">Maximum performance, all cores</div><div class="mbtn">Activate</div></div>
+</div>
+<div class="colgap">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Quick Shortcuts</span></div></div>
+<div class="scut"><i class="si" data-lucide="settings"></i><span class="sl">Control Panel</span><i class="sa" data-lucide="external-link"></i></div>
+<div class="scut"><i class="si" data-lucide="cpu"></i><span class="sl">Device Manager</span><i class="sa" data-lucide="external-link"></i></div>
+<div class="scut"><i class="si" data-lucide="refresh-cw"></i><span class="sl">Windows Update</span><i class="sa" data-lucide="external-link"></i></div>
+<div class="scut"><i class="si" data-lucide="server"></i><span class="sl">Services</span><i class="sa" data-lucide="external-link"></i></div>
+<div class="scut"><i class="si" data-lucide="rocket"></i><span class="sl">Startup Apps</span><i class="sa" data-lucide="external-link"></i></div>
+<div class="scut"><i class="si" data-lucide="package"></i><span class="sl">Programs & Features</span><i class="sa" data-lucide="external-link"></i></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Networks</span></div></div>
+<div class="slist"><div class="srow"><span class="si"><i data-lucide="download"></i></span><span class="sl">Download</span><span class="sv">125.6 Mb/s</span></div><div class="srow"><span class="si"><i data-lucide="upload"></i></span><span class="sl">Upload</span><span class="sv">23.4 Mb/s</span></div><div class="srow"><span class="si"><i data-lucide="wifi"></i></span><span class="sl">Ping</span><span class="sv">8 ms</span></div><div class="srow"><span class="si"><i data-lucide="globe"></i></span><span class="sl">Status</span><span class="sv">Connected</span></div></div>
+</div>
+</div>
+</div>
+<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:16px">
+<div class="glass pad" style="--accent:#4CC2FF;--glow:76,194,255"><div class="label" style="margin-bottom:10px">C: System · SSD</div><div style="font-family:'Rajdhani';font-weight:700;font-size:28px;color:var(--accent);line-height:1">58%</div><div class="seg" data-fill="58" data-n="20"></div></div>
+<div class="glass pad" style="--accent:#3DE08A;--glow:61,224,138"><div class="label" style="margin-bottom:10px">D: Games · SSD</div><div style="font-family:'Rajdhani';font-weight:700;font-size:28px;color:var(--accent);line-height:1">73%</div><div class="seg" data-fill="73" data-n="20"></div></div>
+<div class="glass pad" style="--accent:#6E8BFF;--glow:110,139,255"><div class="label" style="margin-bottom:10px">E: Media · HDD</div><div style="font-family:'Rajdhani';font-weight:700;font-size:28px;color:var(--accent);line-height:1">41%</div><div class="seg" data-fill="41" data-n="20"></div></div>
+<div class="glass pad" style="--accent:#FFB13C;--glow:255,177,60"><div class="label" style="margin-bottom:10px">F: Backup · HDD</div><div style="font-family:'Rajdhani';font-weight:700;font-size:28px;color:var(--accent);line-height:1">22%</div><div class="seg" data-fill="22" data-n="20"></div></div>
+</div>
+<div class="grid" style="grid-template-columns:1fr 1fr 1fr;gap:20px;align-items:start">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">System Information</span></div></div>
+<div class="prow"><span class="pn">Operating System</span><span class="pp">Windows 11 Pro</span></div>
+<div class="prow"><span class="pn">Processor</span><span class="pp">Core i9-13900K</span></div>
+<div class="prow"><span class="pn">Motherboard</span><span class="pp">ROG Z790 Hero</span></div>
+<div class="prow"><span class="pn">Graphics</span><span class="pp">RTX 4090</span></div>
+<div class="prow"><span class="pn">CPU Temp</span><span class="pp">42°C</span></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Fan Control</span></div><span class="tgl on"></span></div>
+<div class="prow" style="border:0"><span class="pn">CPU Fan</span><span class="pp">62%</span></div><div class="hsl"><i style="width:62%"></i><b style="left:62%"></b></div>
+<div class="prow" style="border:0;margin-top:8px"><span class="pn">Case Fan 1</span><span class="pp">48%</span></div><div class="hsl"><i style="width:48%"></i><b style="left:48%"></b></div>
+<div class="tgl-row" style="margin-top:16px"><span class="tgl on"></span><span class="tl">Auto Fan Control</span></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">System Uptime</span></div></div>
+<div class="slist"><div class="srow"><span class="si"><i data-lucide="clock"></i></span><span class="sl">Uptime</span><span class="sv">2d 14h 36m</span></div><div class="srow"><span class="si"><i data-lucide="power"></i></span><span class="sl">Last Boot</span><span class="sv">Today, 06:14</span></div><div class="srow"><span class="si"><i data-lucide="activity"></i></span><span class="sl">Processes</span><span class="sv">214 active</span></div><div class="srow"><span class="si"><i data-lucide="thermometer"></i></span><span class="sl">CPU Temp</span><span class="sv">42°C</span></div></div>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-name="media">
+<div class="colgap">
+<div class="grid" style="grid-template-columns:1.7fr 1.15fr 1fr;gap:20px;align-items:start">
+<div class="glass pad mp">
+<div class="mp-top"><div class="mp-art" style="width:74px;height:74px"><i data-lucide="disc-3"></i></div><div class="mp-meta"><h3 style="font-size:20px">Blinding Lights</h3><p>The Weeknd · After Hours</p></div></div>
+<div class="eq" data-eq="1" style="height:46px"></div>
+<div class="mp-prog"><div class="mp-bar"><i style="width:86%"></i></div><div class="mp-time"><span>2:52</span><span>3:20</span></div></div>
+<div class="mp-ctrl"><i data-lucide="shuffle"></i><i data-lucide="skip-back"></i><div class="mp-play" style="width:58px;height:58px"><i data-lucide="pause"></i></div><i data-lucide="skip-forward"></i><i data-lucide="repeat"></i></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Audio Mixer</span></div></div>
+<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:8px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:12px;--accent:#4CC2FF;--glow:76,194,255;--accent2:#6D8BFF"><div class="label">System</div><div class="vtrack" style="min-height:170px"><div class="vfill" style="height:70%"><span class="vknob"></span></div></div><div class="vval">70%</div></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:12px;--accent:#3DE08A;--glow:61,224,138;--accent2:#16C8FF"><div class="label">Spotify</div><div class="vtrack" style="min-height:170px"><div class="vfill" style="height:55%"><span class="vknob"></span></div></div><div class="vval">55%</div></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:12px;--accent:#6E8BFF;--glow:110,139,255;--accent2:#4CC2FF"><div class="label">Browser</div><div class="vtrack" style="min-height:170px"><div class="vfill" style="height:40%"><span class="vknob"></span></div></div><div class="vval">40%</div></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:12px;--accent:#A06CFF;--glow:160,108,255;--accent2:#FF5CB0"><div class="label">Discord</div><div class="vtrack" style="min-height:170px"><div class="vfill" style="height:65%"><span class="vknob"></span></div></div><div class="vval">65%</div></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Notifications</span></div></div>
+<div class="notif"><span class="ni"><i data-lucide="star"></i></span><div class="nb"><div class="nt">Spotify</div><div class="nd">New release from The Weeknd</div></div><span class="nx">2m</span></div>
+<div class="notif"><span class="ni"><i data-lucide="info"></i></span><div class="nb"><div class="nt">System Update</div><div class="nd">Audio drivers updated</div></div><span class="nx">14m</span></div>
+<div class="notif"><span class="ni"><i data-lucide="mic"></i></span><div class="nb"><div class="nt">Discord</div><div class="nd">Friend joined Voice channel</div></div><span class="nx">23m</span></div>
+<div class="notif"><span class="ni"><i data-lucide="check-circle-2"></i></span><div class="nb"><div class="nt">Storage</div><div class="nd">Media library backed up</div></div><span class="nx">1h</span></div>
+</div>
+</div>
+<div class="grid" style="grid-template-columns:1.25fr 1fr;gap:20px;align-items:start">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Quick Access</span></div></div>
+<div class="tiles" style="grid-template-columns:repeat(5,1fr)">
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#0f8a4c,#1ed760)"><img src="https://cdn.simpleicons.org/spotify/white" data-fb="S" alt=""></div><div class="tile-cap">Spotify</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#c4302b,#ff4133)"><img src="https://cdn.simpleicons.org/youtube/white" data-fb="YT" alt=""></div><div class="tile-cap">YouTube</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#b51d2e,#e3102a)"><img src="https://cdn.simpleicons.org/netflix/white" data-fb="N" alt=""></div><div class="tile-cap">Netflix</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#6441a5,#9146ff)"><img src="https://cdn.simpleicons.org/twitch/white" data-fb="T" alt=""></div><div class="tile-cap">Twitch</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#b5306b,#fa57c1)"><img src="https://cdn.simpleicons.org/applemusic/white" data-fb="M" alt=""></div><div class="tile-cap">Apple Music</div></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Media Tools</span></div></div>
+<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:14px">
+<div class="ctile"><i data-lucide="camera"></i><span>Screenshot</span></div>
+<div class="ctile"><i data-lucide="video"></i><span>Record</span></div>
+<div class="ctile"><i data-lucide="cast"></i><span>Cast</span></div>
+<div class="ctile"><i data-lucide="volume-x"></i><span>Mute</span></div>
+</div>
+</div>
+</div>
+<div class="grid" style="grid-template-columns:1fr 320px;gap:20px;align-items:start">
+<div>
+<div class="section-head"><span class="label">Recently Played</span></div>
+<div class="grid" style="grid-template-columns:repeat(6,1fr);gap:16px">
+<div class="poster" style="background:linear-gradient(155deg,#1c8fb0,#2bd4c0)"><div class="pglyph"><i data-lucide="disc-3"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Starboy</div><div class="ps">The Weeknd</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#3a3f8f,#7a4fd0)"><div class="pglyph"><i data-lucide="disc-3"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">After Hours</div><div class="ps">The Weeknd</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#1f7a6b,#2bd4a8)"><div class="pglyph"><i data-lucide="disc-3"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Dawn FM</div><div class="ps">The Weeknd</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#8a3a6b,#c75fa0)"><div class="pglyph"><i data-lucide="disc-3"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Nightcall</div><div class="ps">Kavinsky</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#2a6fb0,#3aa0e6)"><div class="pglyph"><i data-lucide="disc-3"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Midnight City</div><div class="ps">M83</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#4a8f4a,#8ad04f)"><div class="pglyph"><i data-lucide="disc-3"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Random Access</div><div class="ps">Daft Punk</div></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Upcoming Events</span></div></div>
+<div class="actrow"><span class="ai"><i data-lucide="users"></i></span><div class="ab"><div class="at">Team Standup</div></div><span class="ax">10:30</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="git-merge"></i></span><div class="ab"><div class="at">Release Review</div></div><span class="ax">14:00</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="star"></i></span><div class="ab"><div class="at">Album Drop</div></div><span class="ax">18:00</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="mic"></i></span><div class="ab"><div class="at">Podcast Live</div></div><span class="ax">21:00</span></div>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-name="gaming">
+<div class="colgap">
+<div class="grid" style="grid-template-columns:1fr 320px;gap:20px;align-items:start">
+<div>
+<div class="section-head"><span class="label">Favorite Games</span><span class="wh-a">Launch · Manage · Optimize</span></div>
+<div class="grid" style="grid-template-columns:repeat(6,1fr);gap:16px">
+<div class="poster" style="background:linear-gradient(155deg,#5a8a3a,#9bd04f)"><div class="pglyph"><i data-lucide="gamepad-2"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Cyberpunk 2077</div><div class="ps">Last played 2h ago</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#2a6fb0,#3aa0e6)"><div class="pglyph"><i data-lucide="gamepad-2"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Forza Horizon</div><div class="ps">Last played today</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#1f7a6b,#34c9a0)"><div class="pglyph"><i data-lucide="gamepad-2"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Elden Ring</div><div class="ps">Last played 3d ago</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#7a3a8f,#b75fd0)"><div class="pglyph"><i data-lucide="gamepad-2"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Red Dead 2</div><div class="ps">Last played 1w ago</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#3a4f9f,#6a7fe0)"><div class="pglyph"><i data-lucide="gamepad-2"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Call of Duty</div><div class="ps">Last played today</div></div>
+<div class="poster" style="background:linear-gradient(155deg,#8a5a2a,#d09f4f)"><div class="pglyph"><i data-lucide="gamepad-2"></i></div><div class="pbadge"><i data-lucide="play"></i></div><div class="pt">Baldur's Gate 3</div><div class="ps">Last played 5d ago</div></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Game Launcher</span></div></div>
+<div class="launchrow"><img class="li" src="https://cdn.simpleicons.org/steam/white" data-fb="St" alt=""><span class="ll">Steam</span><span class="la">Launch</span></div>
+<div class="launchrow"><img class="li" src="https://cdn.simpleicons.org/epicgames/white" data-fb="Ep" alt=""><span class="ll">Epic Games</span><span class="la">Launch</span></div>
+<div class="launchrow"><img class="li" src="https://cdn.simpleicons.org/battledotnet/white" data-fb="Bn" alt=""><span class="ll">Battle.net</span><span class="la">Launch</span></div>
+<div class="launchrow"><img class="li" src="https://cdn.simpleicons.org/gogdotcom/white" data-fb="GOG" alt=""><span class="ll">GOG Galaxy</span><span class="la">Launch</span></div>
+<div class="launchrow"><i class="li" data-lucide="gamepad-2"></i><span class="ll">Xbox App</span><span class="la">Launch</span></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Game Optimization</span></div></div>
+<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:16px">
+<div class="tgl-row"><span class="tgl on"></span><span class="tl">Performance Mode</span></div>
+<div class="tgl-row"><span class="tgl"></span><span class="tl">Network Boost</span></div>
+<div class="tgl-row"><span class="tgl"></span><span class="tl">GPU Overclock</span></div>
+<div class="tgl-row"><span class="tgl on"></span><span class="tl">Temperature Control</span></div>
+</div>
+</div>
+<div class="grid" style="grid-template-columns:1fr 1fr 340px;gap:20px;align-items:start">
+<div class="colgap">
+<div class="glass pad gauge-card"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Live Game Stats</span></div><span class="live">Live</span></div><div class="gauge-row"><div class="gauge"><svg viewBox="0 0 160 160"><circle class="g-track" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:75 100"></circle><circle class="g-arc" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:55 100"></circle></svg><div class="g-center"><div class="g-val">143.3</div><div class="g-sub">FPS</div></div></div><div class="g-stats"><div class="g-stat"><span>Min</span><b>118</b></div><div class="g-stat"><span>Max</span><b>144</b></div><div class="g-stat"><span>Avg</span><b>133.8</b></div></div></div></div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Profiles</span></div></div>
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+<div class="mode active"><div class="mode-h"><i data-lucide="zap"></i>Competitive</div><div class="mode-d">Max FPS · low latency</div><div class="mbtn on">Active</div></div>
+<div class="mode"><div class="mode-h"><i data-lucide="sparkles"></i>AAA Ultra</div><div class="mode-d">Ultra visuals</div><div class="mbtn">Activate</div></div>
+<div class="mode"><div class="mode-h"><i data-lucide="video"></i>Streaming</div><div class="mode-d">Capture + encode</div><div class="mbtn">Activate</div></div>
+<div class="mode"><div class="mode-h"><i data-lucide="settings-2"></i>Balanced</div><div class="mode-d">Everyday default</div><div class="mbtn">Activate</div></div>
+</div>
+</div>
+</div>
+<div class="colgap">
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+<div class="minstat" style="--accent:#3DE08A;--glow:61,224,138"><span class="mi"><i data-lucide="cpu"></i></span><div class="mv">37.3<s>%</s></div><div class="ml">CPU Load</div></div>
+<div class="minstat" style="--accent:#4CC2FF;--glow:76,194,255"><span class="mi"><i data-lucide="square-stack"></i></span><div class="mv">52.3<s>%</s></div><div class="ml">GPU Load</div></div>
+<div class="minstat" style="--accent:#FFB13C;--glow:255,177,60"><span class="mi"><i data-lucide="thermometer"></i></span><div class="mv">53.1<s>°C</s></div><div class="ml">CPU Temp</div></div>
+<div class="minstat" style="--accent:#FF5C77;--glow:255,92,119"><span class="mi"><i data-lucide="thermometer"></i></span><div class="mv">54.9<s>°C</s></div><div class="ml">GPU Temp</div></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Live Metrics</span></div></div>
+<div class="prow" style="border:0"><span class="pn">CPU</span><span class="pp">37.3%</span></div><div class="seg" data-fill="37" data-n="22"></div>
+<div class="prow" style="border:0;margin-top:10px"><span class="pn">GPU</span><span class="pp">52.3%</span></div><div class="seg" data-fill="52" data-n="22"></div>
+<div class="prow" style="border:0;margin-top:10px"><span class="pn">RAM</span><span class="pp">67.1%</span></div><div class="seg" data-fill="67" data-n="22"></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Network Status</span></div></div>
+<div class="slist"><div class="srow"><span class="si"><i data-lucide="zap"></i></span><span class="sl">Ping</span><span class="sv">18 ms</span></div><div class="srow"><span class="si"><i data-lucide="download"></i></span><span class="sl">Download</span><span class="sv">125.6 Mb/s</span></div><div class="srow"><span class="si"><i data-lucide="upload"></i></span><span class="sl">Upload</span><span class="sv">42.3 Mb/s</span></div></div>
+</div>
+</div>
+<div class="colgap">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Quick Actions</span></div></div>
+<div class="grid" style="grid-template-columns:repeat(3,1fr);gap:14px">
+<div class="ctile"><i data-lucide="video"></i><span>Record</span></div>
+<div class="ctile"><i data-lucide="camera"></i><span>Screenshot</span></div>
+<div class="ctile"><img class="ctile-bi" src="https://cdn.simpleicons.org/discord/white" data-fb="Dc" alt="" style="width:22px;height:22px"><span>Discord</span></div>
+<div class="ctile"><i data-lucide="layout-template"></i><span>Overlay</span></div>
+<div class="ctile"><i data-lucide="gauge"></i><span>FPS Counter</span></div>
+<div class="ctile"><i data-lucide="volume-x"></i><span>Mute</span></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Achievements</span></div></div>
+<div class="actrow"><span class="ai"><i data-lucide="award"></i></span><div class="ab"><div class="at">Master Explorer</div></div><span class="ax" style="color:#3DE08A">Unlocked</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="zap"></i></span><div class="ab"><div class="at">Speedrunner</div></div><span class="ax">+450 XP</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="shield"></i></span><div class="ab"><div class="at">Survivor</div></div><span class="ax">78%</span></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-name="smarthome">
+<div class="grid" style="grid-template-columns:1fr 340px;gap:20px;align-items:start">
+<div class="colgap">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Rooms Overview</span></div><span class="wh-a">View All</span></div>
+<div class="grid" style="grid-template-columns:repeat(5,1fr);gap:14px">
+<div class="room on"><div class="room-t"><span class="ri"><i data-lucide="lightbulb"></i></span><div><div class="rn">Living Room</div><div class="rd">22°C</div></div></div><div class="tgl-row" style="justify-content:flex-end"><span class="tgl on"></span></div></div>
+<div class="room"><div class="room-t"><span class="ri"><i data-lucide="bed"></i></span><div><div class="rn">Bedroom</div><div class="rd">22°C</div></div></div><div class="tgl-row" style="justify-content:flex-end"><span class="tgl"></span></div></div>
+<div class="room"><div class="room-t"><span class="ri"><i data-lucide="utensils"></i></span><div><div class="rn">Kitchen</div><div class="rd">22°C</div></div></div><div class="tgl-row" style="justify-content:flex-end"><span class="tgl"></span></div></div>
+<div class="room"><div class="room-t"><span class="ri"><i data-lucide="briefcase"></i></span><div><div class="rn">Office</div><div class="rd">22°C</div></div></div><div class="tgl-row" style="justify-content:flex-end"><span class="tgl"></span></div></div>
+<div class="room"><div class="room-t"><span class="ri"><i data-lucide="bath"></i></span><div><div class="rn">Bathroom</div><div class="rd">22°C</div></div></div><div class="tgl-row" style="justify-content:flex-end"><span class="tgl"></span></div></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Security Cameras</span></div></div>
+<div class="crow"><i class="ci" data-lucide="video"></i><span class="cl">Front Door</span><span class="clive">Live</span></div>
+<div class="crow"><i class="ci" data-lucide="video"></i><span class="cl">Driveway</span><span class="clive">Live</span></div>
+<div class="crow"><i class="ci" data-lucide="video"></i><span class="cl">Backyard</span><span class="clive">Live</span></div>
+<div class="crow"><i class="ci" data-lucide="video"></i><span class="cl">Garage</span><span class="clive">Live</span></div>
+</div>
+<div class="grid" style="grid-template-columns:1.1fr 1fr;gap:20px;align-items:start">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Device Control</span></div></div>
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:18px 14px">
+<div class="tgl-row"><span class="tgl on"></span><span class="tl">Ceiling Lights</span></div>
+<div class="tgl-row"><span class="tgl"></span><span class="tl">Floor Lamp</span></div>
+<div class="tgl-row"><span class="tgl"></span><span class="tl">Smart TV</span></div>
+<div class="tgl-row"><span class="tgl on"></span><span class="tl">Speaker</span></div>
+<div class="tgl-row"><span class="tgl on"></span><span class="tl">AC Unit</span></div>
+<div class="tgl-row"><span class="tgl"></span><span class="tl">Coffee Maker</span></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Scenes & Automations</span></div></div>
+<div class="grid" style="grid-template-columns:repeat(3,1fr);gap:12px">
+<div class="scene"><i data-lucide="moon"></i><span>Good Night</span></div>
+<div class="scene"><i data-lucide="clapperboard"></i><span>Movie Time</span></div>
+<div class="scene"><i data-lucide="party-popper"></i><span>Party Mode</span></div>
+<div class="scene"><i data-lucide="briefcase"></i><span>Work Focus</span></div>
+<div class="scene"><i data-lucide="sunrise"></i><span>Morning</span></div>
+<div class="scene"><i data-lucide="log-out"></i><span>Away</span></div>
+</div>
+<div class="wh" style="margin:16px 0 0"><span class="label">Automations</span><span class="wh-a" style="color:#3DE08A">4 Active</span></div>
+<div class="tgl-row" style="margin-top:10px"><span class="tgl on"></span><span class="tl">Sunset lights</span></div>
+</div>
+</div>
+</div>
+<div class="colgap">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Environment</span></div></div>
+<div class="slist"><div class="srow"><span class="si"><i data-lucide="thermometer"></i></span><span class="sl">Temperature</span><span class="sv">24°C</span></div><div class="srow"><span class="si"><i data-lucide="droplets"></i></span><span class="sl">Humidity</span><span class="sv">45%</span></div><div class="srow"><span class="si"><i data-lucide="wind"></i></span><span class="sl">Air Quality</span><span class="sv">Good</span></div><div class="srow"><span class="si"><i data-lucide="cloud"></i></span><span class="sl">CO₂ Level</span><span class="sv">420 ppm</span></div></div>
+</div>
+<div class="glass pad gauge-card"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Energy Monitor</span></div></div><div class="gauge-row"><div class="gauge" style="width:140px;height:140px"><svg viewBox="0 0 160 160"><circle class="g-track" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:75 100"></circle><circle class="g-arc" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:45 100"></circle></svg><div class="g-center"><div class="g-val" style="font-size:24px">273.5</div><div class="g-sub">Watts now</div></div></div><div class="g-stats"><div class="g-stat"><span>Min</span><b>120 W</b></div><div class="g-stat"><span>Max</span><b>340 W</b></div><div class="g-stat"><span>Avg</span><b>214 W</b></div></div></div><svg class="spark2" viewBox="0 0 300 46" preserveAspectRatio="none"><polyline points="0,34 40,28 80,32 120,22 160,30 200,18 240,26 300,20" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg></div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Recent Activity</span></div></div>
+<div class="actrow"><span class="ai"><i data-lucide="unlock"></i></span><div class="ab"><div class="at">Front door unlocked</div><div class="as">Smart lock · Hallway</div></div><span class="ax">2m</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="lightbulb"></i></span><div class="ab"><div class="at">Living room lights on</div><div class="as">Scene · Evening</div></div><span class="ax">14m</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="video"></i></span><div class="ab"><div class="at">Motion: Backyard</div><div class="as">Camera · Detected</div></div><span class="ax">31m</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="thermometer"></i></span><div class="ab"><div class="at">Thermostat set to 22°C</div><div class="as">Climate · Auto</div></div><span class="ax">1h</span></div>
+<div class="actrow"><span class="ai"><i data-lucide="home"></i></span><div class="ab"><div class="at">Good Night scene ran</div><div class="as">Automation · Schedule</div></div><span class="ax">8h</span></div>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-name="overview">
+<div class="colgap">
+<div class="grid" style="grid-template-columns:repeat(6,1fr);gap:16px">
+<div class="glass pad bignum" style="--accent:#4CC2FF;--glow:76,194,255"><span class="bi"><i data-lucide="cpu"></i></span><div class="bv">46.4<s>%</s></div><div class="bl">CPU Load</div></div>
+<div class="glass pad bignum" style="--accent:#A06CFF;--glow:160,108,255"><span class="bi"><i data-lucide="square-stack"></i></span><div class="bv">73.9<s>%</s></div><div class="bl">GPU Load</div></div>
+<div class="glass pad bignum" style="--accent:#2FD6B6;--glow:47,214,182"><span class="bi"><i data-lucide="memory-stick"></i></span><div class="bv">10.2<s>GB</s></div><div class="bl">RAM Used</div></div>
+<div class="glass pad bignum" style="--accent:#FFB13C;--glow:255,177,60"><span class="bi"><i data-lucide="thermometer"></i></span><div class="bv">47.2<s>°C</s></div><div class="bl">CPU Temp</div></div>
+<div class="glass pad bignum" style="--accent:#6E8BFF;--glow:110,139,255"><span class="bi"><i data-lucide="hard-drive"></i></span><div class="bv">58<s>TB</s></div><div class="bl">Storage</div></div>
+<div class="glass pad bignum" style="--accent:#3DE08A;--glow:61,224,138"><span class="bi"><i data-lucide="clock"></i></span><div class="bv" style="font-size:21px">2d 14h<s style="margin-left:0"> 36m</s></div><div class="bl">Uptime</div></div>
+</div>
+<div class="grid" style="grid-template-columns:1.2fr 1fr 0.9fr;gap:20px;align-items:start">
+<div class="glass pad gauge-card"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">System Performance</span></div><span class="live">Live</span></div><div class="gauge-row"><div class="gauge"><svg viewBox="0 0 160 160"><circle class="g-track" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:75 100"></circle><circle class="g-arc" cx="80" cy="80" r="66" pathLength="100" style="stroke-dasharray:34.8 100"></circle></svg><div class="g-center"><div class="g-val">46.4%</div><div class="g-sub">Load</div></div></div><div class="g-stats"><div class="g-stat"><span>Min</span><b>42%</b></div><div class="g-stat"><span>Max</span><b>71%</b></div><div class="g-stat"><span>Avg</span><b>60.3%</b></div></div></div><svg class="spark2" viewBox="0 0 300 46" preserveAspectRatio="none"><polyline points="0,38 50,34 100,36 150,30 200,32 250,26 300,30" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg></div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Detailed System Info</span></div></div>
+<div class="prow"><span class="pn">Operating System</span><span class="pp">Windows 11 Pro</span></div>
+<div class="prow"><span class="pn">Processor</span><span class="pp">Ryzen 9 7950X</span></div>
+<div class="prow"><span class="pn">Graphics</span><span class="pp">RTX 4090</span></div>
+<div class="prow"><span class="pn">Memory</span><span class="pp">64 GB DDR5</span></div>
+<div class="prow"><span class="pn">Storage</span><span class="pp">4 TB NVMe</span></div>
+</div>
+<div class="glass pad" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:280px"><div class="wh" style="width:100%"><div class="wh-l"><span class="dot"></span><span class="label">System Health</span></div></div><div class="ring r-lg" style="--accent:#3DE08A;--glow:61,224,138" data-pct="92" data-val="92%" data-sub="Excellent"></div></div>
+</div>
+<div class="grid" style="grid-template-columns:0.9fr 1.3fr 1fr;gap:20px;align-items:start">
+<div class="glass pad" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:240px"><div class="wh" style="width:100%"><div class="wh-l"><span class="dot"></span><span class="label">Storage Overview</span></div></div><div class="ring r-lg" data-pct="58" data-val="58%" data-sub="Used"></div></div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Top Processes</span></div></div>
+<div class="prow"><span class="pn">chrome.exe</span><span class="pp">18.4%</span></div>
+<div class="prow"><span class="pn">GameClient.exe</span><span class="pp">12.1%</span></div>
+<div class="prow"><span class="pn">Spotify.exe</span><span class="pp">6.7%</span></div>
+<div class="prow"><span class="pn">Code.exe</span><span class="pp">4.2%</span></div>
+<div class="prow"><span class="pn">explorer.exe</span><span class="pp">1.9%</span></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">System Alerts</span></div></div>
+<div class="actrow"><span class="ai" style="--accent:#3DE08A;--glow:61,224,138"><i data-lucide="thermometer"></i></span><div class="ab"><div class="at">GPU Temperature</div><div class="as">Operating within normal range</div></div><span class="ax">2m</span></div>
+<div class="actrow"><span class="ai" style="--accent:#FFB13C;--glow:255,177,60"><i data-lucide="hard-drive"></i></span><div class="ab"><div class="at">Storage Threshold</div><div class="as">System drive over 70% capacity</div></div><span class="ax">14m</span></div>
+<div class="actrow"><span class="ai" style="--accent:#3DE08A;--glow:61,224,138"><i data-lucide="check-circle-2"></i></span><div class="ab"><div class="at">Backup Complete</div><div class="as">Scheduled backup finished</div></div><span class="ax">1h</span></div>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" data-name="notifications">
+<div class="grid" style="grid-template-columns:1fr 1fr 1.35fr;gap:20px;align-items:start">
+<div class="colgap">
+<div class="glass pad mp">
+<div class="mp-top"><div class="mp-art"><i data-lucide="disc-3"></i></div><div class="mp-meta"><h3>Blinding Lights</h3><p>The Weeknd</p></div></div>
+<div class="eq" style="height:34px"></div>
+<div class="mp-prog"><div class="mp-bar"><i style="width:86%"></i></div><div class="mp-time"><span>2:52</span><span>3:20</span></div></div>
+<div class="mp-ctrl"><i data-lucide="shuffle"></i><i data-lucide="skip-back"></i><div class="mp-play"><i data-lucide="pause"></i></div><i data-lucide="skip-forward"></i><i data-lucide="repeat"></i></div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">Quick Launch</span></div></div>
+<div class="tiles" style="grid-template-columns:repeat(4,1fr)">
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#4a4fd6,#7a6cff)"><img src="https://cdn.simpleicons.org/discord/white" data-fb="Dc" alt=""></div><div class="tile-cap">Discord</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#0f8a4c,#1ed760)"><img src="https://cdn.simpleicons.org/spotify/white" data-fb="S" alt=""></div><div class="tile-cap">Spotify</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#1f8f6b,#2bd4a8)"><img src="https://cdn.simpleicons.org/googlechrome/white" data-fb="C" alt=""></div><div class="tile-cap">Chrome</div></div>
+<div class="launch-item"><div class="tile" style="background:linear-gradient(150deg,#3a3f5a,#5a6080)"><i data-lucide="terminal"></i></div><div class="tile-cap">Terminal</div></div>
+</div>
+</div>
+</div>
+<div class="colgap">
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">System Overview</span></div></div>
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:18px;justify-items:center">
+<div class="ring r-md" data-pct="57" data-val="57.3°" data-sub="CPU"></div>
+<div class="ring r-md" data-pct="59" data-val="59°" data-sub="GPU"></div>
+<div class="ring r-md" data-pct="70" data-val="70.5%" data-sub="RAM"></div>
+<div class="ring r-md" data-pct="58" data-val="58%" data-sub="Storage"></div>
+</div>
+</div>
+<div class="glass pad"><div class="wh"><div class="wh-l"><span class="dot"></span><span class="label">System Status</span></div></div>
+<div class="slist"><div class="srow"><span class="si"><i data-lucide="zap"></i></span><span class="sl">Power Plan</span><span class="sv">Balanced</span></div><div class="srow"><span class="si"><i data-lucide="wifi"></i></span><span class="sl">Network</span><span class="sv">Connected</span></div><div class="srow"><span class="si"><i data-lucide="hard-drive"></i></span><span class="sl">Storage</span><span class="sv">512 GB Free</span></div><div class="srow"><span class="si"><i data-lucide="clock"></i></span><span class="sl">Uptime</span><span class="sv">02:45:33</span></div></div>
+</div>
+</div>
+<div class="glass pad" style="display:flex;flex-direction:column">
+<div class="wh"><div class="tabs"><div class="tab on">All</div><div class="tab"><i data-lucide="layout-grid"></i>Apps</div><div class="tab"><i data-lucide="settings"></i>System</div><div class="tab amber"><i data-lucide="alert-triangle"></i>Alerts</div></div><button class="btn"><i data-lucide="check-check"></i>Mark all read</button></div>
+<div style="margin-top:4px">
+<div class="notif"><span class="ni" style="--accent:#7a6cff;--glow:122,108,255"><i data-lucide="message-circle"></i></span><div class="nb"><div class="nt">Discord</div><div class="nd">Alex sent a message in #stream-team</div></div><span class="nx">2m</span></div>
+<div class="notif"><span class="ni" style="--accent:#1ed760;--glow:30,215,96"><i data-lucide="play"></i></span><div class="nb"><div class="nt">Spotify</div><div class="nd">Now playing: Blinding Lights — The Weeknd</div></div><span class="nx">5m</span></div>
+<div class="notif"><span class="ni" style="--accent:#4CC2FF;--glow:76,194,255"><i data-lucide="refresh-cw"></i></span><div class="nb"><div class="nt">System Update</div><div class="nd">Windows 11 update installed successfully</div></div><span class="nx">18m</span></div>
+<div class="notif"><span class="ni" style="--accent:#FFB13C;--glow:255,177,60"><i data-lucide="star"></i></span><div class="nb"><div class="nt">StreamHub</div><div class="nd">New donation from Aled — $10</div></div><span class="nx">32m</span></div>
+<div class="notif"><span class="ni" style="--accent:#FF5C77;--glow:255,92,119"><i data-lucide="shield-alert"></i></span><div class="nb"><div class="nt">Security Alert</div><div class="nd">New login detected on Windows</div></div><span class="nx">1h</span></div>
+<div class="notif"><span class="ni" style="--accent:#FF7A45;--glow:255,122,69"><i data-lucide="thermometer"></i></span><div class="nb"><div class="nt">Hardware Monitor</div><div class="nd">CPU temperature is above 80°C</div></div><span class="nx">2h</span></div>
+</div>
+<div class="btn-ghost" style="margin-top:16px">View Notification History</div>
+</div>
+</div>
+</section>
+<!--SCREENS-->
+</div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  titleRef = React.createRef();
+  subRef = React.createRef();
+  clockRef = React.createRef();
+  dateRef = React.createRef();
+  eqRef = React.createRef();
+
+  SCREENS = {
+    dashboard:{title:'Dashboard',sub:'Quick launch · media · system monitor',accent:'#4CC2FF',accent2:'#6D8BFF',glow:'76,194,255'},
+    system:{title:'System Control',sub:'Power · performance · fans · storage',accent:'#FFB13C',accent2:'#FF7A45',glow:'255,177,60'},
+    media:{title:'Media',sub:'Now playing · audio mixer · weather',accent:'#FF5CB0',accent2:'#A06CFF',glow:'255,92,176'},
+    gaming:{title:'Gaming',sub:'Library · live metrics · optimization',accent:'#3DE08A',accent2:'#16C8FF',glow:'61,224,138'},
+    smarthome:{title:'Smart Home',sub:'Rooms · devices · scenes · energy',accent:'#2FD6B6',accent2:'#34D399',glow:'47,214,182'},
+    overview:{title:'Overview',sub:'Vitals · performance history · processes',accent:'#6E8BFF',accent2:'#4CC2FF',glow:'110,139,255'},
+    notifications:{title:'Notifications',sub:'Live feed · now playing · system',accent:'#FF5C77',accent2:'#FF8A5C',glow:'255,92,119'},
+  };
+
+  componentDidMount(){
+    this.buildEq();
+    this.brandFallbacks();
+    this.buildDynamics();
+    this.wireInteractions();
+    this.icons();
+    this.apply('dashboard');
+    this.tick(); this.timer = setInterval(()=>this.tick(), 1000);
+    this.fitApp(); this._rs=()=>this.fitApp(); window.addEventListener('resize', this._rs);
+  }
+  fitApp(){ const a=this.rootRef.current; if(!a) return; const s=Math.min(window.innerWidth/1920, window.innerHeight/1080); a.style.transform='scale('+s+')'; }
+  buildDynamics(){
+    const root=this.rootRef.current; if(!root) return;
+    root.querySelectorAll('.ring[data-pct]').forEach(r=>{
+      if(r.dataset.b) return; r.dataset.b='1';
+      const pct=Math.max(0,Math.min(100,+r.dataset.pct));
+      r.insertAdjacentHTML('afterbegin','<svg viewBox="0 0 100 100"><circle class="rt" cx="50" cy="50" r="44" pathLength="100" stroke-dasharray="100 100"></circle><circle class="ra" cx="50" cy="50" r="44" pathLength="100" stroke-dasharray="'+pct+' 100"></circle></svg><div class="rc"><div class="rv">'+r.dataset.val+'</div><div class="rs">'+(r.dataset.sub||'')+'</div></div>');
+    });
+    root.querySelectorAll('.seg[data-fill]').forEach(sg=>{
+      if(sg.dataset.b) return; sg.dataset.b='1';
+      const n=+(sg.dataset.n||18), fill=Math.round(n*(+sg.dataset.fill)/100);
+      let h=''; for(let i=0;i<n;i++) h+='<s class="'+(i<fill?'on':'')+'"></s>';
+      sg.innerHTML=h;
+    });
+  }
+  wireInteractions(){
+    const root=this.rootRef.current; if(!root) return;
+    root.addEventListener('click',(e)=>{
+      const t=e.target.closest('.tgl'); if(t){ t.classList.toggle('on'); return; }
+      const tab=e.target.closest('.tab'); if(tab && tab.parentElement){ tab.parentElement.querySelectorAll('.tab').forEach(x=>x.classList.remove('on')); tab.classList.add('on'); }
+    });
+  }
+  brandFallbacks(){
+    const root=this.rootRef.current; if(!root) return;
+    root.querySelectorAll('img[data-fb]').forEach(img=>{
+      const swap=()=>{ if(img.dataset.done) return; img.dataset.done='1'; const r=img.getBoundingClientRect(); const s=document.createElement('span'); s.className='lettermark'; if(r.width&&r.width<34){ s.style.fontSize='12px'; s.style.fontWeight='700'; } s.textContent=img.dataset.fb; img.replaceWith(s); };
+      img.addEventListener('error', swap);
+      if(img.complete && img.naturalWidth===0) swap();
+    });
+  }
+  componentWillUnmount(){ if(this.timer) clearInterval(this.timer); if(this._rs) window.removeEventListener('resize', this._rs); }
+
+  icons(){
+    const go = () => { if(window.lucide){ window.lucide.createIcons(); } else { setTimeout(go,60); } };
+    go();
+  }
+  buildEq(){
+    const root=this.rootRef.current; if(!root) return;
+    root.querySelectorAll('.eq').forEach(el=>{
+      el.innerHTML='';
+      for(let i=0;i<24;i++){ const b=document.createElement('b'); b.style.animationDelay=(Math.random()*1).toFixed(2)+'s'; b.style.animationDuration=(0.7+Math.random()*0.8).toFixed(2)+'s'; el.appendChild(b); }
+    });
+  }
+  tick(){
+    const d=new Date();
+    const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0');
+    if(this.clockRef.current) this.clockRef.current.textContent = hh+':'+mm;
+    if(this.dateRef.current) this.dateRef.current.textContent = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  }
+  onNav = (e) => { this.apply(e.currentTarget.dataset.name); };
+  apply(name){
+    const root=this.rootRef.current; if(!root) return;
+    const s=this.SCREENS[name]; if(!s) return;
+    root.style.setProperty('--accent', s.accent);
+    root.style.setProperty('--accent2', s.accent2);
+    root.style.setProperty('--glow', s.glow);
+    root.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.name===name));
+    root.querySelectorAll('.screen').forEach(sc=>sc.classList.toggle('active', sc.dataset.name===name));
+    if(this.titleRef.current) this.titleRef.current.textContent=s.title;
+    if(this.subRef.current) this.subRef.current.textContent=s.sub;
+    const stage=root.querySelector('.stage'); if(stage) stage.scrollTop=0;
+    this.icons();
+  }
+  renderVals(){
+    return { rootRef:this.rootRef, titleRef:this.titleRef, subRef:this.subRef, clockRef:this.clockRef, dateRef:this.dateRef, eqRef:this.eqRef, onNav:this.onNav };
+  }
+}
+</script>
+</body>
+</html>
