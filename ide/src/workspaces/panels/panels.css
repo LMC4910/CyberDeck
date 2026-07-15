@@ -1,0 +1,51 @@
+.panel {
+  position: relative;
+  flex: none;
+  min-width: 0;
+  border-right: 1px solid var(--line, #30363d);
+  background: var(--panel, #0e0e1c);
+  display: flex;
+}
+.panel-right {
+  border-right: none;
+  border-left: 1px solid var(--line, #30363d);
+}
+.panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+.panel-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  right: -3px;
+}
+.panel-right .panel-handle {
+  right: auto;
+  left: -3px;
+}
+.panel-handle:hover,
+.panel-handle:focus-visible {
+  background: var(--accent, #4cc2ff);
+  outline: none;
+}
+.panel-reopen {
+  flex: none;
+  width: 16px;
+  border: none;
+  border-right: 1px solid var(--line, #30363d);
+  background: var(--panel2, #12121f);
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+}
+.panel-reopen-right {
+  border-right: none;
+  border-left: 1px solid var(--line, #30363d);
+}
+.panel-reopen:focus-visible {
+  outline: 2px solid var(--accent, #4cc2ff);
+  outline-offset: -2px;
+}

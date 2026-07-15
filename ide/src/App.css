@@ -34,6 +34,15 @@
   color: var(--text-muted);
 }
 
+.shell-brand {
+  font-weight: 600;
+}
+
+.panel-placeholder {
+  color: var(--ink2, #8a8cb4);
+  font-size: 12px;
+}
+
 .shell-statusbar {
   flex: none;
   height: 24px;

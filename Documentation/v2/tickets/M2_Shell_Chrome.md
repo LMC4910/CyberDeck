@@ -17,7 +17,7 @@
 - [x] CD-210 Settings search — ✅ Done 2026-07-15
 - [x] CD-211 NotificationService + toasts + drawer — ✅ Done 2026-07-15
 - [x] CD-212 Session restore + relaunch E2E — ✅ Done 2026-07-15
-- [ ] CD-213 Resizable panels
+- [x] CD-213 Resizable panels — ✅ Done 2026-07-15
 - [ ] CD-214 DockManager model
 - [ ] CD-215 Dock UI: zones, insets, auto-hide/peek
 - [ ] CD-216 Declarative dock registration + proof window
@@ -136,7 +136,9 @@
 **BP:** IDE-E08-F01 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-203
 **Do:** Drag handles on L/R panels (180–480 px clamp) writing Workspace-store widths; ⌘B/⌘J hide/show; reopen affordance when hidden; per-workspace persistence.
 **AC:**
-- [ ] persist/restore test per workspace; keyboard + palette commands exist
+- [x] persist/restore test per workspace; keyboard + palette commands exist
+
+**Notes (2026-07-15):** `ide/src/workspaces/panels/`. `panels-model.ts`: per-workspace `PanelState {leftWidth,rightWidth,leftVisible,rightVisible}` over a persisted store; `clampWidth` [180,480], `setPanelWidth`/`togglePanel`/`setPanelVisible`/`panelFor` (defaults for unseen workspaces). `ResizablePanel`: drag handle (pointer resize) + **keyboard resize** (Arrow keys on the `role="separator"`, ±16px, clamped, aria-valuenow/min/max); hidden → **reopen strip** affordance. **Wired into the shell**: `boot-sequence.ts` creates a persisted `panels` store + a `StoreManager` (`panels-restore` phase restores it) and exposes a combined `flush()`; **App refactored into a boot-loader + `Shell` component** (kernel non-null) rendering a left Explorer panel, `useStore(panels)`, ⌘B/⌘J toggle, palette togL/togR routed, resize→`setPanelWidth`. `beforeunload` flushes session + panels. Unit tests: clamp, per-workspace independent widths, toggle, component width/keyboard-resize/reopen. **E2E**: Ctrl+B hides the panel + reopen appears, and **hidden state persists across relaunch** (needed the beforeunload flush — debounced write was being lost). 347 vitest + 6 E2E green.
 
 ### CD-214 · DockManager model
 **BP:** IDE-E08-F02-T01 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-130

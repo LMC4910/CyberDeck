@@ -11,8 +11,8 @@ import { LocalStorageAdapter } from '@/services/persistence'
 import { CommandRegistry, seedCommands } from '@/platform/commands'
 import { KeymapDispatcher, detectPlatform } from '@/platform/keymap'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
-import { createAllStores, type AllStores } from '@/stores'
-import { WORKSPACE_CONTRIBUTIONS } from '@/workspaces'
+import { createAllStores, createStore, StoreManager, type AllStores, type Store } from '@/stores'
+import { WORKSPACE_CONTRIBUTIONS, type PanelsState } from '@/workspaces'
 
 export interface BootedKernel {
   config: ConfigurationService
@@ -23,6 +23,9 @@ export interface BootedKernel {
   bus: TypedEventBus
   stores: AllStores
   session: SessionManager
+  panels: Store<PanelsState>
+  /** Flush all pending write-behind persistence (wire to beforeunload / quit). */
+  flush: () => void
   report: BootReport
 }
 
@@ -56,6 +59,10 @@ export async function runAppBoot(): Promise<BootedKernel> {
   const stores = createAllStores()
   const keymap = new KeymapDispatcher(commands, { platform: detectPlatform() })
   const session = new SessionManager({ adapter: new LocalStorageAdapter() })
+  // Per-workspace resizable-panel widths/visibility, persisted (CD-213).
+  const panels = createStore<PanelsState>({ panels: {} }, { name: 'panels', kind: 'persisted', location: 'cdk-panels' })
+  const storeManager = new StoreManager({ adapter: new LocalStorageAdapter() })
+  storeManager.register(panels)
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -89,6 +96,8 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
     // Keymap defaults after all commands are registered (CD-209).
     { id: 'keymap', blocking: true, run: () => keymap.loadDefaults() },
+    // Restore persisted panel widths (CD-213) — non-blocking (after shell paint).
+    { id: 'panels-restore', blocking: false, run: () => void storeManager.restore() },
     // Session restore (CD-212, boot stage 4): restore the last workspace + editor
     // state, then wire debounced write-behind. Corrupt blob → defaults (SessionManager notices).
     {
@@ -115,7 +124,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   ]
 
   const report = await runBoot(phases, {
-    order: ['configuration', 'theme', 'commands', 'workspaces', 'keymap', 'session-restore'],
+    order: ['configuration', 'theme', 'commands', 'workspaces', 'keymap', 'session-restore', 'panels-restore'],
     onComplete: () => {
       // mark the app interactive for the E2E / perf tooling
       try {
@@ -126,5 +135,9 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
   })
 
-  return { config, theme, workspaces, commands, keymap, bus, stores, session, report }
+  const flush = () => {
+    session.flush()
+    storeManager.flush()
+  }
+  return { config, theme, workspaces, commands, keymap, bus, stores, session, panels, flush, report }
 }
