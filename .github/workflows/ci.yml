@@ -117,6 +117,8 @@ jobs:
         run: pnpm run test:boundaries
       - name: build
         run: pnpm build
+      - name: pane code-splitting (each workspace pane is its own chunk)
+        run: pnpm run test:chunks
       - name: bundle budget (≤ 350 KB gz shell entry)
         run: pnpm size
 

@@ -14,7 +14,10 @@ test('app boots to interactive and renders the shell', async ({ page }) => {
   // shell chrome regions render
   await expect(page.getByRole('banner')).toHaveText('CyberDeck IDE')
   await expect(page.getByRole('navigation', { name: 'Workspaces' })).toBeVisible()
-  await expect(page.getByRole('main')).toContainText('booted')
+
+  // the workspace rail shows all 7 workspaces and the Home pane is mounted
+  await expect(page.getByRole('tab')).toHaveCount(7)
+  await expect(page.getByRole('main')).toContainText('Home')
 
   // the interactive perf mark was recorded
   const hasMark = await page.evaluate(

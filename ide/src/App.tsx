@@ -1,33 +1,48 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { runAppBoot } from '@/boot-sequence'
+import { runAppBoot, type BootedKernel } from '@/boot-sequence'
+import { WorkspaceRail, PaneHost } from '@/workspaces'
 
 /**
- * Shell (CD-102 placeholder, CD-136 boot-wired). Runs the real boot sequence on
- * mount and exposes an interactive marker (`data-boot`) the E2E waits on. Real
- * workspace chrome replaces the placeholder body in M2.
+ * Shell (CD-102 placeholder → CD-136 boot-wired → CD-203 workspace shell). Boots
+ * the kernel, then renders the workspace rail + lazy pane host. Real chrome
+ * (breadcrumb, status bar, palette, prefs) fills in across M2.
  */
 function App() {
-  const [booted, setBooted] = useState(false)
+  const [kernel, setKernel] = useState<BootedKernel | null>(null)
+  const [active, setActive] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    void runAppBoot().then(() => {
-      if (!cancelled) setBooted(true)
+    void runAppBoot().then((k) => {
+      if (cancelled) return
+      setKernel(k)
+      setActive(k.workspaces.active())
+      k.workspaces.subscribe((id) => setActive(id))
     })
     return () => {
       cancelled = true
     }
   }, [])
 
+  const booted = kernel !== null
+
   return (
     <div className="shell" data-boot={booted ? 'interactive' : 'booting'} data-testid="shell">
       <header className="shell-topbar">CyberDeck IDE</header>
       <div className="shell-body">
-        <nav className="shell-rail" aria-label="Workspaces" />
-        <main className="shell-stage">
-          <p>{booted ? 'Platform kernel booted.' : 'Booting platform kernel…'}</p>
-        </main>
+        {kernel ? (
+          <WorkspaceRail service={kernel.workspaces} active={active} />
+        ) : (
+          <nav className="shell-rail" aria-label="Workspaces" />
+        )}
+        {kernel ? (
+          <PaneHost service={kernel.workspaces} active={active} />
+        ) : (
+          <main className="shell-stage">
+            <p>Booting platform kernel…</p>
+          </main>
+        )}
       </div>
       <footer className="shell-statusbar">{booted ? 'ready' : 'starting'}</footer>
     </div>

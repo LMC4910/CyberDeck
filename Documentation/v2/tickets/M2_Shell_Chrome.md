@@ -7,7 +7,7 @@
 
 - [x] CD-201 A11y primitives library — ✅ Done 2026-07-15
 - [x] CD-202 WorkspaceService + contribution registry — ✅ Done 2026-07-15
-- [ ] CD-203 Workspace rail + lazy pane host
+- [x] CD-203 Workspace rail + lazy pane host — ✅ Done 2026-07-15
 - [ ] CD-204 Per-workspace context preservation + nav history
 - [ ] CD-205 Breadcrumb + status bar
 - [ ] CD-206 Command palette UI
@@ -49,8 +49,10 @@
 **BP:** IDE-E07-F01-T02 · **Hat:** FE · **P:** P0 · **Est:** S · **Deps:** CD-202, CD-201
 **Do:** Left rail (roving tabindex) + pane host mounting each workspace pane via dynamic `import()` on first entry; seven placeholder panes registered.
 **AC:**
-- [ ] each pane is its own chunk (bundle analysis assertion)
-- [ ] rail keyboard-operable; WorkspaceChanged fires on switch
+- [x] each pane is its own chunk (bundle analysis assertion)
+- [x] rail keyboard-operable; WorkspaceChanged fires on switch
+
+**Notes (2026-07-15):** `ide/src/workspaces/`. 7 placeholder panes (`panes/*-pane.tsx`) + `WORKSPACE_CONTRIBUTIONS` (home/deck-designer/flows/variables/library/devices/projects, each with `lazyPane: () => import('./panes/…')`). `WorkspaceRail` — vertical tablist with **roving tabindex** (Arrow up/down move focus, Enter/Space + click activate via `activateOnKey`), aria-selected on active. `PaneHost` — `React.lazy` + `Suspense`, WeakMap-cached per loader so re-entry doesn't re-import. **Wired into the real shell**: `boot-sequence.ts` adds a `workspaces` boot phase (registers contributions; `onChanged`→`WorkspaceChanged` on the bus) and `App.tsx` renders rail + pane host, subscribing to route changes. **Each pane is its own chunk — verified against the real build**: `home-pane`, `flows-pane`, … 7 separate `dist/assets/*-pane-*.js` files; `scripts/pane-chunks.test.mjs` (`pnpm test:chunks`, wired into CI after build) asserts it. 5 vitest (7 distinct loaders, roving tabindex, Arrow-nav + click→WorkspaceChanged, lazy mount + switch) + **2 Playwright journeys** (boot shows 7 tabs + Home pane; rail click + keyboard nav lazy-loads Flows/Variables). 294 vitest + 2 E2E green.
 
 ### CD-204 · Per-workspace context preservation + nav history
 **BP:** IDE-E07-F01-T03 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-203

@@ -5,12 +5,15 @@
 import { runBoot, type BootPhase, type BootReport } from '@/platform/boot'
 import { ConfigurationService } from '@/services/configuration'
 import { ThemeService } from '@/services/theme'
+import { WorkspaceService } from '@/services/workspace'
 import { CommandRegistry, seedCommands } from '@/platform/commands'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
+import { WORKSPACE_CONTRIBUTIONS } from '@/workspaces'
 
 export interface BootedKernel {
   config: ConfigurationService
   theme: ThemeService
+  workspaces: WorkspaceService
   commands: CommandRegistry
   bus: TypedEventBus
   report: BootReport
@@ -41,6 +44,8 @@ export async function runAppBoot(): Promise<BootedKernel> {
   const theme = new ThemeService()
   const commands = new CommandRegistry()
   const bus = new TypedEventBus(new EventBus())
+  // WorkspaceService bridges onChanged → WorkspaceChanged on the bus.
+  const workspaces = new WorkspaceService({ onChanged: (id) => bus.emit('WorkspaceChanged', { workspaceId: id }) })
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -50,10 +55,11 @@ export async function runAppBoot(): Promise<BootedKernel> {
       run: () => theme.apply(config.get<string>('theme.id') ?? 'cyber-dark'),
     },
     { id: 'commands', blocking: true, run: () => commands.registerAll(seedCommands()) },
+    { id: 'workspaces', blocking: true, run: () => workspaces.registerAll(WORKSPACE_CONTRIBUTIONS) },
   ]
 
   const report = await runBoot(phases, {
-    order: ['configuration', 'theme', 'commands'],
+    order: ['configuration', 'theme', 'commands', 'workspaces'],
     onComplete: () => {
       // mark the app interactive for the E2E / perf tooling
       try {
@@ -64,5 +70,5 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
   })
 
-  return { config, theme, commands, bus, report }
+  return { config, theme, workspaces, commands, bus, report }
 }

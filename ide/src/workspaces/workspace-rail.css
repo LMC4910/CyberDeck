@@ -1,0 +1,51 @@
+.ws-rail {
+  flex: none;
+  width: 64px;
+  border-right: 1px solid var(--line, #30363d);
+}
+.ws-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ws-rail-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-s, 7px);
+  color: var(--ink2, #8b949e);
+  cursor: pointer;
+}
+.ws-rail-btn.on {
+  color: var(--ink, #eaeaf6);
+  background: var(--panel2, #12121f);
+  border-color: var(--line2, rgba(255, 255, 255, 0.12));
+}
+.ws-rail-btn:focus-visible {
+  outline: 2px solid var(--accent, #4cc2ff);
+  outline-offset: -2px;
+}
+.ws-rail-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: currentColor;
+  opacity: 0.5;
+}
+.ws-rail-label {
+  font-size: 10px;
+}
+.ws-pane-host {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 16px;
+}
