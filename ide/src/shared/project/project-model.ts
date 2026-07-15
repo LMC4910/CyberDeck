@@ -58,6 +58,12 @@ export class ProjectModel {
   private widgetPage = new Map<string, string>()
   /** child widget id → parent container id (derived from childIds). */
   private parent = new Map<string, string>()
+  /** Per-entity change counters + a structural revision, for render(dirtyIds)
+   *  granularity (CD-303): a React view keyed on version(id) re-renders only when
+   *  its own id is touched; the board list keyed on structuralRev re-renders only
+   *  on add/remove/reorder. */
+  private versions = new Map<string, number>()
+  private structuralRevCounter = 0
 
   constructor(doc?: ProjectDocument) {
     this.doc = doc ? structuredClone(doc) : blankDocument()
@@ -82,9 +88,22 @@ export class ProjectModel {
   }
 
   private emit(dirtyIds: string[], structural = false): void {
-    if (structural) this.reindex()
+    if (structural) {
+      this.reindex()
+      this.structuralRevCounter++
+    }
+    for (const id of dirtyIds) this.versions.set(id, (this.versions.get(id) ?? 0) + 1)
     const change: ModelChange = { structural, dirtyIds }
     for (const l of this.listeners) l(change)
+  }
+
+  /** Change counter for one entity — bumps whenever that id is a dirty target. */
+  version(id: string): number {
+    return this.versions.get(id) ?? 0
+  }
+  /** Revision that bumps on any structural change (add/remove/reorder/group). */
+  get structuralRev(): number {
+    return this.structuralRevCounter
   }
 
   // ── reads ─────────────────────────────────────────────────────────────────

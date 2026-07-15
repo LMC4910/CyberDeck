@@ -1,0 +1,13 @@
+/* Deck Designer pane layout (CD-303). The pane fills the pane-host; the canvas
+   surface takes all of it. */
+.dd-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.dd-pane .pz-surface {
+  flex: 1 1 auto;
+  min-height: 0;
+}

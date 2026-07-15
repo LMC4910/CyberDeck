@@ -7,7 +7,7 @@
 
 - [x] CD-301 PanZoomSurface
 - [x] CD-302 ProjectModel document core
-- [ ] CD-303 Model→React reconciliation + board render
+- [x] CD-303 Model→React reconciliation + board render
 - [ ] CD-304 Serialize/restore + autosave + property tests
 - [ ] CD-305 Selection engine + store
 - [ ] CD-306 Drag/resize/rotate controllers
