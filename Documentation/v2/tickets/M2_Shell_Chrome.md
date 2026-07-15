@@ -1,7 +1,7 @@
 # M2 — Shell & Chrome (CD-201…219)
 
 **Gate:** all seven workspaces navigable (empty panes allowed) · palette executes every registered command · prefs/keyboard/rebinding live · docking + presets + session restore survive relaunch · every visible control operable or honestly disabled · chrome keyboard-complete.
-**Entry:** CD-139 passed. **Exit:** CD-219 recorded.
+**Entry:** CD-139 passed. **Exit:** CD-219 recorded. — ✅ **M2 GATE PASSED 2026-07-16** (11 Playwright journeys green; keyboard-only walkthrough; warm workspace switch < 100 ms; coverage 90.84% stmts; bundle 78 kB gz).
 
 ## Board
 
@@ -23,7 +23,7 @@
 - [x] CD-216 Declarative dock registration + proof window — ✅ Done 2026-07-16
 - [x] CD-217 Layout presets — ✅ Done 2026-07-16
 - [x] CD-218 Honest-stub sweep + placeholder panes — ✅ Done 2026-07-16
-- [ ] CD-219 **M2 gate review**
+- [x] CD-219 **M2 gate review** — ✅ PASSED 2026-07-16
 
 ---
 
@@ -181,10 +181,12 @@
 
 **Notes (2026-07-16):** Wired the last unwired chrome (CD-211 notifications + undo were built but not hooked up). `boot-sequence.ts` now assembles an `UndoStack` + `NotificationService` (onNotify → drawer store + transient toast store) and emits a welcome notification. **App**: a **notification bell** in the top bar (unread badge) toggles the `NotificationDrawer`; the `Toaster` renders toast notifications (undo action → `undo.undo()`); **⌘Z/⇧⌘Z** + palette undo/redo/drawer/togL/togR/prefs all route to real behavior. **Click-everything audit (recorded)**: every visible shell control is operable — rail (7 workspaces), breadcrumb (navigates), bell (drawer), palette (⌘K, executes), prefs (⌘,, 3 panes + search), keyboard rebind, panel toggles/resize (⌘B/⌘J), dock controls (pin/unpin/peek/float/dock-back), preset menu (apply/save/delete), mark-all-read. **Zero silent controls.** All 7 panes carry an honest "arrives in a later milestone" placeholder (never blank). **E2E audit** (`chrome-audit.spec.ts`): bell opens drawer + welcome notification + mark-all-read disables; every pane shows its named honest placeholder. 369 vitest + **9 E2E** green.
 
-### CD-219 · **M2 gate review**
+### CD-219 · **M2 gate review** ✅ PASSED 2026-07-16
 **BP:** Blueprint M2 gate · **Hat:** PM+QA · **P:** P0 · **Est:** S · **Deps:** CD-201…218
 **Do:** Demo + record: workspace journeys, palette-everything, prefs, docking, restart restore, keyboard-only walkthrough.
 **AC:**
-- [ ] Playwright journey suite green (nav/palette/prefs/dock/session)
-- [ ] keyboard-only walkthrough of the full chrome recorded
-- [ ] workspace switch < 100 ms measured; chunk budgets green
+- [x] Playwright journey suite green (nav/palette/prefs/dock/session) — **11 E2E green**: boot, workspace-nav, palette (Ctrl+K→execute), session×2 (relaunch restore + corrupt fallback), panels (toggle+width persist), dock (full lifecycle+relaunch), chrome-audit×2 (bell/drawer + honest pane placeholders), gate-m2×2 (keyboard walkthrough + warm switch)
+- [x] keyboard-only walkthrough of the full chrome recorded — `gate-m2.spec.ts`: rail Arrow+Enter nav → ⌘K palette (type+Esc) → ⌘, prefs (Esc) → ⌘B panel toggle, all keyboard-only
+- [x] workspace switch < 100 ms measured; chunk budgets green — warm re-switch **measured < 100 ms** (E2E `performance.now`); 7 pane chunks each their own file (`test:chunks`); shell bundle **78.25 kB gz** (budget 350)
+
+**M2 GATE RESULT (2026-07-16): PASS.** All seven workspaces navigable (lazy-loaded, honest placeholders); the palette executes every registered command; prefs/keyboard-rebinding/settings-search live; docking (pin/auto-hide/peek/float) + resizable panels + layout presets + session all survive relaunch; every visible control is operable (zero silent controls); the chrome is keyboard-complete + axe-clean on primitives/palette. **Coverage enforced + passing at 90.84% stmts / 92.65% lines.** **19 tickets CD-201…219 done.** Proceed to M3 (Authoring Core, CD-301…330).
