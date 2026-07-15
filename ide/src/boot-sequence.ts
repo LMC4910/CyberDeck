@@ -10,6 +10,7 @@ import { SessionManager } from '@/services/session'
 import { LocalStorageAdapter } from '@/services/persistence'
 import { CommandRegistry, seedCommands } from '@/platform/commands'
 import { KeymapDispatcher, detectPlatform } from '@/platform/keymap'
+import { DockManager } from '@/platform/dock'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
 import { createAllStores, createStore, StoreManager, type AllStores, type Store } from '@/stores'
 import { WORKSPACE_CONTRIBUTIONS, type PanelsState } from '@/workspaces'
@@ -24,6 +25,9 @@ export interface BootedKernel {
   stores: AllStores
   session: SessionManager
   panels: Store<PanelsState>
+  dock: DockManager
+  /** Persist the current dock layout (call after a dock transition). */
+  saveDock: () => void
   /** Flush all pending write-behind persistence (wire to beforeunload / quit). */
   flush: () => void
   report: BootReport
@@ -61,8 +65,17 @@ export async function runAppBoot(): Promise<BootedKernel> {
   const session = new SessionManager({ adapter: new LocalStorageAdapter() })
   // Per-workspace resizable-panel widths/visibility, persisted (CD-213).
   const panels = createStore<PanelsState>({ panels: {} }, { name: 'panels', kind: 'persisted', location: 'cdk-panels' })
+  // Dock tool windows (CD-214/215): the Live Mirror tool window, persisted.
+  const dock = new DockManager()
+  dock.register({ id: 'mirror', defaultSide: 'right', minSize: 220, defaultSize: 280 })
+  const dockStore = createStore<{ rows: ReturnType<DockManager['serialize']> }>(
+    { rows: [] },
+    { name: 'dock', kind: 'persisted', location: 'cdk-dock' },
+  )
+  const saveDock = () => dockStore.setState({ rows: dock.serialize() })
   const storeManager = new StoreManager({ adapter: new LocalStorageAdapter() })
   storeManager.register(panels)
+  storeManager.register(dockStore as unknown as Store<unknown>)
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -96,8 +109,16 @@ export async function runAppBoot(): Promise<BootedKernel> {
     },
     // Keymap defaults after all commands are registered (CD-209).
     { id: 'keymap', blocking: true, run: () => keymap.loadDefaults() },
-    // Restore persisted panel widths (CD-213) — non-blocking (after shell paint).
-    { id: 'panels-restore', blocking: false, run: () => void storeManager.restore() },
+    // Restore persisted panel widths (CD-213) + dock layout (CD-215) — non-blocking.
+    {
+      id: 'panels-restore',
+      blocking: false,
+      run: () => {
+        storeManager.restore()
+        const rows = dockStore.getState().rows
+        if (rows.length) dock.hydrate(rows)
+      },
+    },
     // Session restore (CD-212, boot stage 4): restore the last workspace + editor
     // state, then wire debounced write-behind. Corrupt blob → defaults (SessionManager notices).
     {
@@ -139,5 +160,5 @@ export async function runAppBoot(): Promise<BootedKernel> {
     session.flush()
     storeManager.flush()
   }
-  return { config, theme, workspaces, commands, keymap, bus, stores, session, panels, flush, report }
+  return { config, theme, workspaces, commands, keymap, bus, stores, session, panels, dock, saveDock, flush, report }
 }

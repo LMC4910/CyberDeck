@@ -13,6 +13,7 @@ import {
   panelFor,
   setPanelWidth,
   togglePanel,
+  DockHost,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -62,6 +63,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [prefsTab, setPrefsTab] = useState<PreferencesTab>('general')
+  const [dockRows, setDockRows] = useState(kernel.dock.list())
   const panelsState = useStore(kernel.panels, (s) => s)
 
   useEffect(() => kernel.workspaces.subscribe((id) => setActive(id)), [kernel])
@@ -123,6 +125,15 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
           </ResizablePanel>
         )}
         <PaneHost service={kernel.workspaces} active={active} />
+        <DockHost
+          manager={kernel.dock}
+          windows={dockRows}
+          content={{ mirror: <div className="panel-placeholder">Live Mirror — device preview arrives in M4.</div> }}
+          onChange={() => {
+            setDockRows(kernel.dock.list())
+            kernel.saveDock()
+          }}
+        />
       </div>
       <StatusBar
         activeWorkspaceLabel={activeLabel}

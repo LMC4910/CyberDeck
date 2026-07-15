@@ -1,0 +1,72 @@
+.dock-host {
+  display: contents;
+}
+.dock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--ink2, #8a8cb4);
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+.dock-controls button {
+  background: none;
+  border: none;
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+  margin-left: 4px;
+}
+.dock-controls button:focus-visible {
+  outline: 2px solid var(--accent, #4cc2ff);
+  outline-offset: 1px;
+}
+.dock-rail {
+  flex: none;
+  background: var(--panel, #0e0e1c);
+  border-left: 1px solid var(--line, #30363d);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dock-rail-left {
+  border-left: none;
+  border-right: 1px solid var(--line, #30363d);
+}
+.dock-rail-body {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+.dock-tab {
+  flex: none;
+  position: relative;
+}
+.dock-tab button[data-dock-peek] {
+  writing-mode: vertical-rl;
+  padding: 8px 2px;
+  background: var(--panel2, #12121f);
+  border: 1px solid var(--line, #30363d);
+  color: var(--ink2, #8a8cb4);
+  cursor: pointer;
+}
+.dock-peek-body {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: 260px;
+  height: 100%;
+  background: var(--panel, #0e0e1c);
+  border: 1px solid var(--line2, rgba(255, 255, 255, 0.12));
+  z-index: var(--z-float, 38);
+}
+.dock-float {
+  position: fixed;
+  top: 80px;
+  right: 80px;
+  width: 300px;
+  background: var(--panel, #0e0e1c);
+  border: 1px solid var(--line2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--r-m, 10px);
+  z-index: var(--z-float, 38);
+}

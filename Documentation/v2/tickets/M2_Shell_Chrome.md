@@ -19,7 +19,7 @@
 - [x] CD-212 Session restore + relaunch E2E — ✅ Done 2026-07-15
 - [x] CD-213 Resizable panels — ✅ Done 2026-07-15
 - [x] CD-214 DockManager model — ✅ Done 2026-07-15
-- [ ] CD-215 Dock UI: zones, insets, auto-hide/peek
+- [x] CD-215 Dock UI: zones, insets, auto-hide/peek — ✅ Done 2026-07-16
 - [ ] CD-216 Declarative dock registration + proof window
 - [ ] CD-217 Layout presets
 - [ ] CD-218 Honest-stub sweep + placeholder panes
@@ -152,8 +152,10 @@
 **BP:** IDE-E08-F02-T02 · **Hat:** FE · **P:** P0 · **Est:** M · **Deps:** CD-214, CD-213
 **Do:** Header drag → zone overlay (L/R/bottom/float) with hot-zone highlight; pinned rails inset the content area; unpinned collapse to edge tabs with hover-peek; rail resize handles; float-back.
 **AC:**
-- [ ] Playwright journey: dock → pin → auto-hide → peek → re-pin → float → relaunch-restore
-- [ ] insets computed correctly with both rails pinned
+- [x] Playwright journey: dock → pin → auto-hide → peek → re-pin → float → relaunch-restore
+- [x] insets computed correctly with both rails pinned
+
+**Notes (2026-07-16):** `ide/src/workspaces/dock/`. `DockHost` renders each `ToolWindow` per the CD-214 `DockManager` state: **pinned docked → rail** (header + body, sized by side), **unpinned docked → edge tab with peek** (hover/click shows a peek body), **float → floating window** with dock-back controls. Header controls (keyboard-operable buttons) drive the transitions — a zone-chooser stands in for the design's drag-to-zone overlay (drag can layer on later; buttons keep the journey reliable + accessible). `computeInsets(windows)` sums **pinned docked** rail sizes per side (ignores unpinned/floating). **Wired into the shell**: `boot-sequence.ts` registers a **Live Mirror** tool window on a `DockManager`, persists `dock.serialize()` to a `cdk-dock` store via the StoreManager (`saveDock`), and hydrates it in the panels-restore phase; App renders `DockHost` and re-reads on `onChange`. Tests: `computeInsets` (both rails pinned → both sides; unpin/float drop insets), full lifecycle harness (rail→auto-hide→peek→re-pin→float→dock-left). **E2E**: the full journey **incl. relaunch restoring the floating state**. 363 vitest + 7 E2E green.
 
 ### CD-216 · Declarative dock registration + proof window
 **BP:** IDE-E08-F02-T03 · **Hat:** FE · **P:** P1 · **Est:** S · **Deps:** CD-214

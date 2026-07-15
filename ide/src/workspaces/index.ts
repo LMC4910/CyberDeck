@@ -39,3 +39,4 @@ export {
   type PanelState,
   type PanelsState,
 } from './panels'
+export { DockHost, computeInsets, type DockHostProps, type Insets } from './dock'
