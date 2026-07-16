@@ -68,6 +68,14 @@
   font-weight: 600;
 }
 
+.dd-widget-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 24px;
+}
+
 .dd-widget-group-label {
   position: absolute;
   top: -18px;

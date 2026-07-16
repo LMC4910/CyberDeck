@@ -101,6 +101,10 @@ function WidgetBody({ widget, model }: { widget: WidgetInstance; model: ProjectM
   if (widget.type === GROUP_TYPE) {
     return <div className="dd-widget-group-label">{widget.name ?? 'Group'}</div>
   }
+  const symbolGlyph = (widget.config as { glyph?: string } | undefined)?.glyph
+  if (symbolGlyph) {
+    return <div className="dd-widget-symbol" data-testid="widget-symbol">{symbolGlyph}</div>
+  }
   const kind = widget.type.split('.')[0] ?? widget.type
   return (
     <div className="dd-widget-body">

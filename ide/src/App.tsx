@@ -24,6 +24,7 @@ import {
   CommandsProvider,
   LayersPanel,
   InsertPanel,
+  SymbolsPanel,
   DeckInspectorPanel,
   Minimap,
   LiveMirror,
@@ -79,7 +80,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [prefsTab, setPrefsTab] = useState<PreferencesTab>('general')
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [leftTab, setLeftTab] = useState<'layers' | 'insert'>('layers')
+  const [leftTab, setLeftTab] = useState<'layers' | 'insert' | 'symbols'>('layers')
   const [dockRows, setDockRows] = useState(kernel.dock.list())
   const panelsState = useStore(kernel.panels, (s) => s)
   const userPresets = useStore(kernel.userPresets, (s) => s)
@@ -174,12 +175,13 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
                   <button type="button" role="tab" aria-selected={leftTab === 'insert'} onClick={() => setLeftTab('insert')}>
                     Insert
                   </button>
+                  <button type="button" role="tab" aria-selected={leftTab === 'symbols'} onClick={() => setLeftTab('symbols')}>
+                    Symbols
+                  </button>
                 </div>
-                {leftTab === 'layers' ? (
-                  <LayersPanel pageId={kernel.project.model.pages()[0]!.id} />
-                ) : (
-                  <InsertPanel pageId={kernel.project.model.pages()[0]!.id} />
-                )}
+                {leftTab === 'layers' && <LayersPanel pageId={kernel.project.model.pages()[0]!.id} />}
+                {leftTab === 'insert' && <InsertPanel pageId={kernel.project.model.pages()[0]!.id} />}
+                {leftTab === 'symbols' && <SymbolsPanel pageId={kernel.project.model.pages()[0]!.id} />}
               </div>
             ) : (
               <div className="panel-placeholder">Explorer — arrives in M3.</div>

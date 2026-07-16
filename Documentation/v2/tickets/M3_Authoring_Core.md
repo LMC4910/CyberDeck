@@ -26,7 +26,7 @@
 - [x] CD-319 Nested components
 - [x] CD-320 Component inspector section
 - [x] CD-321 Shared styles
-- [ ] CD-322 Symbols
+- [x] CD-322 Symbols
 - [ ] CD-323 Expression sandbox parser + conformance corpus
 - [ ] CD-324 Binding model + popover (static/variable)
 - [ ] CD-325 Expression editor + live preview
