@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, act, fireEvent } from '@testing-library/react'
 import { ProjectModel, type WidgetInstance } from '@/shared/project'
-import { createSelectionStore, SelectionEngine } from '@/stores'
+import { createSelectionStore, SelectionEngine, createStore } from '@/stores'
 import { UndoStack } from '@/platform/undo'
 import { ProjectModelProvider } from './use-project-model'
 import { SelectionProvider } from './use-selection'
 import { UndoProvider } from './use-undo'
+import { CanvasSettingsProvider } from './use-canvas-settings'
 import DeckDesignerPane from '../deck-designer-pane'
 
 function w(id: string, x: number, y = 0): WidgetInstance {
@@ -21,16 +22,20 @@ function setup(widgets = [w('w_aaaaaa', 0), w('w_bbbbbb', 200)]) {
   })
   const engine = new SelectionEngine(createSelectionStore())
   const undo = new UndoStack()
+  // Snapping OFF so these tests exercise the raw gesture math (CD-307 tests snap).
+  const canvasSettings = createStore({ snap: false, grid: 8 }, { name: 'canvas', kind: 'temp' })
   const view = render(
     <ProjectModelProvider value={model}>
       <SelectionProvider value={engine}>
         <UndoProvider value={undo}>
-          <DeckDesignerPane />
+          <CanvasSettingsProvider value={canvasSettings}>
+            <DeckDesignerPane />
+          </CanvasSettingsProvider>
         </UndoProvider>
       </SelectionProvider>
     </ProjectModelProvider>,
   )
-  return { model, engine, undo, ...view }
+  return { model, engine, undo, canvasSettings, ...view }
 }
 
 // jsdom: surface rect is 0×0, so client coords == world coords at scale 1.

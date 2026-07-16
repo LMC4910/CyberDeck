@@ -10,6 +10,7 @@ import { Board } from './deck-designer/board'
 import { useProjectModel } from './deck-designer/use-project-model'
 import { useSelection, useSelectionState } from './deck-designer/use-selection'
 import { useUndo } from './deck-designer/use-undo'
+import { useCanvasSettings } from './deck-designer/use-canvas-settings'
 import { useCanvasSelection } from './deck-designer/use-canvas-selection'
 import { useTransformGestures } from './deck-designer/use-transform-gestures'
 import { SelectionGizmo } from './deck-designer/selection-gizmo'
@@ -19,6 +20,7 @@ export default function DeckDesignerPane() {
   const model = useProjectModel()
   const engine = useSelection()
   const undo = useUndo()
+  const { snap, grid } = useCanvasSettings()
   const pageId = useMemo(() => model.pages()[0]!.id, [model])
   const canvas = model.page(pageId)?.canvas
 
@@ -28,7 +30,7 @@ export default function DeckDesignerPane() {
   const getTransform = useCallback((): ViewTransform => surfaceRef.current?.getTransform() ?? IDENTITY, [])
 
   const { marquee, lasso } = useCanvasSelection({ element, getTransform, model, pageId, engine })
-  const gestures = useTransformGestures({ model, engine, undo, pageId, element, getTransform })
+  const gestures = useTransformGestures({ model, engine, undo, pageId, element, getTransform, snapEnabled: snap, grid })
   const selection = useSelectionState()
   const selectedIds = useMemo(
     () => new Set(selection.kind === 'widget' ? selection.ids : []),
@@ -49,6 +51,13 @@ export default function DeckDesignerPane() {
           onWidgetPointerDown={gestures.onWidgetPointerDown}
         />
         <SelectionGizmo model={model} selection={selection} gestures={gestures} />
+        {/* Smart guides render ONLY during a snapping gesture (CD-307). */}
+        {gestures.guides.v.map((x) => (
+          <div key={`v${x}`} className="dd-guide dd-guide-v" data-testid="guide-v" style={{ transform: `translateX(${x}px)` }} />
+        ))}
+        {gestures.guides.h.map((y) => (
+          <div key={`h${y}`} className="dd-guide dd-guide-h" data-testid="guide-h" style={{ transform: `translateY(${y}px)` }} />
+        ))}
         {marquee && (
           <div
             className="dd-marquee"

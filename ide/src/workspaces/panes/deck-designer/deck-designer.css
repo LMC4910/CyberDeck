@@ -37,6 +37,26 @@
   stroke-dasharray: 4 3;
 }
 
+/* Smart guides (CD-307): full-extent V/H lines drawn only during a snapping drag. */
+.dd-guide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--guide, #f0f);
+  pointer-events: none;
+  z-index: 5;
+}
+.dd-guide-v {
+  width: 1px;
+  height: 4000px;
+  margin-top: -2000px;
+}
+.dd-guide-h {
+  height: 1px;
+  width: 4000px;
+  margin-left: -2000px;
+}
+
 /* Selection gizmo (CD-306): outline + 8 resize handles + rotate handle, world coords. */
 .dd-gizmo {
   position: absolute;

@@ -59,4 +59,23 @@ describe('StatusBar — pure store subscriber', () => {
     act(() => editor.setState({ selection: ['w1', 'w2'] }))
     expect(container.querySelector('[data-status-selection]')).toHaveTextContent('2 selected')
   })
+
+  it('renders a snap toggle segment when wired (CD-307)', () => {
+    const editor = createStore({ selection: [] as string[] }, { name: 'editor', kind: 'persisted' })
+    const onToggleSnap = vi.fn()
+    const { container } = renderWithProviders(
+      <StatusBar
+        activeWorkspaceLabel="Deck"
+        editorStore={editor}
+        savedLabel="Saved"
+        snapEnabled
+        onToggleSnap={onToggleSnap}
+      />,
+    )
+    const snap = container.querySelector('[data-status-snap]') as HTMLButtonElement
+    expect(snap).toHaveTextContent('Snap: On')
+    expect(snap).toHaveAttribute('aria-pressed', 'true')
+    act(() => snap.click())
+    expect(onToggleSnap).toHaveBeenCalledOnce()
+  })
 })

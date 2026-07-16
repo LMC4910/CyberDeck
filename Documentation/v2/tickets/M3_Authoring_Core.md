@@ -11,7 +11,7 @@
 - [x] CD-304 Serialize/restore + autosave + property tests
 - [x] CD-305 Selection engine + store
 - [x] CD-306 Drag/resize/rotate controllers
-- [ ] CD-307 Snapping + smart guides
+- [x] CD-307 Snapping + smart guides
 - [ ] CD-308 Nudge, canvas shortcuts, selection minibar
 - [ ] CD-309 Canvas perf harness (200 widgets)
 - [ ] CD-310 Layers tree + command mutations

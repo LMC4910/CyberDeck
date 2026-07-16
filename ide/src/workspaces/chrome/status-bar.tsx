@@ -14,9 +14,12 @@ export interface StatusBarProps {
   editorStore: Store<EditorLike>
   /** "saved · 09:41" style indicator, derived from config write-behind. */
   savedLabel: string
+  /** Snap-to-guides toggle segment (CD-307); omit to hide the segment. */
+  snapEnabled?: boolean
+  onToggleSnap?: () => void
 }
 
-export function StatusBar({ activeWorkspaceLabel, editorStore, savedLabel }: StatusBarProps) {
+export function StatusBar({ activeWorkspaceLabel, editorStore, savedLabel, snapEnabled, onToggleSnap }: StatusBarProps) {
   const selectionCount = useStore(editorStore, (s) => s.selection.length)
   return (
     <footer className="statusbar" aria-label="Status bar">
@@ -26,6 +29,18 @@ export function StatusBar({ activeWorkspaceLabel, editorStore, savedLabel }: Sta
       <span className="statusbar-sel" data-status-selection>
         {selectionCount === 0 ? 'No selection' : `${selectionCount} selected`}
       </span>
+      {onToggleSnap && (
+        <button
+          type="button"
+          className="statusbar-snap"
+          data-status-snap
+          aria-pressed={snapEnabled}
+          onClick={onToggleSnap}
+          title="Toggle snapping"
+        >
+          Snap: {snapEnabled ? 'On' : 'Off'}
+        </button>
+      )}
       <span className="statusbar-saved" data-status-saved>
         {savedLabel}
       </span>

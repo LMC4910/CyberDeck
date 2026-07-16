@@ -24,8 +24,14 @@ import {
   type ResizeHandle,
   type Vec,
 } from './transform-math'
+import { snapBox } from './snapping'
 
 export type GestureKind = 'drag' | 'resize' | 'rotate'
+
+export interface SmartGuides {
+  v: number[]
+  h: number[]
+}
 
 interface Options {
   model: ProjectModel
@@ -34,6 +40,10 @@ interface Options {
   pageId: string
   element: HTMLElement | null
   getTransform: () => ViewTransform
+  /** Snap to sibling edges/centers + grid during drag (⇧ bypasses). Default true. */
+  snapEnabled?: boolean
+  /** Grid size (world px) for grid snapping. Default 8. */
+  grid?: number
 }
 
 interface ActiveGesture {
@@ -59,6 +69,8 @@ export interface TransformGestures {
   beginResize: (handle: ResizeHandle, e: React.PointerEvent) => void
   beginRotate: (e: React.PointerEvent) => void
   active: GestureKind | null
+  /** Smart-guide lines to draw; non-empty only during a snapping drag. */
+  guides: SmartGuides
 }
 
 export function useTransformGestures(options: Options): TransformGestures {
@@ -68,6 +80,7 @@ export function useTransformGestures(options: Options): TransformGestures {
   const rafId = useRef<number | null>(null)
   const latestClient = useRef<Vec | null>(null)
   const [active, setActive] = useState<GestureKind | null>(null)
+  const [guides, setGuides] = useState<SmartGuides>({ v: [], h: [] })
 
   const toWorld = useCallback((clientX: number, clientY: number): Vec => {
     const { element, getTransform } = ctx.current
@@ -91,10 +104,23 @@ export function useTransformGestures(options: Options): TransformGestures {
       const g = gesture.current
       const client = latestClient.current
       if (!g || !client) return
-      const { model, getTransform } = ctx.current
+      const { model, getTransform, pageId, snapEnabled = true, grid = 8 } = ctx.current
       if (g.kind === 'drag') {
         const world = toWorld(client.x, client.y)
         const d: Vec = { x: world.x - g.startPointerWorld.x, y: world.y - g.startPointerWorld.y }
+        // Snap the moving group's bounding box against static siblings + grid.
+        if (snapEnabled && !g.free) {
+          const box = boundingFrame([...g.startFrames.values()].map((f) => ({ ...f, x: f.x + d.x, y: f.y + d.y })))
+          if (box) {
+            const siblings = model.widgetsOf(pageId).filter((w) => !g.startFrames.has(w.id)).map((w) => w.frame)
+            const snap = snapBox(box, siblings, { grid })
+            d.x += snap.dx
+            d.y += snap.dy
+            setGuides({ v: snap.guidesV, h: snap.guidesH })
+          }
+        } else {
+          setGuides({ v: [], h: [] })
+        }
         for (const [id, start] of g.startFrames) model.updateFrame(id, dragFrame(start, d))
       } else if (g.kind === 'resize' && g.handle) {
         const dScreen: Vec = { x: client.x - g.startPointerClient.x, y: client.y - g.startPointerClient.y }
@@ -158,6 +184,7 @@ export function useTransformGestures(options: Options): TransformGestures {
       gesture.current = null
       latestClient.current = null
       setActive(null)
+      setGuides({ v: [], h: [] }) // guides render ONLY during a gesture
     }
 
     const onMove = (e: PointerEvent) => {
@@ -263,5 +290,5 @@ export function useTransformGestures(options: Options): TransformGestures {
     [movingFrames, start, toWorld],
   )
 
-  return { onWidgetPointerDown, beginResize, beginRotate, active }
+  return { onWidgetPointerDown, beginResize, beginRotate, active, guides }
 }

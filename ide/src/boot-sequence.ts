@@ -47,6 +47,8 @@ export interface BootedKernel {
   /** The single selection source every panel subscribes to (CD-305, AUDIT C2). */
   selection: SelectionEngine
   selectionStore: Store<SelectionState>
+  /** Canvas authoring settings — snap toggle + grid (CD-307). */
+  canvasSettings: Store<{ snap: boolean; grid: number }>
   /** Drawer projection (all notifications) + active toasts. */
   notificationStore: Store<{ items: Notification[] }>
   toastStore: Store<{ items: Notification[] }>
@@ -135,6 +137,12 @@ export async function runAppBoot(): Promise<BootedKernel> {
   // all subscribe to this one store; the engine is the only writer.
   const selectionStore = createSelectionStore()
   const selection = new SelectionEngine(selectionStore)
+  // Canvas authoring settings (CD-307): snap-to-guides toggle + grid size, persisted.
+  const canvasSettings = createStore<{ snap: boolean; grid: number }>(
+    { snap: true, grid: 8 },
+    { name: 'canvas', kind: 'persisted', location: 'cdk-canvas' },
+  )
+  storeManager.register(canvasSettings as unknown as Store<unknown>)
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -240,7 +248,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   notifications.notify({ level: 'info', source: 'CyberDeck', title: 'Welcome to CyberDeck', body: 'The shell is ready.' })
   return {
     config, theme, workspaces, commands, keymap, bus, stores, session, panels, userPresets,
-    dock, undo, notifications, project, selection, selectionStore,
+    dock, undo, notifications, project, selection, selectionStore, canvasSettings,
     notificationStore, toastStore, saveDock, flush, report,
   }
 }

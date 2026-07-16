@@ -20,6 +20,7 @@ import {
   ProjectModelProvider,
   SelectionProvider,
   UndoProvider,
+  CanvasSettingsProvider,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -77,6 +78,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   const toasts = useStore(kernel.toastStore, (s) => s.items)
   const unread = useStore(kernel.notificationStore, (s) => s.items.filter((n) => !n.read).length)
   const [saveState, setSaveState] = useState<SaveState>(kernel.project.saveState)
+  const snapEnabled = useStore(kernel.canvasSettings, (s) => s.snap)
 
   useEffect(() => kernel.workspaces.subscribe((id) => setActive(id)), [kernel])
   useEffect(() => kernel.project.subscribe(setSaveState), [kernel])
@@ -124,6 +126,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
    <ProjectModelProvider value={kernel.project.model}>
    <SelectionProvider value={kernel.selection}>
    <UndoProvider value={kernel.undo}>
+   <CanvasSettingsProvider value={kernel.canvasSettings}>
     <div className="shell" data-boot="interactive" data-testid="shell">
       <header className="shell-topbar">
         <span className="shell-brand">CyberDeck IDE</span>
@@ -174,6 +177,8 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
           activeWorkspaceLabel={activeLabel}
           editorStore={kernel.stores.editor as unknown as Store<{ selection: string[] }>}
           savedLabel={savedLabel}
+          snapEnabled={snapEnabled}
+          onToggleSnap={() => kernel.canvasSettings.setState((s) => ({ ...s, snap: !s.snap }))}
         />
         {active && (
           <LayoutPresetMenu
@@ -234,6 +239,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         }
       />
     </div>
+   </CanvasSettingsProvider>
    </UndoProvider>
    </SelectionProvider>
    </ProjectModelProvider>
