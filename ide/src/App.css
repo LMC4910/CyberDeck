@@ -93,3 +93,35 @@
   color: var(--text-muted);
   border-top: 1px solid var(--border);
 }
+
+/* Deck Designer left panel: Layers / Insert tab switcher (CD-315). */
+.dd-leftpanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.dd-leftpanel-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+.dd-leftpanel-tabs button {
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: 11px;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.dd-leftpanel-tabs button[aria-selected='true'] {
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 26%, transparent);
+}
+.dd-leftpanel > :last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+}

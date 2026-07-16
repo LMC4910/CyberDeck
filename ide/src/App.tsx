@@ -23,6 +23,7 @@ import {
   CanvasSettingsProvider,
   CommandsProvider,
   LayersPanel,
+  InsertPanel,
   DeckInspectorPanel,
   Minimap,
   LiveMirror,
@@ -78,6 +79,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [prefsTab, setPrefsTab] = useState<PreferencesTab>('general')
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [leftTab, setLeftTab] = useState<'layers' | 'insert'>('layers')
   const [dockRows, setDockRows] = useState(kernel.dock.list())
   const panelsState = useStore(kernel.panels, (s) => s)
   const userPresets = useStore(kernel.userPresets, (s) => s)
@@ -164,7 +166,21 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
             onToggle={() => toggleSide('left')}
           >
             {active === 'deck-designer' && kernel.project.model ? (
-              <LayersPanel pageId={kernel.project.model.pages()[0]!.id} />
+              <div className="dd-leftpanel">
+                <div className="dd-leftpanel-tabs" role="tablist" aria-label="Left panel">
+                  <button type="button" role="tab" aria-selected={leftTab === 'layers'} onClick={() => setLeftTab('layers')}>
+                    Layers
+                  </button>
+                  <button type="button" role="tab" aria-selected={leftTab === 'insert'} onClick={() => setLeftTab('insert')}>
+                    Insert
+                  </button>
+                </div>
+                {leftTab === 'layers' ? (
+                  <LayersPanel pageId={kernel.project.model.pages()[0]!.id} />
+                ) : (
+                  <InsertPanel pageId={kernel.project.model.pages()[0]!.id} />
+                )}
+              </div>
             ) : (
               <div className="panel-placeholder">Explorer — arrives in M3.</div>
             )}

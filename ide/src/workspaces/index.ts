@@ -55,6 +55,7 @@ export { CommandsProvider, useCommands } from './panes/deck-designer/use-command
 export { registerCanvasCommands, CANVAS_COMMANDS, type CanvasCtx } from './panes/deck-designer/canvas-commands'
 export { generatePerfProject } from './panes/deck-designer/perf-fixture'
 export { LayersPanel } from './panes/deck-designer/layers-panel'
+export { InsertPanel } from './panes/deck-designer/insert-panel'
 export { InspectorPanel as DeckInspectorPanel } from './panes/deck-designer/inspector-panel'
 export { Minimap } from './panes/deck-designer/minimap'
 export { LiveMirror } from './panes/deck-designer/live-mirror'

@@ -18,6 +18,8 @@ import { useCanvasShortcuts } from './deck-designer/use-canvas-shortcuts'
 import { SelectionGizmo } from './deck-designer/selection-gizmo'
 import { SelectionMinibar } from './deck-designer/selection-minibar'
 import { useCanvasViewBus } from './deck-designer/use-canvas-view'
+import { screenToWorld } from '@/shared/canvas'
+import { INSERT_CATALOG, INSERT_DND_TYPE, insertManifest } from './deck-designer/insert-catalog'
 import './deck-designer/deck-designer.css'
 
 export default function DeckDesignerPane() {
@@ -60,8 +62,28 @@ export default function DeckDesignerPane() {
     [selection],
   )
 
+  const onCanvasDrop = useCallback(
+    (e: React.DragEvent) => {
+      const type = e.dataTransfer.getData(INSERT_DND_TYPE)
+      const manifest = INSERT_CATALOG.find((m) => m.type === type)
+      if (!manifest) return
+      e.preventDefault()
+      const rect = surfaceRef.current?.getElement()?.getBoundingClientRect()
+      const world = screenToWorld(getTransform(), { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) })
+      insertManifest({ model, undo, engine, pageId }, manifest, world)
+    },
+    [model, undo, engine, pageId, getTransform],
+  )
+
   return (
-    <section className="dd-pane" data-pane="deck-designer" data-tool={tool} aria-label="Deck Designer workspace">
+    <section
+      className="dd-pane"
+      data-pane="deck-designer"
+      data-tool={tool}
+      aria-label="Deck Designer workspace"
+      onDragOver={(e) => e.dataTransfer.types.includes(INSERT_DND_TYPE) && e.preventDefault()}
+      onDrop={onCanvasDrop}
+    >
       <PanZoomSurface
         ref={surfaceRef}
         aria-label="Deck canvas"
