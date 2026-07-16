@@ -2,7 +2,7 @@
 // select (synced through the one selection store), double-click rename (Esc cancels),
 // lock / hide / color-label toggles, and pointer drag to reorder/nest — every
 // mutation an undoable command. Proven to virtualize at 1 000 layers.
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { isContainer, childIdsOf, type ProjectModel } from '@/shared/project'
 import type { SelectionEngine } from '@/stores'
 import type { UndoStack } from '@/platform/undo'
@@ -10,6 +10,7 @@ import { useProjectModel } from './use-project-model'
 import { useSelection, useSelectionState } from './use-selection'
 import { useUndo } from './use-undo'
 import { flattenLayers, type LayerRow } from './layers-model'
+import { filterRows, ancestorsOf, LAYER_FILTERS, type LayerFilter } from './layers-filter'
 import { useVirtualRows } from './use-virtual-rows'
 import './layers.css'
 
@@ -30,12 +31,23 @@ export function LayersPanel({ pageId }: { pageId: string }) {
   useModelRevision(model)
 
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
-  const rows = useMemo(() => flattenLayers(model, pageId, collapsed), [model, pageId, collapsed, model.revision])
-  const v = useVirtualRows(rows.length, ROW_H)
-  // The drag SOURCE id is a ref (set synchronously in onDragStart) so drop never
-  // depends on React state timing; `dropHint` is state only for the visual indicator.
+  const [filter, setFilter] = useState<LayerFilter>('all')
+  const [query, setQuery] = useState('')
+  // Explicit keyboard focus target (drives roving tabindex + DOM focus); distinct
+  // from selection so external (canvas) selection never steals focus from the tree.
+  const [focusedId, setFocusedId] = useState<string | null>(null)
   const dragId = useRef<string | null>(null)
   const [dropHint, setDropHint] = useState<{ overId: string; pos: DropPos } | null>(null)
+  const typeahead = useRef({ buf: '', time: 0 })
+
+  const allRows = useMemo(() => flattenLayers(model, pageId, collapsed), [model, pageId, collapsed, model.revision])
+  const rows = useMemo(() => filterRows(allRows, filter, query), [allRows, filter, query])
+  const v = useVirtualRows(rows.length, ROW_H)
+  const orderedIds = useMemo(() => rows.map((r) => r.id), [rows])
+  const containerIds = useMemo(
+    () => flattenLayers(model, pageId, new Set()).filter((r) => r.container).map((r) => r.id),
+    [model, pageId, model.revision],
+  )
 
   const toggleCollapse = useCallback((id: string) => {
     setCollapsed((prev) => {
@@ -46,11 +58,18 @@ export function LayersPanel({ pageId }: { pageId: string }) {
     })
   }, [])
 
-  const orderedIds = useMemo(() => rows.map((r) => r.id), [rows])
-
   const selectRow = (row: LayerRow, e: React.PointerEvent) => {
+    setFocusedId(row.id)
     engine.click(row.id, { shift: e.shiftKey, meta: e.metaKey || e.ctrlKey }, orderedIds)
   }
+
+  const focusRow = useCallback(
+    (id: string) => {
+      setFocusedId(id)
+      engine.selectOnly(id)
+    },
+    [engine],
+  )
 
   const applyDrop = useCallback(
     (dragId: string, targetId: string, pos: DropPos) => {
@@ -59,13 +78,94 @@ export function LayersPanel({ pageId }: { pageId: string }) {
     [model, undo, engine, pageId],
   )
 
+  // Roving-tabindex active row: the explicitly focused row, else the selection, else
+  // the first row. Only the explicitly focused row grabs DOM focus (autoFocus).
+  const activeId = focusedId ?? selection.ids[0] ?? rows[0]?.id ?? null
+  const crumbs = activeId ? ancestorsOf(model, activeId) : []
+
+  const onTreeKeyDown = (e: React.KeyboardEvent) => {
+    const idx = rows.findIndex((r) => r.id === activeId)
+    const go = (i: number) => {
+      const r = rows[Math.max(0, Math.min(rows.length - 1, i))]
+      if (r) {
+        e.preventDefault()
+        focusRow(r.id)
+      }
+    }
+    if (e.key === 'ArrowDown') go(idx + 1)
+    else if (e.key === 'ArrowUp') go(idx - 1)
+    else if (e.key === 'Home') go(0)
+    else if (e.key === 'End') go(rows.length - 1)
+    else if (e.key === 'ArrowRight') {
+      const r = rows[idx]
+      if (r?.container && r.collapsed) toggleCollapse(r.id)
+    } else if (e.key === 'ArrowLeft') {
+      const r = rows[idx]
+      if (r?.container && !r.collapsed) toggleCollapse(r.id)
+    } else if (e.key.length === 1 && /\S/.test(e.key) && !e.metaKey && !e.ctrlKey) {
+      // type-ahead: accumulate within 700 ms, jump to the next matching name
+      const now = performance.now()
+      const ta = typeahead.current
+      ta.buf = now - ta.time > 700 ? e.key : ta.buf + e.key
+      ta.time = now
+      const q = ta.buf.toLowerCase()
+      const order = [...rows.slice(idx + 1), ...rows.slice(0, idx + 1)]
+      const match = order.find((r) => r.name.toLowerCase().startsWith(q))
+      if (match) focusRow(match.id)
+    }
+  }
+
   return (
     <div className="dd-layers" data-testid="layers-panel">
       <div className="dd-layers-title">Layers</div>
+      <div className="dd-layers-toolbar">
+        <input
+          className="dd-layers-search"
+          type="search"
+          placeholder="Search layers"
+          aria-label="Search layers"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <div className="dd-layers-chips" role="group" aria-label="Filter layers">
+          {LAYER_FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className="dd-chip"
+              aria-pressed={filter === f.id}
+              data-testid={`filter-${f.id}`}
+              onClick={() => setFilter(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
+          <span className="dd-layers-spacer" />
+          <button type="button" className="dd-chip" aria-label="Collapse all" title="Collapse all" onClick={() => setCollapsed(new Set(containerIds))}>
+            ⊟
+          </button>
+          <button type="button" className="dd-chip" aria-label="Expand all" title="Expand all" onClick={() => setCollapsed(new Set())}>
+            ⊞
+          </button>
+        </div>
+      </div>
+      {crumbs.length > 1 && (
+        <nav className="dd-layers-breadcrumb" aria-label="Nesting">
+          {crumbs.map((c, i) => (
+            <span key={c.id}>
+              {i > 0 && <span className="dd-crumb-sep" aria-hidden="true">›</span>}
+              <button type="button" className="dd-crumb" data-testid={`crumb-${c.id}`} onClick={() => focusRow(c.id)}>
+                {c.name}
+              </button>
+            </span>
+          ))}
+        </nav>
+      )}
       <div
         className="dd-layers-scroll"
         ref={v.containerRef}
         onScroll={v.onScroll}
+        onKeyDown={onTreeKeyDown}
         role="tree"
         aria-label="Layers"
       >
@@ -76,6 +176,8 @@ export function LayersPanel({ pageId }: { pageId: string }) {
                 key={row.id}
                 row={row}
                 selected={selection.ids.includes(row.id)}
+                tabbable={row.id === activeId}
+                autoFocus={row.id === focusedId}
                 dropHint={dropHint?.overId === row.id ? dropHint.pos : null}
                 onToggleCollapse={() => toggleCollapse(row.id)}
                 onSelect={(e) => selectRow(row, e)}
@@ -104,6 +206,8 @@ export function LayersPanel({ pageId }: { pageId: string }) {
 interface RowProps {
   row: LayerRow
   selected: boolean
+  tabbable: boolean
+  autoFocus: boolean
   dropHint: DropPos | null
   onToggleCollapse: () => void
   onSelect: (e: React.PointerEvent) => void
@@ -117,10 +221,17 @@ interface RowProps {
 }
 
 function LayerRowView({
-  row, selected, dropHint, onToggleCollapse, onSelect, onRename, onToggleLock, onToggleHide, onSetColor, onDragStart, onDragOver, onDrop,
+  row, selected, tabbable, autoFocus, dropHint, onToggleCollapse, onSelect, onRename, onToggleLock, onToggleHide, onSetColor, onDragStart, onDragOver, onDrop,
 }: RowProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(row.name)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Only the explicitly keyboard-focused row grabs DOM focus (never on external
+  // selection), so canvas interaction never yanks focus into the tree.
+  useEffect(() => {
+    if (autoFocus && ref.current && document.activeElement !== ref.current) ref.current.focus()
+  }, [autoFocus])
 
   const commit = () => {
     setEditing(false)
@@ -139,10 +250,13 @@ function LayerRowView({
 
   return (
     <div
+      ref={ref}
       className="dd-layer-row"
       role="treeitem"
       aria-selected={selected}
       aria-level={row.depth + 1}
+      aria-expanded={row.container ? !row.collapsed : undefined}
+      tabIndex={tabbable ? 0 : -1}
       data-layer={row.id}
       data-selected={selected || undefined}
       data-drop={dropHint ?? undefined}
