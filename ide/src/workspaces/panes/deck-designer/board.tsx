@@ -84,6 +84,9 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
     >
       <WidgetBody widget={widget} model={model} />
       {selected && <div className="dd-widget-ring" aria-hidden="true" />}
+      {model.bindingsOf(id) && Object.keys(model.bindingsOf(id)!).length > 0 && (
+        <div className="dd-widget-bind" data-testid={`bind-dot-${id}`} aria-hidden="true" title="Bound" />
+      )}
       {widget.locked && (
         <div className="dd-widget-lock" aria-hidden="true" title="Locked">
           🔒

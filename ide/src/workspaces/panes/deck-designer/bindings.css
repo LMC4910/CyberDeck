@@ -1,0 +1,109 @@
+/* Bindings section + popover (CD-324/325). */
+.dd-bind-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dd-bind-row .dd-field-label {
+  flex: 0 0 66px;
+  opacity: 0.7;
+}
+.dd-bind-link {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 12px;
+}
+.dd-bind-link:hover {
+  opacity: 1;
+}
+.dd-bind-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  background: color-mix(in srgb, var(--bind, #30a46c) 22%, transparent);
+  border: 1px solid var(--bind, #30a46c);
+  border-radius: 10px;
+  padding: 1px 4px 1px 8px;
+  max-width: 100%;
+  overflow: hidden;
+}
+.dd-bind-chip[data-mode='expression'] {
+  border-color: var(--component, #a960e8);
+  background: color-mix(in srgb, var(--component, #a960e8) 22%, transparent);
+}
+.dd-bind-x {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.dd-bind-popover {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 30;
+  width: 220px;
+  padding: 8px;
+  background: var(--menu-bg, #24242b);
+  border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.16));
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+.dd-bind-modes {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+.dd-bind-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dd-var-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.dd-var-item {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 3px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dd-var-item:hover,
+.dd-var-item:focus-visible {
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 20%, transparent);
+}
+.dd-var-value {
+  opacity: 0.6;
+}
+.dd-expr-input {
+  font-family: ui-monospace, monospace;
+  resize: vertical;
+}
+.dd-expr-error {
+  margin: 0;
+  color: var(--error, #e5484d);
+  font-size: 10px;
+}
+.dd-expr-preview {
+  margin: 0;
+  color: var(--bind, #30a46c);
+  font-size: 11px;
+}

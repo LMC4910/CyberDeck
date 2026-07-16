@@ -22,6 +22,7 @@ import {
 import { ColorField } from './inspector-fields'
 import { STYLE_KINDS, linkedStyleId, newStyleFromWidget, linkStyle, unlinkStyle, setStyleProp, stylesOfKind } from './style-ops'
 import type { StyleKind } from '@/shared/project'
+import { BindingsSection } from './bindings-section'
 import { useCanvasSettings, useCanvasSettingsStore } from './use-canvas-settings'
 import {
   InspectorSection,
@@ -56,6 +57,7 @@ export function InspectorPanel({ pageId }: { pageId: string }) {
       {ids.length === 0 && <PageProperties model={model} pageId={pageId} undo={undo} />}
       {ids.length === 1 && <SingleWidget model={model} id={ids[0]!} undo={undo} />}
       {ids.length === 1 && !single?.component && <StylesSection model={model} widgetId={ids[0]!} undo={undo} engine={engine} />}
+      {ids.length === 1 && <BindingsSection model={model} widgetId={ids[0]!} undo={undo} />}
       {single?.component && <ComponentSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <OverrideSection model={model} instanceId={single.id} undo={undo} engine={engine} />}

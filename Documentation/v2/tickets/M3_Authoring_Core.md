@@ -28,7 +28,7 @@
 - [x] CD-321 Shared styles
 - [x] CD-322 Symbols
 - [x] CD-323 Expression sandbox parser + conformance corpus
-- [ ] CD-324 Binding model + popover (static/variable)
+- [x] CD-324 Binding model + popover (static/variable)
 - [ ] CD-325 Expression editor + live preview
 - [ ] CD-326 Binding runtime apply path
 - [ ] CD-327 States

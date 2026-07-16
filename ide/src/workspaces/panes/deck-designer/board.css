@@ -47,6 +47,16 @@
   opacity: 0.7;
 }
 
+.dd-widget-bind {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bind, #30a46c);
+}
+
 .dd-widget-body {
   display: flex;
   flex-direction: column;
