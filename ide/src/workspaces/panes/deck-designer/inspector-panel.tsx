@@ -24,6 +24,7 @@ import { STYLE_KINDS, linkedStyleId, newStyleFromWidget, linkStyle, unlinkStyle,
 import type { StyleKind } from '@/shared/project'
 import { BindingsSection } from './bindings-section'
 import { allStates, activeState, stateDelta, setActive, setDelta, addCustomState, removeCustomState, STATE_DELTA_FIELDS, STANDARD_STATES } from './state-ops'
+import { GESTURES, GESTURE_LABELS, FLOWS_CATALOG, flowById, assignFlow, disconnectFlow } from './flows-catalog'
 import { useCanvasSettings, useCanvasSettingsStore } from './use-canvas-settings'
 import {
   InspectorSection,
@@ -60,11 +61,49 @@ export function InspectorPanel({ pageId }: { pageId: string }) {
       {ids.length === 1 && !single?.component && <StylesSection model={model} widgetId={ids[0]!} undo={undo} engine={engine} />}
       {ids.length === 1 && <BindingsSection model={model} widgetId={ids[0]!} undo={undo} />}
       {ids.length === 1 && <StatesSection model={model} widgetId={ids[0]!} undo={undo} />}
+      {ids.length === 1 && <EventsSection model={model} widgetId={ids[0]!} undo={undo} />}
       {single?.component && <ComponentSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <OverrideSection model={model} instanceId={single.id} undo={undo} engine={engine} />}
       {ids.length > 1 && <MultiArrange model={model} ids={ids} undo={undo} />}
     </div>
+  )
+}
+
+// ── events + flow drawer (CD-328) ────────────────────────────────────────────────
+function EventsSection({ model, widgetId, undo }: { model: ProjectModel; widgetId: string; undo: UndoStack }) {
+  const ctx = { model, undo }
+  const events = model.eventsOf(widgetId) ?? {}
+  return (
+    <InspectorSection title="Events">
+      {GESTURES.map((g) => {
+        const flowId = events[g]
+        const flow = flowId ? flowById(flowId) : undefined
+        return (
+          <div key={g} className="dd-event-row" data-gesture={g}>
+            <SelectField
+              label={GESTURE_LABELS[g]}
+              value={flowId ?? ''}
+              options={[{ value: '', label: '— none —' }, ...FLOWS_CATALOG.map((f) => ({ value: f.id, label: f.name }))]}
+              onCommit={(v) => (v ? assignFlow(ctx, widgetId, g, v) : disconnectFlow(ctx, widgetId, g))}
+            />
+            {flow && (
+              <div className="dd-flow-drawer" data-testid={`flow-${g}`}>
+                <span className="dd-flow-preview" aria-label="Flow preview">
+                  {flow.trigger} → {flow.action}
+                </span>
+                <button type="button" className="dd-flow-open" data-testid={`open-flows-${g}`} disabled title="Opens the Flows workspace (arrives in M4)">
+                  Open in Flows ↗
+                </button>
+                <button type="button" className="dd-bind-x" data-testid={`disconnect-${g}`} aria-label={`Disconnect ${g}`} onClick={() => disconnectFlow(ctx, widgetId, g)}>
+                  ×
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </InspectorSection>
   )
 }
 

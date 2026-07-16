@@ -90,6 +90,40 @@
   border-color: var(--focus-ring, #4c9aff);
 }
 
+.dd-event-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dd-flow-drawer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 66px;
+  padding: 3px 6px;
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 8%, transparent);
+  border-radius: 4px;
+  font-size: 10px;
+}
+.dd-flow-preview {
+  flex: 1 1 auto;
+  font-family: ui-monospace, monospace;
+}
+.dd-flow-open {
+  font: inherit;
+  font-size: 10px;
+  color: inherit;
+  background: none;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.16));
+  border-radius: 4px;
+  padding: 1px 5px;
+  cursor: pointer;
+}
+.dd-flow-open:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .dd-state-chips {
   display: flex;
   flex-wrap: wrap;
