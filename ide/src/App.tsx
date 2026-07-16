@@ -100,7 +100,8 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey
-      if (mod && e.key.toLowerCase() === 'k') {
+      // ⌘K opens the palette; ⌘⌥K is the canvas "create component" shortcut — leave it.
+      if (mod && !e.altKey && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         setPaletteOpen((v) => !v)
       } else if (mod && e.key === ',') {

@@ -10,7 +10,8 @@ test('keyboard-only walkthrough of the chrome', async ({ page }) => {
   await page.getByRole('tab', { name: 'Home' }).focus()
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('main')).toContainText('Deck Designer')
+  // Deck Designer now mounts the real authoring canvas (M3), not a placeholder.
+  await expect(page.locator('[data-pane="deck-designer"]')).toBeVisible()
 
   // Palette: ⌘K, type, Enter — all keyboard
   await page.keyboard.press('Control+k')

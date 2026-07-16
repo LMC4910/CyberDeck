@@ -5,8 +5,8 @@
 import { test, expect } from '@playwright/test'
 
 const WIDGETS = 200
-// Soft floor for the reporting phase — CD-330 raises this to the 55 fps gate.
-const SOFT_FLOOR_FPS = 30
+// M3 gate (CD-330): the 55 fps floor is now ENFORCED in CI (was a soft report at CD-309).
+const GATE_FLOOR_FPS = 55
 
 test('canvas sustains frame rate at 200 widgets during pan/zoom', async ({ page }, testInfo) => {
   await page.goto(`/?perf=${WIDGETS}`)
@@ -54,5 +54,5 @@ test('canvas sustains frame rate at 200 widgets during pan/zoom', async ({ page 
   console.log(line)
   await testInfo.attach('canvas-perf', { body: line, contentType: 'text/plain' })
 
-  expect(fps, line).toBeGreaterThanOrEqual(SOFT_FLOOR_FPS)
+  expect(fps, line).toBeGreaterThanOrEqual(GATE_FLOOR_FPS)
 })

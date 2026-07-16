@@ -24,9 +24,14 @@ test('every workspace pane shows an honest placeholder', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByTestId('shell')).toHaveAttribute('data-boot', 'interactive', { timeout: 10_000 })
 
-  for (const ws of ['Deck Designer', 'Flows', 'Variables', 'Library', 'Devices', 'Projects', 'Home']) {
+  // Deck Designer is a real workspace as of M3 — it mounts the authoring canvas.
+  await page.getByRole('tab', { name: 'Deck Designer' }).click()
+  await expect(page.locator('[data-pane="deck-designer"]')).toBeVisible()
+  await expect(page.locator('[data-widget]').first()).toBeVisible()
+
+  // The remaining panes still show an honest "arrives later" placeholder — never blank.
+  for (const ws of ['Flows', 'Variables', 'Library', 'Devices', 'Projects', 'Home']) {
     await page.getByRole('tab', { name: ws }).click()
-    // each pane names itself + says it arrives later — never blank/silent
     await expect(page.getByRole('main')).toContainText(ws)
     await expect(page.getByRole('main')).toContainText(/arrives in|workspace/i)
   }

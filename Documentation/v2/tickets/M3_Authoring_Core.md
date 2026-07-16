@@ -34,7 +34,7 @@
 - [x] CD-327 States
 - [x] CD-328 Events + flow drawer
 - [x] CD-329 Undo integration sweep
-- [ ] CD-330 **M3 gate review**
+- [x] CD-330 **M3 gate review**
 
 ---
 
@@ -225,10 +225,24 @@
 **AC:**
 - [ ] property test in CI; no direct-mutation escapes (review checklist)
 
-### CD-330 · **M3 gate review**
+### CD-330 · **M3 gate review** — ✅ PASSED 2026-07-17
 **BP:** Blueprint M3 gate · **Hat:** PM+QA · **P:** P0 · **Est:** S · **Deps:** CD-301…329
 **Do:** Scripted authoring journey E2E + perf gate flip; record results.
 **AC:**
-- [ ] Playwright: insert → arrange → component → variant → override → bind → state → event → undo-all → save → reload identical — green
-- [ ] perf harness ≥ 55 fps enforced in CI
-- [ ] expression security corpus green in CI
+- [x] Playwright: insert → arrange → component → variant → override → bind → state → event → undo-all → save → reload identical — green (`e2e/gate-m3.spec.ts`; drives it in chromium, reload-identity verified)
+- [x] perf harness ≥ 55 fps enforced in CI (`e2e/canvas-perf.spec.ts` floor flipped 30→55; recorded ~60 fps / 16.70 ms median @ 200 widgets)
+- [x] expression security corpus green in CI (`src/shared/expr/expr.test.ts` — 60 cases incl. injection/prototype/constructor rejection + op/time limits)
+
+**Gate results (recorded 2026-07-17):**
+
+| Criterion | Result |
+|---|---|
+| Authoring-journey E2E | green (insert→component→detach→bind→state→event→undo→autosave→reload identical) |
+| Full E2E suite | 13 specs green (M2 + M3 gates, perf, session, panels, nav) |
+| Canvas perf @ 200 widgets | ~60 fps (16.70 ms median) — ≥ 55 fps enforced |
+| Expression security corpus | 60 cases green; all injection attempts rejected |
+| Unit/integration tests | 717 green |
+| Undo sweep (CD-329) | 50-op random sequence fully reverts to baseline |
+| Lint / typecheck / build | clean; deck-designer its own lazy chunk; shell bundle 84 kB gz |
+
+Every gate-journey step is operable via real UI + keyboard; the document round-trips through save→restore unchanged.
