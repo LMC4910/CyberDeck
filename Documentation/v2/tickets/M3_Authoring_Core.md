@@ -31,7 +31,7 @@
 - [x] CD-324 Binding model + popover (static/variable)
 - [x] CD-325 Expression editor + live preview
 - [x] CD-326 Binding runtime apply path
-- [ ] CD-327 States
+- [x] CD-327 States
 - [ ] CD-328 Events + flow drawer
 - [ ] CD-329 Undo integration sweep
 - [ ] CD-330 **M3 gate review**

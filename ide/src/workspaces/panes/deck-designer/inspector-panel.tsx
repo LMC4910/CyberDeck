@@ -23,6 +23,7 @@ import { ColorField } from './inspector-fields'
 import { STYLE_KINDS, linkedStyleId, newStyleFromWidget, linkStyle, unlinkStyle, setStyleProp, stylesOfKind } from './style-ops'
 import type { StyleKind } from '@/shared/project'
 import { BindingsSection } from './bindings-section'
+import { allStates, activeState, stateDelta, setActive, setDelta, addCustomState, removeCustomState, STATE_DELTA_FIELDS, STANDARD_STATES } from './state-ops'
 import { useCanvasSettings, useCanvasSettingsStore } from './use-canvas-settings'
 import {
   InspectorSection,
@@ -58,11 +59,54 @@ export function InspectorPanel({ pageId }: { pageId: string }) {
       {ids.length === 1 && <SingleWidget model={model} id={ids[0]!} undo={undo} />}
       {ids.length === 1 && !single?.component && <StylesSection model={model} widgetId={ids[0]!} undo={undo} engine={engine} />}
       {ids.length === 1 && <BindingsSection model={model} widgetId={ids[0]!} undo={undo} />}
+      {ids.length === 1 && <StatesSection model={model} widgetId={ids[0]!} undo={undo} />}
       {single?.component && <ComponentSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <OverrideSection model={model} instanceId={single.id} undo={undo} engine={engine} />}
       {ids.length > 1 && <MultiArrange model={model} ids={ids} undo={undo} />}
     </div>
+  )
+}
+
+// ── widget states (CD-327) ──────────────────────────────────────────────────────
+function StatesSection({ model, widgetId, undo }: { model: ProjectModel; widgetId: string; undo: UndoStack }) {
+  const ctx = { model, undo }
+  const states = allStates(model, widgetId)
+  const active = activeState(model, widgetId)
+  const delta = stateDelta(model, widgetId, active)
+  return (
+    <InspectorSection title="States">
+      <div className="dd-state-chips" role="group" aria-label="States">
+        {states.map((s) => (
+          <button
+            key={s}
+            type="button"
+            className="dd-state-chip"
+            aria-pressed={active === s}
+            data-state={s}
+            onClick={() => setActive(ctx, widgetId, s)}
+          >
+            {s}
+            {!STANDARD_STATES.includes(s as never) && (
+              <span className="dd-state-x" role="button" aria-label={`Remove ${s}`} onClick={(e) => { e.stopPropagation(); removeCustomState(ctx, widgetId, s) }}>×</span>
+            )}
+          </button>
+        ))}
+        <button type="button" className="dd-chip" data-testid="add-state" onClick={() => addCustomState(ctx, widgetId, `state${states.length}`)}>
+          ＋
+        </button>
+      </div>
+      {active !== 'default' &&
+        STATE_DELTA_FIELDS.map((f) => (
+          <NumberField
+            key={f.prop}
+            label={f.label}
+            step={f.step}
+            value={typeof delta[f.prop] === 'number' ? (delta[f.prop] as number) : f.def}
+            onCommit={(v) => setDelta(ctx, widgetId, active, f.prop, v)}
+          />
+        ))}
+    </InspectorSection>
   )
 }
 

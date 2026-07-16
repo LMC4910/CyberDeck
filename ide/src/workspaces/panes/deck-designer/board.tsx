@@ -71,9 +71,16 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
   const cfg = widget.config as { rotation?: number; opacity?: number; hidden?: boolean } | undefined
   if (cfg?.hidden) return null // hidden via the layers panel (CD-310)
   const rotation = typeof cfg?.rotation === 'number' ? cfg.rotation : 0
-  const opacity = typeof cfg?.opacity === 'number' ? cfg.opacity : undefined
+  // Active-state preview delta (CD-327): opacity/scale/glow applied live on canvas.
+  const st = model.stateOf(id)
+  const sd = (st?.active ? st.ov?.[st.active] : undefined) as { opacity?: number; scale?: number; glow?: number } | undefined
+  const opacity = typeof sd?.opacity === 'number' ? sd.opacity : typeof cfg?.opacity === 'number' ? cfg.opacity : undefined
+  const scale = typeof sd?.scale === 'number' ? sd.scale : undefined
+  const glow = typeof sd?.glow === 'number' ? sd.glow : undefined
   const transform =
-    `translate(${frame.x}px, ${frame.y}px)` + (rotation ? ` rotate(${rotation}deg)` : '')
+    `translate(${frame.x}px, ${frame.y}px)` +
+    (rotation ? ` rotate(${rotation}deg)` : '') +
+    (scale != null ? ` scale(${scale})` : '')
   return (
     <div
       className="dd-widget"
@@ -83,9 +90,10 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
       data-locked={widget.locked || undefined}
       data-container={container || undefined}
       data-instance={widget.component || undefined}
+      data-state={st?.active || undefined}
       role="figure"
       aria-label={widget.name ?? widget.type}
-      style={{ transform, width: frame.w, height: frame.h, opacity }}
+      style={{ transform, width: frame.w, height: frame.h, opacity, boxShadow: glow ? `0 0 ${glow}px var(--focus-ring, #4c9aff)` : undefined }}
       onPointerDown={onPointerDown ? (e) => onPointerDown(id, e) : undefined}
     >
       <WidgetBody widget={widget} model={model} bound={bound} />

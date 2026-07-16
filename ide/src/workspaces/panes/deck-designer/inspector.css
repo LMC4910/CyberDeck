@@ -90,6 +90,33 @@
   border-color: var(--focus-ring, #4c9aff);
 }
 
+.dd-state-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.dd-state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font: inherit;
+  font-size: 10px;
+  color: inherit;
+  background: var(--chip-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.dd-state-chip[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 30%, transparent);
+  border-color: var(--focus-ring, #4c9aff);
+}
+.dd-state-x {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
 .dd-variant-chips {
   display: flex;
   flex-wrap: wrap;
