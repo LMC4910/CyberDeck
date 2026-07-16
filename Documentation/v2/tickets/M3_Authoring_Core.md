@@ -16,7 +16,7 @@
 - [x] CD-309 Canvas perf harness (200 widgets) — recorded ~60 fps @ 200 widgets (16.70 ms median, headless chromium)
 - [x] CD-310 Layers tree + command mutations
 - [x] CD-311 Layers filters/search + tree a11y
-- [ ] CD-312 Contextual inspector registry + page/multi states
+- [x] CD-312 Contextual inspector registry + page/multi states
 - [ ] CD-313 Per-type inspector sections (10 canon kinds)
 - [ ] CD-314 Board model + minimap + Live Mirror
 - [ ] CD-315 Insert panel v1 (mock manifests)

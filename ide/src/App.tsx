@@ -23,6 +23,7 @@ import {
   CanvasSettingsProvider,
   CommandsProvider,
   LayersPanel,
+  DeckInspectorPanel,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -166,6 +167,18 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
           </ResizablePanel>
         )}
         <PaneHost service={kernel.workspaces} active={active} />
+        {panel && active === 'deck-designer' && kernel.project.model && (
+          <ResizablePanel
+            side="right"
+            width={panel.rightWidth}
+            visible={panel.rightVisible}
+            label="Inspector"
+            onResize={(w) => setPanelWidth(kernel.panels, active, 'right', w)}
+            onToggle={() => toggleSide('right')}
+          >
+            <DeckInspectorPanel pageId={kernel.project.model.pages()[0]!.id} />
+          </ResizablePanel>
+        )}
         <DockHost
           manager={kernel.dock}
           windows={dockRows}

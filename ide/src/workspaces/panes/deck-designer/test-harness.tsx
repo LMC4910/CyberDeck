@@ -13,6 +13,7 @@ import { CommandsProvider } from './use-commands'
 import { CanvasSettingsProvider } from './use-canvas-settings'
 import { registerCanvasCommands } from './canvas-commands'
 import { LayersPanel } from './layers-panel'
+import { InspectorPanel } from './inspector-panel'
 import DeckDesignerPane from '../deck-designer-pane'
 
 export interface RenderDeckOptions {
@@ -67,6 +68,30 @@ export function renderLayers(doc: ProjectDocument) {
     </ProjectModelProvider>,
   )
   return { model, engine, undo, ...view }
+}
+
+/** Render the contextual Inspector with the full provider stack it needs. */
+export function renderInspector(doc: ProjectDocument) {
+  const model = new ProjectModel(doc)
+  const engine = new SelectionEngine(createSelectionStore())
+  const undo = new UndoStack()
+  const commands = new CommandRegistry()
+  registerCanvasCommands(commands, () => ({ model, engine, undo }))
+  const canvasSettings = createStore({ snap: true, grid: 8 }, { name: 'canvas', kind: 'temp' })
+  const view = render(
+    <ProjectModelProvider value={model}>
+      <SelectionProvider value={engine}>
+        <UndoProvider value={undo}>
+          <CommandsProvider value={commands}>
+            <CanvasSettingsProvider value={canvasSettings}>
+              <InspectorPanel pageId={doc.pages[0]!.id} />
+            </CanvasSettingsProvider>
+          </CommandsProvider>
+        </UndoProvider>
+      </SelectionProvider>
+    </ProjectModelProvider>,
+  )
+  return { model, engine, undo, commands, canvasSettings, ...view }
 }
 
 /** Convenience: a doc with the given widgets on one page. */

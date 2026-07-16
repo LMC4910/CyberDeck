@@ -219,6 +219,19 @@ export class ProjectModel {
     }
   }
 
+  setPageCanvas(pageId: string, canvas: { w?: number; h?: number }): Inverse {
+    const page = this.page(pageId)
+    if (!page) return () => {}
+    const prev = page.canvas ? { ...page.canvas } : undefined
+    page.canvas = { ...page.canvas, ...canvas }
+    this.emit([pageId])
+    return () => {
+      const p = this.page(pageId)
+      if (p) p.canvas = prev
+      this.emit([pageId])
+    }
+  }
+
   renamePage(pageId: string, name: string): Inverse {
     const page = this.page(pageId)
     if (!page) return () => {}
