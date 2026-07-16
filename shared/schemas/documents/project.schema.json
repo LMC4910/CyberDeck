@@ -231,6 +231,21 @@
           "uri": { "type": "string", "minLength": 1 }
         }
       }
+    },
+    "styles": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]*_[a-z0-9][a-z0-9-]{5,}$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["kind", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["fill", "stroke", "typography", "effect", "radius"] },
+          "name": { "type": "string", "minLength": 1 },
+          "props": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "description": "shared style registry (CD-321): style id → { kind, name, props }; widgets link a style via config.styles[kind] = styleId"
     }
   }
 }

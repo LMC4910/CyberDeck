@@ -155,6 +155,18 @@ export interface CyberDeckProjectDocumentCyberdeckProject {
     kind: "image" | "icon" | "font" | "audio";
     uri: string;
   }[];
+  /**
+   * shared style registry (CD-321): style id → { kind, name, props }; widgets link a style via config.styles[kind] = styleId
+   */
+  styles?: {
+    [k: string]: {
+      kind: "fill" | "stroke" | "typography" | "effect" | "radius";
+      name: string;
+      props?: {
+        [k: string]: unknown;
+      };
+    };
+  };
 }
 export interface WidgetInstance {
   id: StableId;

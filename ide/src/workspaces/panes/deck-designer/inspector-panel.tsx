@@ -20,6 +20,8 @@ import {
   resetAllOverrides,
 } from './override-ops'
 import { ColorField } from './inspector-fields'
+import { STYLE_KINDS, linkedStyleId, newStyleFromWidget, linkStyle, unlinkStyle, setStyleProp, stylesOfKind } from './style-ops'
+import type { StyleKind } from '@/shared/project'
 import { useCanvasSettings, useCanvasSettingsStore } from './use-canvas-settings'
 import {
   InspectorSection,
@@ -53,11 +55,60 @@ export function InspectorPanel({ pageId }: { pageId: string }) {
     <div className="dd-inspector" data-testid="inspector-panel" data-mode={inspectorMode(selection.kind, ids.length)}>
       {ids.length === 0 && <PageProperties model={model} pageId={pageId} undo={undo} />}
       {ids.length === 1 && <SingleWidget model={model} id={ids[0]!} undo={undo} />}
+      {ids.length === 1 && !single?.component && <StylesSection model={model} widgetId={ids[0]!} undo={undo} engine={engine} />}
       {single?.component && <ComponentSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <OverrideSection model={model} instanceId={single.id} undo={undo} engine={engine} />}
       {ids.length > 1 && <MultiArrange model={model} ids={ids} undo={undo} />}
     </div>
+  )
+}
+
+// ── shared styles (CD-321) ──────────────────────────────────────────────────────
+function StylesSection({ model, widgetId, undo, engine }: { model: ProjectModel; widgetId: string; undo: UndoStack; engine: SelectionEngine }) {
+  const w = model.widget(widgetId)
+  if (!w) return null
+  const ctx = { model, undo, engine }
+  return (
+    <InspectorSection title="Styles">
+      {STYLE_KINDS.map(({ kind, label, props }) => {
+        const linkedId = linkedStyleId(w, kind as StyleKind)
+        const style = linkedId ? model.style(linkedId) : undefined
+        const options = stylesOfKind(model, kind as StyleKind)
+        return (
+          <div key={kind} className="dd-style-row" data-style-kind={kind}>
+            {style ? (
+              <>
+                <span className="dd-style-chip" data-style-linked={linkedId}>
+                  {label}: {style.name} <span className="dd-style-refs" data-testid={`refs-${kind}`}>×{model.styleRefCount(linkedId!)}</span>
+                </span>
+                {props.map((p) => {
+                  const val = (style.props ?? {})[p]
+                  return p === 'color' ? (
+                    <ColorField key={p} label={p} value={typeof val === 'string' ? val : ''} onCommit={(v) => setStyleProp(ctx, linkedId!, p, v)} />
+                  ) : (
+                    <NumberField key={p} label={p} value={typeof val === 'number' ? val : 0} onCommit={(v) => setStyleProp(ctx, linkedId!, p, v)} />
+                  )
+                })}
+                <button type="button" className="dd-insp-btn" data-testid={`detach-${kind}`} onClick={() => unlinkStyle(ctx, widgetId, kind as StyleKind)}>
+                  Detach
+                </button>
+              </>
+            ) : (
+              <SelectField
+                label={label}
+                value=""
+                options={[{ value: '', label: '— none —' }, ...options.map((o) => ({ value: o.id, label: o.name })), { value: '__new', label: '＋ New from selection' }]}
+                onCommit={(v) => {
+                  if (v === '__new') newStyleFromWidget(ctx, widgetId, kind as StyleKind, `${label} ${options.length + 1}`)
+                  else if (v) linkStyle(ctx, widgetId, kind as StyleKind, v)
+                }}
+              />
+            )}
+          </div>
+        )
+      })}
+    </InspectorSection>
   )
 }
 

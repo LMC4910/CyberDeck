@@ -76,4 +76,5 @@ export const ID_PREFIX = {
   variant: 'var',
   device: 'dev',
   asset: 'ast',
+  style: 'sty',
 } as const

@@ -18,6 +18,8 @@ export {
   type ComponentDef,
   type Variant,
   type StateDef,
+  type SharedStyle,
+  type StyleKind,
   type Inverse,
   type Diagnostic,
 } from './types'

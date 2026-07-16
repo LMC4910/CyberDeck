@@ -180,6 +180,123 @@ export class ProjectModel {
   eventsOf(widgetId: string): Record<string, string> | undefined {
     return this.doc.events?.[widgetId]
   }
+  styles(): Readonly<NonNullable<ProjectDocument['styles']>> {
+    return this.doc.styles ?? {}
+  }
+  style(id: string) {
+    return this.doc.styles?.[id]
+  }
+
+  // ── shared styles (CD-321) ──────────────────────────────────────────────────
+  addStyle(id: string, style: NonNullable<ProjectDocument['styles']>[string]): Inverse {
+    this.ids.reserve(id)
+    ;(this.doc.styles ??= {})[id] = style
+    this.emit([id])
+    return () => {
+      if (this.doc.styles) {
+        delete this.doc.styles[id]
+        if (Object.keys(this.doc.styles).length === 0) delete this.doc.styles
+      }
+      this.emit([id])
+    }
+  }
+
+  removeStyle(id: string): Inverse {
+    const prev = this.doc.styles?.[id]
+    if (!prev) return () => {}
+    // Unlink from every widget that referenced it.
+    const relinks: Inverse[] = []
+    for (const p of this.doc.pages) {
+      for (const w of p.widgets) {
+        const links = (w.config as { styles?: Record<string, string> } | undefined)?.styles
+        if (links) for (const k of Object.keys(links)) if (links[k] === id) relinks.push(this.unlinkStyle(w.id, k))
+      }
+    }
+    delete this.doc.styles![id]
+    if (Object.keys(this.doc.styles!).length === 0) delete this.doc.styles
+    this.emit([id])
+    return () => {
+      ;(this.doc.styles ??= {})[id] = prev
+      relinks.reverse().forEach((inv) => inv())
+      this.emit([id])
+    }
+  }
+
+  setStyleProp(id: string, prop: string, value: unknown): Inverse {
+    const s = this.doc.styles?.[id]
+    if (!s) return () => {}
+    const had = s.props && prop in s.props
+    const prev = had ? (s.props as Record<string, unknown>)[prop] : undefined
+    if (value === undefined) {
+      if (s.props) delete s.props[prop]
+    } else {
+      ;(s.props ??= {})[prop] = value
+    }
+    this.emit([id])
+    return () => {
+      const t = this.doc.styles?.[id]
+      if (!t) return
+      if (had) (t.props ??= {})[prop] = prev
+      else if (t.props) delete t.props[prop]
+      this.emit([id])
+    }
+  }
+
+  renameStyle(id: string, name: string): Inverse {
+    const s = this.doc.styles?.[id]
+    if (!s) return () => {}
+    const prev = s.name
+    s.name = name
+    this.emit([id])
+    return () => {
+      const t = this.doc.styles?.[id]
+      if (t) t.name = prev
+      this.emit([id])
+    }
+  }
+
+  /** Link `kind` of widget's appearance to a shared style (config.styles[kind]=id). */
+  linkStyle(widgetId: string, kind: string, styleId: string): Inverse {
+    return this.mutateStyleLink(widgetId, kind, styleId)
+  }
+  unlinkStyle(widgetId: string, kind: string): Inverse {
+    return this.mutateStyleLink(widgetId, kind, undefined)
+  }
+  private mutateStyleLink(widgetId: string, kind: string, styleId: string | undefined): Inverse {
+    const w = this.widget(widgetId)
+    if (!w) return () => {}
+    const cfg = (w.config ?? {}) as { styles?: Record<string, string> }
+    const prev = cfg.styles?.[kind]
+    const links = { ...(cfg.styles ?? {}) }
+    if (styleId === undefined) delete links[kind]
+    else links[kind] = styleId
+    w.config = { ...cfg, styles: Object.keys(links).length ? links : undefined }
+    if (!(w.config as { styles?: unknown }).styles) delete (w.config as { styles?: unknown }).styles
+    this.emit([widgetId, styleId ?? kind])
+    return () => {
+      const t = this.widget(widgetId)
+      if (!t) return
+      const c = (t.config ?? {}) as { styles?: Record<string, string> }
+      const l = { ...(c.styles ?? {}) }
+      if (prev === undefined) delete l[kind]
+      else l[kind] = prev
+      t.config = { ...c, styles: Object.keys(l).length ? l : undefined }
+      if (!(t.config as { styles?: unknown }).styles) delete (t.config as { styles?: unknown }).styles
+      this.emit([widgetId])
+    }
+  }
+
+  /** Number of widgets currently linking `styleId` (any kind) — live ref count. */
+  styleRefCount(styleId: string): number {
+    let n = 0
+    for (const p of this.doc.pages) {
+      for (const w of p.widgets) {
+        const links = (w.config as { styles?: Record<string, string> } | undefined)?.styles
+        if (links && Object.values(links).includes(styleId)) n++
+      }
+    }
+    return n
+  }
 
   private reindex(): void {
     this.widgetPage.clear()
@@ -829,6 +946,7 @@ function collectIds(doc: ProjectDocument): string[] {
   }
   for (const d of doc.devices ?? []) ids.push(d.id)
   for (const a of doc.assets ?? []) ids.push(a.id)
+  for (const sid of Object.keys(doc.styles ?? {})) ids.push(sid)
   return ids
 }
 
@@ -926,6 +1044,16 @@ export function validateDocument(doc: ProjectDocument): Diagnostic[] {
   for (const d of doc.devices ?? []) {
     if (!pageIds.has(d.pageId)) {
       out.push({ code: 'dangling-ref', id: d.id, message: `device ${d.id} → missing page ${d.pageId}` })
+    }
+  }
+  // Style links must resolve to a style in the registry (CD-321).
+  const styleIds = new Set(Object.keys(doc.styles ?? {}))
+  for (const p of doc.pages) {
+    for (const w of p.widgets) {
+      const links = (w.config as { styles?: Record<string, string> } | undefined)?.styles
+      for (const ref of Object.values(links ?? {})) {
+        if (!styleIds.has(ref)) out.push({ code: 'dangling-ref', id: w.id, message: `style link → missing style ${ref}` })
+      }
     }
   }
 

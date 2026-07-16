@@ -25,7 +25,7 @@
 - [x] CD-318 Overrides
 - [x] CD-319 Nested components
 - [x] CD-320 Component inspector section
-- [ ] CD-321 Shared styles
+- [x] CD-321 Shared styles
 - [ ] CD-322 Symbols
 - [ ] CD-323 Expression sandbox parser + conformance corpus
 - [ ] CD-324 Binding model + popover (static/variable)

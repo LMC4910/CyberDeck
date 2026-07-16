@@ -110,6 +110,21 @@
   border-color: var(--component, #a960e8);
 }
 
+.dd-style-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-bottom: 4px;
+  border-bottom: 1px dotted var(--panel-border, rgba(255, 255, 255, 0.08));
+}
+.dd-style-chip {
+  font-size: 11px;
+}
+.dd-style-refs {
+  opacity: 0.6;
+  font-size: 10px;
+}
+
 .dd-nesting-crumb {
   margin: 0;
   font-size: 10px;

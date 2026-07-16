@@ -16,6 +16,8 @@ export type Page = ProjectDocument['pages'][number]
 export type ComponentDef = NonNullable<ProjectDocument['components']>[number]
 export type Variant = NonNullable<ComponentDef['variants']>[number]
 export type StateDef = NonNullable<ProjectDocument['states']>[string]
+export type SharedStyle = NonNullable<ProjectDocument['styles']>[string]
+export type StyleKind = SharedStyle['kind']
 
 /** Container/group widget type. Groups persist as ordinary widgets whose
  *  `config.childIds` lists their children (schema `config` allows any keys), so the
