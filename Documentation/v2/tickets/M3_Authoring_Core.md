@@ -10,7 +10,7 @@
 - [x] CD-303 Model→React reconciliation + board render
 - [x] CD-304 Serialize/restore + autosave + property tests
 - [x] CD-305 Selection engine + store
-- [ ] CD-306 Drag/resize/rotate controllers
+- [x] CD-306 Drag/resize/rotate controllers
 - [ ] CD-307 Snapping + smart guides
 - [ ] CD-308 Nudge, canvas shortcuts, selection minibar
 - [ ] CD-309 Canvas perf harness (200 widgets)

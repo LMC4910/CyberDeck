@@ -49,6 +49,7 @@ export {
   usePage,
 } from './panes/deck-designer/use-project-model'
 export { SelectionProvider, useSelection, useSelectionState } from './panes/deck-designer/use-selection'
+export { UndoProvider, useUndo } from './panes/deck-designer/use-undo'
 export {
   LayoutPresetMenu,
   BUILTIN_PRESETS,

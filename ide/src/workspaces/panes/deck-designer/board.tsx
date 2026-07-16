@@ -62,6 +62,11 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
 
   const { frame } = widget
   const container = isContainer(widget)
+  const cfg = widget.config as { rotation?: number; opacity?: number } | undefined
+  const rotation = typeof cfg?.rotation === 'number' ? cfg.rotation : 0
+  const opacity = typeof cfg?.opacity === 'number' ? cfg.opacity : undefined
+  const transform =
+    `translate(${frame.x}px, ${frame.y}px)` + (rotation ? ` rotate(${rotation}deg)` : '')
   return (
     <div
       className="dd-widget"
@@ -72,7 +77,7 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
       data-container={container || undefined}
       role="figure"
       aria-label={widget.name ?? widget.type}
-      style={{ transform: `translate(${frame.x}px, ${frame.y}px)`, width: frame.w, height: frame.h }}
+      style={{ transform, width: frame.w, height: frame.h, opacity }}
       onPointerDown={onPointerDown ? (e) => onPointerDown(id, e) : undefined}
     >
       <WidgetBody widget={widget} />

@@ -19,6 +19,7 @@ import {
   NotificationDrawer,
   ProjectModelProvider,
   SelectionProvider,
+  UndoProvider,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -122,6 +123,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   return (
    <ProjectModelProvider value={kernel.project.model}>
    <SelectionProvider value={kernel.selection}>
+   <UndoProvider value={kernel.undo}>
     <div className="shell" data-boot="interactive" data-testid="shell">
       <header className="shell-topbar">
         <span className="shell-brand">CyberDeck IDE</span>
@@ -232,6 +234,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         }
       />
     </div>
+   </UndoProvider>
    </SelectionProvider>
    </ProjectModelProvider>
   )

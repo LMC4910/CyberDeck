@@ -36,3 +36,53 @@
   stroke-width: 1;
   stroke-dasharray: 4 3;
 }
+
+/* Selection gizmo (CD-306): outline + 8 resize handles + rotate handle, world coords. */
+.dd-gizmo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.dd-gizmo-outline {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--focus-ring, #4c9aff);
+}
+
+.dd-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--focus-ring, #4c9aff);
+  border-radius: 2px;
+  pointer-events: auto;
+}
+
+.dd-handle-nw { top: 0; left: 0; cursor: nwse-resize; }
+.dd-handle-n  { top: 0; left: 50%; cursor: ns-resize; }
+.dd-handle-ne { top: 0; left: 100%; cursor: nesw-resize; }
+.dd-handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+.dd-handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+.dd-handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+.dd-handle-sw { top: 100%; left: 0; cursor: nesw-resize; }
+.dd-handle-w  { top: 50%; left: 0; cursor: ew-resize; }
+
+.dd-rotate-handle {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  margin-left: -6px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--focus-ring, #4c9aff);
+  border-radius: 50%;
+  cursor: grab;
+  pointer-events: auto;
+}

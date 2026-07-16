@@ -9,12 +9,16 @@ import { PanZoomSurface, IDENTITY, type PanZoomHandle, type ViewTransform } from
 import { Board } from './deck-designer/board'
 import { useProjectModel } from './deck-designer/use-project-model'
 import { useSelection, useSelectionState } from './deck-designer/use-selection'
+import { useUndo } from './deck-designer/use-undo'
 import { useCanvasSelection } from './deck-designer/use-canvas-selection'
+import { useTransformGestures } from './deck-designer/use-transform-gestures'
+import { SelectionGizmo } from './deck-designer/selection-gizmo'
 import './deck-designer/deck-designer.css'
 
 export default function DeckDesignerPane() {
   const model = useProjectModel()
   const engine = useSelection()
+  const undo = useUndo()
   const pageId = useMemo(() => model.pages()[0]!.id, [model])
   const canvas = model.page(pageId)?.canvas
 
@@ -24,18 +28,11 @@ export default function DeckDesignerPane() {
   const getTransform = useCallback((): ViewTransform => surfaceRef.current?.getTransform() ?? IDENTITY, [])
 
   const { marquee, lasso } = useCanvasSelection({ element, getTransform, model, pageId, engine })
+  const gestures = useTransformGestures({ model, engine, undo, pageId, element, getTransform })
   const selection = useSelectionState()
   const selectedIds = useMemo(
     () => new Set(selection.kind === 'widget' ? selection.ids : []),
     [selection],
-  )
-
-  const onWidgetPointerDown = useCallback(
-    (id: string, e: React.PointerEvent) => {
-      const orderedIds = model.widgetsOf(pageId).map((w) => w.id)
-      engine.click(id, { shift: e.shiftKey, meta: e.metaKey || e.ctrlKey }, orderedIds)
-    },
-    [engine, model, pageId],
   )
 
   return (
@@ -49,8 +46,9 @@ export default function DeckDesignerPane() {
           model={model}
           pageId={pageId}
           selectedIds={selectedIds}
-          onWidgetPointerDown={onWidgetPointerDown}
+          onWidgetPointerDown={gestures.onWidgetPointerDown}
         />
+        <SelectionGizmo model={model} selection={selection} gestures={gestures} />
         {marquee && (
           <div
             className="dd-marquee"

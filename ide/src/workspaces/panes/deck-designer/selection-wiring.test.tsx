@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, act, fireEvent } from '@testing-library/react'
 import { ProjectModel, type WidgetInstance } from '@/shared/project'
 import { createSelectionStore, SelectionEngine } from '@/stores'
+import { UndoStack } from '@/platform/undo'
 import { ProjectModelProvider } from './use-project-model'
 import { SelectionProvider } from './use-selection'
+import { UndoProvider } from './use-undo'
 import DeckDesignerPane from '../deck-designer-pane'
 
 function w(id: string, x: number): WidgetInstance {
@@ -18,14 +20,17 @@ function setup() {
     pages: [{ id: 'page_seltst', name: 'P', canvas: { w: 800, h: 600 }, widgets: [w('w_aaaaaa', 0), w('w_bbbbbb', 100), w('w_cccccc', 200)] }],
   })
   const engine = new SelectionEngine(createSelectionStore())
+  const undo = new UndoStack()
   const view = render(
     <ProjectModelProvider value={model}>
       <SelectionProvider value={engine}>
-        <DeckDesignerPane />
+        <UndoProvider value={undo}>
+          <DeckDesignerPane />
+        </UndoProvider>
       </SelectionProvider>
     </ProjectModelProvider>,
   )
-  return { model, engine, ...view }
+  return { model, engine, undo, ...view }
 }
 
 const rings = (c: HTMLElement) => c.querySelectorAll('.dd-widget-ring').length
@@ -97,7 +102,10 @@ describe('canvas selection wiring (CD-305)', () => {
     const surface = container.querySelector('[role="application"]')!
     fireEvent.keyDown(surface, { key: 'a', ctrlKey: true })
     expect(engine.state.ids).toHaveLength(3)
-    fireEvent.pointerDown(container.querySelector('[data-widget="w_bbbbbb"]')!)
+    // A full click (down+up, no drag) on an already-selected widget reduces to it.
+    const bbb = container.querySelector('[data-widget="w_bbbbbb"]')!
+    fireEvent.pointerDown(bbb, { clientX: 10, clientY: 10 })
+    fireEvent.pointerUp(window, { clientX: 10, clientY: 10 })
     expect(engine.state.ids).toEqual(['w_bbbbbb'])
     fireEvent.keyDown(surface, { key: '[' }) // history back → select-all
     expect(engine.state.ids).toHaveLength(3)
