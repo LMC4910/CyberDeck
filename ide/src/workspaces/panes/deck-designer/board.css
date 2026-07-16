@@ -75,3 +75,29 @@
   font-size: 10px;
   opacity: 0.6;
 }
+
+/* Component instances (CD-316): dashed frame + template preview + badge. */
+.dd-widget[data-instance] {
+  border-color: var(--component, #a960e8);
+  border-style: solid;
+}
+.dd-instance {
+  position: absolute;
+  inset: 0;
+}
+.dd-instance-cell {
+  position: absolute;
+  background: color-mix(in srgb, var(--component, #a960e8) 22%, transparent);
+  border-radius: 2px;
+}
+.dd-instance-badge {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 11px;
+  color: var(--component, #a960e8);
+  z-index: 1;
+}
+.dd-instance-missing {
+  color: var(--warn, #f5a623);
+}

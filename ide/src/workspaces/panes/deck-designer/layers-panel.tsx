@@ -285,6 +285,9 @@ function LayerRowView({
         <span className="dd-layer-twist-spacer" />
       )}
       <span className="dd-layer-color" style={{ background: row.color ?? 'transparent' }} aria-hidden="true" />
+      {row.instanceOf && (
+        <span className="dd-layer-instance" data-testid={`instance-badge-${row.id}`} title="Component instance" aria-label="Component instance">◇</span>
+      )}
       {editing ? (
         <input
           className="dd-layer-rename"

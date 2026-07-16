@@ -87,7 +87,10 @@ export function useCanvasShortcuts({ element, model, engine, undo, commands }: O
         return
       }
       const mod = e.metaKey || e.ctrlKey
-      if (mod && e.key.toLowerCase() === 'g') {
+      if (mod && e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        void commands.execute(CANVAS_COMMANDS.createComponent, undefined, {})
+      } else if (mod && e.key.toLowerCase() === 'g') {
         e.preventDefault()
         void commands.execute(e.shiftKey ? CANVAS_COMMANDS.ungroup : CANVAS_COMMANDS.group, undefined, {})
       } else if (mod && e.key.toLowerCase() === 'd') {

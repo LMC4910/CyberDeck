@@ -2,13 +2,14 @@
 // sections. Double-click inserts a widget at the canvas centre; dragging a tile to the
 // canvas inserts it at the drop point (handled by the pane). Inserted widgets get a
 // model node (undoable), a layer row, and become the selection.
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 import { useProjectModel } from './use-project-model'
 import { useSelection } from './use-selection'
 import { useUndo } from './use-undo'
 import { useCanvasViewBus } from './use-canvas-view'
 import { visibleWorldRect } from '@/shared/canvas'
 import { INSERT_CATALOG, INSERT_DND_TYPE, insertManifest, type InsertManifest } from './insert-catalog'
+import { instantiateComponent } from './component-ops'
 import './insert.css'
 
 export function InsertPanel({ pageId }: { pageId: string }) {
@@ -42,6 +43,11 @@ export function InsertPanel({ pageId }: { pageId: string }) {
 
   const doInsert = (m: InsertManifest) => insertManifest({ model, undo, engine, pageId }, m, canvasCenter())
 
+  // Component masters (CD-316) — instantiate on double-click.
+  useSyncExternalStore((cb) => model.subscribe(cb), () => model.revision)
+  const q = query.trim().toLowerCase()
+  const components = model.components().filter((c) => !q || c.name.toLowerCase().includes(q))
+
   return (
     <div className="dd-insert" data-testid="insert-panel">
       <div className="dd-insert-title">Insert</div>
@@ -54,7 +60,27 @@ export function InsertPanel({ pageId }: { pageId: string }) {
         onChange={(e) => setQuery(e.target.value)}
       />
       <div className="dd-insert-scroll">
-        {groups.length === 0 && <p className="dd-insert-empty">No widgets match.</p>}
+        {components.length > 0 && (
+          <section className="dd-insert-cat" aria-label="Components">
+            <h3 className="dd-insert-cat-title">Components</h3>
+            <div className="dd-insert-grid">
+              {components.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="dd-insert-tile dd-insert-component"
+                  data-component={c.id}
+                  onDoubleClick={() => instantiateComponent({ model, undo, engine, pageId }, c.id, canvasCenter())}
+                  title={`${c.name} — double-click to place`}
+                >
+                  <span className="dd-insert-icon" aria-hidden="true">◇</span>
+                  <span className="dd-insert-label">{c.name}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+        {groups.length === 0 && components.length === 0 && <p className="dd-insert-empty">No widgets match.</p>}
         {groups.map(([category, items]) => (
           <section key={category} className="dd-insert-cat" aria-label={category}>
             <h3 className="dd-insert-cat-title">{category}</h3>

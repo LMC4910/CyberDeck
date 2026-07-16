@@ -149,6 +149,12 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
+.dd-layer-instance {
+  color: var(--component, #a960e8);
+  font-size: 10px;
+  flex: 0 0 auto;
+}
+
 .dd-layer-name {
   flex: 1 1 auto;
   overflow: hidden;

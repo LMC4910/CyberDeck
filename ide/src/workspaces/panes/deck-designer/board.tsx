@@ -76,12 +76,13 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
       data-selected={selected || undefined}
       data-locked={widget.locked || undefined}
       data-container={container || undefined}
+      data-instance={widget.component || undefined}
       role="figure"
       aria-label={widget.name ?? widget.type}
       style={{ transform, width: frame.w, height: frame.h, opacity }}
       onPointerDown={onPointerDown ? (e) => onPointerDown(id, e) : undefined}
     >
-      <WidgetBody widget={widget} />
+      <WidgetBody widget={widget} model={model} />
       {selected && <div className="dd-widget-ring" aria-hidden="true" />}
       {widget.locked && (
         <div className="dd-widget-lock" aria-hidden="true" title="Locked">
@@ -93,7 +94,10 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
 })
 
 /** Honest placeholder body — real widget rendering is the widget platform (M4). */
-function WidgetBody({ widget }: { widget: WidgetInstance }) {
+function WidgetBody({ widget, model }: { widget: WidgetInstance; model: ProjectModel }) {
+  if (widget.component) {
+    return <InstanceBody widget={widget} model={model} />
+  }
   if (widget.type === GROUP_TYPE) {
     return <div className="dd-widget-group-label">{widget.name ?? 'Group'}</div>
   }
@@ -102,6 +106,33 @@ function WidgetBody({ widget }: { widget: WidgetInstance }) {
     <div className="dd-widget-body">
       <span className="dd-widget-kind">{kind}</span>
       {widget.name && <span className="dd-widget-name">{widget.name}</span>}
+    </div>
+  )
+}
+
+/** Component instance preview (CD-316): the master template scaled into the instance
+ *  frame, with a badge. Publish expands it to plain widgets (M5). */
+function InstanceBody({ widget, model }: { widget: WidgetInstance; model: ProjectModel }) {
+  const def = widget.component ? model.component(widget.component) : undefined
+  if (!def) {
+    return <div className="dd-widget-body dd-instance-missing">Missing component</div>
+  }
+  const bounds = def.widgets.reduce(
+    (b, t) => ({ w: Math.max(b.w, t.frame.x + t.frame.w), h: Math.max(b.h, t.frame.y + t.frame.h) }),
+    { w: 1, h: 1 },
+  )
+  const sx = widget.frame.w / bounds.w
+  const sy = widget.frame.h / bounds.h
+  return (
+    <div className="dd-instance" data-component={def.id}>
+      <span className="dd-instance-badge" aria-hidden="true" title={`Instance of ${def.name}`}>◇</span>
+      {def.widgets.map((t) => (
+        <div
+          key={t.id}
+          className="dd-instance-cell"
+          style={{ left: t.frame.x * sx, top: t.frame.y * sy, width: Math.max(1, t.frame.w * sx), height: Math.max(1, t.frame.h * sy) }}
+        />
+      ))}
     </div>
   )
 }

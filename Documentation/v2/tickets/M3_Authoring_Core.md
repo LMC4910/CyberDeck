@@ -20,7 +20,7 @@
 - [x] CD-313 Per-type inspector sections (10 canon kinds)
 - [x] CD-314 Board model + minimap + Live Mirror
 - [x] CD-315 Insert panel v1 (mock manifests)
-- [ ] CD-316 Component registry + create/instantiate/detach
+- [x] CD-316 Component registry + create/instantiate/detach
 - [ ] CD-317 Variants
 - [ ] CD-318 Overrides
 - [ ] CD-319 Nested components

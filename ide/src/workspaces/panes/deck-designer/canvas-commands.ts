@@ -7,6 +7,7 @@ import type { SelectionEngine } from '@/stores'
 import type { UndoStack } from '@/platform/undo'
 import type { CommandRegistry } from '@/platform/commands'
 import { boundingFrame } from './transform-math'
+import { createComponentFromSelection, detachInstance } from './component-ops'
 
 export interface CanvasCtx {
   model: ProjectModel
@@ -21,6 +22,8 @@ export const CANVAS_COMMANDS = {
   group: 'canvas.group',
   ungroup: 'canvas.ungroup',
   delete: 'canvas.delete',
+  createComponent: 'canvas.createComponent',
+  detach: 'canvas.detach',
 } as const
 
 const OFFSET = 16
@@ -123,4 +126,26 @@ export function registerCanvasCommands(commands: CommandRegistry, getCtx: () => 
   commands.register({ id: CANVAS_COMMANDS.group, category: 'Edit', label: 'Group', icon: 'group', handler: run(groupSelection) })
   commands.register({ id: CANVAS_COMMANDS.ungroup, category: 'Edit', label: 'Ungroup', icon: 'ungroup', handler: run(ungroupSelection) })
   commands.register({ id: CANVAS_COMMANDS.delete, category: 'Edit', label: 'Delete', icon: 'trash', handler: run(deleteSelection) })
+  commands.register({
+    id: CANVAS_COMMANDS.createComponent,
+    category: 'Component',
+    label: 'Create Component',
+    icon: 'component',
+    handler: run(({ model, engine, undo }) => {
+      const pageId = model.pageOf(engine.state.ids[0] ?? '')
+      if (pageId) createComponentFromSelection({ model, engine, undo, pageId }, 'Component')
+    }),
+  })
+  commands.register({
+    id: CANVAS_COMMANDS.detach,
+    category: 'Component',
+    label: 'Detach Instance',
+    icon: 'unlink',
+    handler: run(({ model, engine, undo }) => {
+      for (const id of [...engine.state.ids]) {
+        const pageId = model.pageOf(id)
+        if (pageId && model.widget(id)?.component) detachInstance({ model, engine, undo, pageId }, id)
+      }
+    }),
+  })
 }

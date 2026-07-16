@@ -14,6 +14,8 @@ export interface LayerRow {
   locked: boolean
   hidden: boolean
   color?: string
+  /** Set when this widget is a component instance (CD-316). */
+  instanceOf?: string
 }
 
 function cfg(w: WidgetInstance): { hidden?: boolean; colorLabel?: string } {
@@ -39,6 +41,7 @@ export function flattenLayers(model: ProjectModel, pageId: string, collapsed: Re
       locked: !!w.locked,
       hidden: !!c.hidden,
       color: c.colorLabel,
+      instanceOf: w.component,
     })
     if (container && !collapsed.has(id)) for (const cid of kids) walk(cid, depth + 1)
   }
