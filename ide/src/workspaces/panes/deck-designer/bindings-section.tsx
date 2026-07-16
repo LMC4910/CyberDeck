@@ -82,14 +82,30 @@ function BindingPopover({ current, onClose, onApply, onRemove }: { current?: Bin
     }
   }, [onClose])
 
+  const exprRef = useRef<HTMLTextAreaElement>(null)
+  // Live preview via the sandbox; friendly errors from analyze() or a runtime throw.
   const exprAnalysis = mode === 'expression' && expr ? analyze(expr, KNOWN_VARIABLE_PATHS) : null
   let exprPreview: string | null = null
-  if (mode === 'expression' && expr && exprAnalysis?.ok) {
-    try {
-      exprPreview = String(evaluate(expr, { vars: catalogResolver }))
-    } catch (e) {
-      exprPreview = e instanceof Error ? e.message : String(e)
+  let exprError: string | null = null
+  if (mode === 'expression' && expr) {
+    if (!exprAnalysis?.ok) {
+      exprError = exprAnalysis?.error ?? 'Invalid expression'
+    } else {
+      try {
+        exprPreview = String(evaluate(expr, { vars: catalogResolver }))
+      } catch (e) {
+        exprError = e instanceof Error ? e.message : String(e)
+      }
     }
+  }
+  const insertVar = (path: string) => {
+    const ta = exprRef.current
+    const at = ta ? ta.selectionStart : expr.length
+    setExpr(expr.slice(0, at) + path + expr.slice(ta ? ta.selectionEnd : expr.length))
+    queueMicrotask(() => {
+      ta?.focus()
+      if (ta) ta.selectionStart = ta.selectionEnd = at + path.length
+    })
   }
 
   return (
@@ -135,10 +151,17 @@ function BindingPopover({ current, onClose, onApply, onRemove }: { current?: Bin
 
       {mode === 'expression' && (
         <div className="dd-bind-body">
-          <textarea className="dd-input dd-expr-input" aria-label="Expression" rows={2} value={expr} onChange={(e) => setExpr(e.target.value)} />
-          {exprAnalysis && !exprAnalysis.ok && <p className="dd-expr-error" data-testid="expr-error">{exprAnalysis.error}</p>}
-          {exprPreview != null && <p className="dd-expr-preview" data-testid="expr-preview">= {exprPreview}</p>}
-          <button type="button" className="dd-insp-btn" data-testid="bind-apply-expr" disabled={!expr || !exprAnalysis?.ok} onClick={() => onApply({ mode: 'expression', expr })}>
+          <textarea ref={exprRef} className="dd-input dd-expr-input" aria-label="Expression" rows={2} value={expr} onChange={(e) => setExpr(e.target.value)} />
+          <div className="dd-expr-chips" aria-label="Insert variable">
+            {KNOWN_VARIABLE_PATHS.slice(0, 6).map((p) => (
+              <button key={p} type="button" className="dd-chip dd-expr-chip" data-var-chip={p} onClick={() => insertVar(p)}>
+                {p}
+              </button>
+            ))}
+          </div>
+          {exprError && <p className="dd-expr-error" data-testid="expr-error">{exprError}</p>}
+          {exprPreview != null && !exprError && <p className="dd-expr-preview" data-testid="expr-preview">= {exprPreview}</p>}
+          <button type="button" className="dd-insp-btn" data-testid="bind-apply-expr" disabled={!expr || !!exprError} onClick={() => onApply({ mode: 'expression', expr })}>
             Apply
           </button>
         </div>

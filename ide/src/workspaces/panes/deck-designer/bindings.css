@@ -97,6 +97,15 @@
   font-family: ui-monospace, monospace;
   resize: vertical;
 }
+.dd-expr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.dd-expr-chip {
+  font-size: 9px;
+  font-family: ui-monospace, monospace;
+}
 .dd-expr-error {
   margin: 0;
   color: var(--error, #e5484d);
