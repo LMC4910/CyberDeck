@@ -142,6 +142,32 @@ describe('ProjectModel — mutations keep the document valid', () => {
     expect(model.validate()).toEqual([])
   })
 
+  it('reparent nests/unnests with a round-trip inverse (CD-310)', () => {
+    const { model, pageId } = seed()
+    model.addWidget(pageId, w('w_aaaaaa'))
+    model.addWidget(pageId, w('w_bbbbbb'))
+    const gid = model.newId('group')
+    model.group(pageId, gid, ['w_aaaaaa'], { x: 0, y: 0, w: 20, h: 20 })
+    const before = model.snapshot()
+    // nest bbbbbb into the group
+    const inv = model.reparent('w_bbbbbb', gid)
+    expect(model.parentOf('w_bbbbbb')).toBe(gid)
+    expect(model.childrenOf(gid).map((c) => c.id)).toContain('w_bbbbbb')
+    inv()
+    expect(model.snapshot()).toEqual(before)
+    expect(model.parentOf('w_bbbbbb')).toBeUndefined()
+  })
+
+  it('reparent rejects nesting a container into its own descendant (cycle guard)', () => {
+    const { model, pageId } = seed()
+    model.addWidget(pageId, w('w_child0'))
+    const outer = model.newId('group')
+    model.group(pageId, outer, ['w_child0'], { x: 0, y: 0, w: 30, h: 30 })
+    // outer contains w_child0; nesting outer under w_child0 would be a cycle
+    // (only meaningful if child were a container — use the outer→outer identity + subtree guard)
+    expect(() => model.reparent(outer, 'w_child0')).toThrow(/descendant/)
+  })
+
   it('ungroup dissolves the container but keeps children', () => {
     const { model, pageId } = seed()
     model.addWidget(pageId, w('w_aaaaaa'))

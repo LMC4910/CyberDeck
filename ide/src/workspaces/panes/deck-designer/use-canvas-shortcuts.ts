@@ -87,7 +87,10 @@ export function useCanvasShortcuts({ element, model, engine, undo, commands }: O
         return
       }
       const mod = e.metaKey || e.ctrlKey
-      if (mod && e.key.toLowerCase() === 'd') {
+      if (mod && e.key.toLowerCase() === 'g') {
+        e.preventDefault()
+        void commands.execute(e.shiftKey ? CANVAS_COMMANDS.ungroup : CANVAS_COMMANDS.group, undefined, {})
+      } else if (mod && e.key.toLowerCase() === 'd') {
         e.preventDefault()
         void commands.execute(CANVAS_COMMANDS.duplicate, undefined, {})
       } else if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {

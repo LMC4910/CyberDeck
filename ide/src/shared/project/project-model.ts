@@ -431,6 +431,41 @@ export class ProjectModel {
     }
   }
 
+  /**
+   * Move `id` under `newParentId` (a container) at `index`, or to page root when
+   * `newParentId` is null. Rejects nesting a container into its own descendant
+   * (cycle guard). Returns an inverse restoring the prior parent linkage.
+   */
+  reparent(id: string, newParentId: string | null, index?: number): Inverse {
+    if (id === newParentId) return () => {}
+    if (newParentId && this.collectSubtree(id).has(newParentId)) {
+      throw new Error('cannot nest a container into its own descendant')
+    }
+    const oldParentId = this.parent.get(id)
+    if (oldParentId === (newParentId ?? undefined) && index === undefined) {
+      // no structural change requested
+    }
+    const oldParentPrev = oldParentId ? [...childIdsOf(this.widget(oldParentId)!)] : null
+    const newParentPrev = newParentId ? [...childIdsOf(this.widget(newParentId)!)] : null
+
+    if (oldParentId) {
+      const p = this.widget(oldParentId)!
+      setChildIds(p, childIdsOf(p).filter((x) => x !== id))
+    }
+    if (newParentId) {
+      const c = this.widget(newParentId)!
+      const kids = childIdsOf(c).filter((x) => x !== id)
+      kids.splice(index ?? kids.length, 0, id)
+      setChildIds(c, kids)
+    }
+    this.emit([id, ...(oldParentId ? [oldParentId] : []), ...(newParentId ? [newParentId] : [])], true)
+    return () => {
+      if (oldParentId && oldParentPrev) setChildIds(this.widget(oldParentId)!, oldParentPrev)
+      if (newParentId && newParentPrev) setChildIds(this.widget(newParentId)!, newParentPrev)
+      this.emit([id, ...(oldParentId ? [oldParentId] : []), ...(newParentId ? [newParentId] : [])], true)
+    }
+  }
+
   /** Set a container's ordered child list (reorder / nest / unnest). */
   setChildren(containerId: string, childIds: string[]): Inverse {
     const c = this.widget(containerId)

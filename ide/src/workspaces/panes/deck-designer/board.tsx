@@ -62,7 +62,8 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
 
   const { frame } = widget
   const container = isContainer(widget)
-  const cfg = widget.config as { rotation?: number; opacity?: number } | undefined
+  const cfg = widget.config as { rotation?: number; opacity?: number; hidden?: boolean } | undefined
+  if (cfg?.hidden) return null // hidden via the layers panel (CD-310)
   const rotation = typeof cfg?.rotation === 'number' ? cfg.rotation : 0
   const opacity = typeof cfg?.opacity === 'number' ? cfg.opacity : undefined
   const transform =

@@ -12,6 +12,7 @@ import { UndoProvider } from './use-undo'
 import { CommandsProvider } from './use-commands'
 import { CanvasSettingsProvider } from './use-canvas-settings'
 import { registerCanvasCommands } from './canvas-commands'
+import { LayersPanel } from './layers-panel'
 import DeckDesignerPane from '../deck-designer-pane'
 
 export interface RenderDeckOptions {
@@ -49,6 +50,23 @@ export function renderDeckPane(doc: ProjectDocument, opts: RenderDeckOptions = {
     ({ left: 0, top: 0, width: 1000, height: 800, right: 1000, bottom: 800, x: 0, y: 0 }) as DOMRect
 
   return { model, engine, undo, commands, canvasSettings, surface, ...view }
+}
+
+/** Render the Layers panel with the model/selection/undo providers it needs. */
+export function renderLayers(doc: ProjectDocument) {
+  const model = new ProjectModel(doc)
+  const engine = new SelectionEngine(createSelectionStore())
+  const undo = new UndoStack()
+  const view = render(
+    <ProjectModelProvider value={model}>
+      <SelectionProvider value={engine}>
+        <UndoProvider value={undo}>
+          <LayersPanel pageId={doc.pages[0]!.id} />
+        </UndoProvider>
+      </SelectionProvider>
+    </ProjectModelProvider>,
+  )
+  return { model, engine, undo, ...view }
 }
 
 /** Convenience: a doc with the given widgets on one page. */

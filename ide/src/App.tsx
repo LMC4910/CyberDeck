@@ -22,6 +22,7 @@ import {
   UndoProvider,
   CanvasSettingsProvider,
   CommandsProvider,
+  LayersPanel,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -157,7 +158,11 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
             onResize={(w) => setPanelWidth(kernel.panels, active, 'left', w)}
             onToggle={() => toggleSide('left')}
           >
-            <div className="panel-placeholder">Explorer — arrives in M3.</div>
+            {active === 'deck-designer' && kernel.project.model ? (
+              <LayersPanel pageId={kernel.project.model.pages()[0]!.id} />
+            ) : (
+              <div className="panel-placeholder">Explorer — arrives in M3.</div>
+            )}
           </ResizablePanel>
         )}
         <PaneHost service={kernel.workspaces} active={active} />
