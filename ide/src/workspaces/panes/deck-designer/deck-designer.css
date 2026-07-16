@@ -37,6 +37,43 @@
   stroke-dasharray: 4 3;
 }
 
+/* Selection minibar (CD-308): screen-space, constant size, follows the selection. */
+.dd-minibar {
+  position: absolute;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--menu-bg, #24242b);
+  border: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
+  border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.dd-minibar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 13px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--menu-fg, #eee);
+  cursor: pointer;
+}
+
+.dd-minibar button:hover {
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 22%, transparent);
+}
+
+.dd-minibar button:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+
 /* Smart guides (CD-307): full-extent V/H lines drawn only during a snapping drag. */
 .dd-guide {
   position: absolute;

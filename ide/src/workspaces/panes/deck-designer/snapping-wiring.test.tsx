@@ -1,44 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, act, fireEvent } from '@testing-library/react'
-import { ProjectModel, type WidgetInstance } from '@/shared/project'
-import { createSelectionStore, SelectionEngine, createStore } from '@/stores'
-import { UndoStack } from '@/platform/undo'
-import { ProjectModelProvider } from './use-project-model'
-import { SelectionProvider } from './use-selection'
-import { UndoProvider } from './use-undo'
-import { CanvasSettingsProvider } from './use-canvas-settings'
-import DeckDesignerPane from '../deck-designer-pane'
+import { act, fireEvent } from '@testing-library/react'
+import { type WidgetInstance } from '@/shared/project'
+import { renderDeckPane, docWith } from './test-harness'
 
 function w(id: string, x: number, y = 0): WidgetInstance {
   return { id, type: 'gauge.circular', frame: { x, y, w: 100, h: 100 } }
 }
 
 function setup(snap: boolean) {
-  const model = new ProjectModel({
-    format: 'cyberdeck.project',
-    version: 1,
-    meta: { name: 'Snap' },
-    // mover at x:0, anchor sibling at x:300 (edges 300/350/400)
-    pages: [{ id: 'page_snptst', name: 'P', canvas: { w: 900, h: 600 }, widgets: [w('w_mover0', 0, 300), w('w_anchor', 300, 300)] }],
-  })
-  const engine = new SelectionEngine(createSelectionStore())
-  const undo = new UndoStack()
-  // grid:0 isolates sibling-edge snapping (grid snapping is unit-tested separately).
-  const canvasSettings = createStore({ snap, grid: 0 }, { name: 'canvas', kind: 'temp' })
-  const view = render(
-    <ProjectModelProvider value={model}>
-      <SelectionProvider value={engine}>
-        <UndoProvider value={undo}>
-          <CanvasSettingsProvider value={canvasSettings}>
-            <DeckDesignerPane />
-          </CanvasSettingsProvider>
-        </UndoProvider>
-      </SelectionProvider>
-    </ProjectModelProvider>,
-  )
-  const surface = view.container.querySelector('[role="application"]') as HTMLElement
-  surface.getBoundingClientRect = () => ({ left: 0, top: 0, width: 900, height: 600, right: 900, bottom: 600, x: 0, y: 0 }) as DOMRect
-  return { model, engine, undo, ...view }
+  // mover at x:0, anchor sibling at x:300 (edges 300/350/400). grid:0 isolates
+  // sibling-edge snapping (grid snapping is unit-tested separately).
+  return renderDeckPane(docWith([w('w_mover0', 0, 300), w('w_anchor', 300, 300)], 'Snap'), { snap, grid: 0 })
 }
 
 describe('snapping + smart guides (CD-307)', () => {

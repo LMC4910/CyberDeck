@@ -12,7 +12,7 @@
 - [x] CD-305 Selection engine + store
 - [x] CD-306 Drag/resize/rotate controllers
 - [x] CD-307 Snapping + smart guides
-- [ ] CD-308 Nudge, canvas shortcuts, selection minibar
+- [x] CD-308 Nudge, canvas shortcuts, selection minibar
 - [ ] CD-309 Canvas perf harness (200 widgets)
 - [ ] CD-310 Layers tree + command mutations
 - [ ] CD-311 Layers filters/search + tree a11y

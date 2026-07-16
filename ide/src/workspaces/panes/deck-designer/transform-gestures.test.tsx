@@ -1,48 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, act, fireEvent } from '@testing-library/react'
-import { ProjectModel, type WidgetInstance } from '@/shared/project'
-import { createSelectionStore, SelectionEngine, createStore } from '@/stores'
-import { UndoStack } from '@/platform/undo'
-import { ProjectModelProvider } from './use-project-model'
-import { SelectionProvider } from './use-selection'
-import { UndoProvider } from './use-undo'
-import { CanvasSettingsProvider } from './use-canvas-settings'
-import DeckDesignerPane from '../deck-designer-pane'
+import { act, fireEvent } from '@testing-library/react'
+import { type WidgetInstance } from '@/shared/project'
+import { renderDeckPane, docWith } from './test-harness'
 
 function w(id: string, x: number, y = 0): WidgetInstance {
   return { id, type: 'gauge.circular', frame: { x, y, w: 100, h: 80 } }
 }
 
 function setup(widgets = [w('w_aaaaaa', 0), w('w_bbbbbb', 200)]) {
-  const model = new ProjectModel({
-    format: 'cyberdeck.project',
-    version: 1,
-    meta: { name: 'G' },
-    pages: [{ id: 'page_gestst', name: 'P', canvas: { w: 800, h: 600 }, widgets }],
-  })
-  const engine = new SelectionEngine(createSelectionStore())
-  const undo = new UndoStack()
   // Snapping OFF so these tests exercise the raw gesture math (CD-307 tests snap).
-  const canvasSettings = createStore({ snap: false, grid: 8 }, { name: 'canvas', kind: 'temp' })
-  const view = render(
-    <ProjectModelProvider value={model}>
-      <SelectionProvider value={engine}>
-        <UndoProvider value={undo}>
-          <CanvasSettingsProvider value={canvasSettings}>
-            <DeckDesignerPane />
-          </CanvasSettingsProvider>
-        </UndoProvider>
-      </SelectionProvider>
-    </ProjectModelProvider>,
-  )
-  return { model, engine, undo, canvasSettings, ...view }
-}
-
-// jsdom: surface rect is 0×0, so client coords == world coords at scale 1.
-function stubSurfaceRect(container: HTMLElement) {
-  const surface = container.querySelector('[role="application"]') as HTMLElement
-  surface.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600, x: 0, y: 0 }) as DOMRect
-  return surface
+  return renderDeckPane(docWith(widgets, 'G'), { snap: false })
 }
 
 describe('transform gestures (CD-306)', () => {
@@ -69,7 +36,6 @@ describe('transform gestures (CD-306)', () => {
 
   it('dragging a widget moves it and records ONE undo entry', () => {
     const { container, model, undo } = setup()
-    stubSurfaceRect(container)
     const el = container.querySelector('[data-widget="w_aaaaaa"]')!
     drag(el, { x: 10, y: 10 }, { x: 60, y: 30 }) // Δ = (50,20)
     expect(model.widget('w_aaaaaa')!.frame).toMatchObject({ x: 50, y: 20 })
@@ -78,7 +44,6 @@ describe('transform gestures (CD-306)', () => {
 
   it('one gesture = one history entry; undo restores the start frame', () => {
     const { container, model, undo } = setup()
-    stubSurfaceRect(container)
     const el = container.querySelector('[data-widget="w_aaaaaa"]')!
     drag(el, { x: 0, y: 0 }, { x: 40, y: 0 })
     expect(model.widget('w_aaaaaa')!.frame.x).toBe(40)
@@ -90,7 +55,6 @@ describe('transform gestures (CD-306)', () => {
 
   it('multi-drag moves every selected widget by the same delta in one entry', () => {
     const { container, model, engine, undo } = setup()
-    stubSurfaceRect(container)
     act(() => engine.selectMany(['w_aaaaaa', 'w_bbbbbb']))
     const el = container.querySelector('[data-widget="w_aaaaaa"]')!
     drag(el, { x: 5, y: 5 }, { x: 35, y: 25 }) // Δ = (30,20)
@@ -101,7 +65,6 @@ describe('transform gestures (CD-306)', () => {
 
   it('resize via the east handle grows width in one entry', () => {
     const { container, model, engine, undo } = setup()
-    stubSurfaceRect(container)
     act(() => engine.selectOnly('w_aaaaaa'))
     const handle = container.querySelector('[data-handle="e"]')!
     drag(handle, { x: 100, y: 40 }, { x: 160, y: 40 }) // Δx = 60
@@ -111,7 +74,6 @@ describe('transform gestures (CD-306)', () => {
 
   it('rotate handle writes config.rotation (snapped) in one entry', () => {
     const { container, model, engine, undo } = setup()
-    stubSurfaceRect(container)
     act(() => engine.selectOnly('w_aaaaaa')) // center (50,40)
     const rot = container.querySelector('[data-handle="rotate"]')!
     // drag to the right of center → ~90°
@@ -122,7 +84,6 @@ describe('transform gestures (CD-306)', () => {
 
   it('locked widgets do not move', () => {
     const { container, model } = setup([{ ...w('w_aaaaaa', 0), locked: true }])
-    stubSurfaceRect(container)
     const el = container.querySelector('[data-widget="w_aaaaaa"]')!
     drag(el, { x: 0, y: 0 }, { x: 50, y: 0 })
     expect(model.widget('w_aaaaaa')!.frame.x).toBe(0)
@@ -130,7 +91,6 @@ describe('transform gestures (CD-306)', () => {
 
   it('a click without drag does not create an undo entry', () => {
     const { container, undo } = setup()
-    stubSurfaceRect(container)
     const el = container.querySelector('[data-widget="w_aaaaaa"]')!
     fireEvent.pointerDown(el, { clientX: 10, clientY: 10 })
     act(() => {

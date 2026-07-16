@@ -26,7 +26,7 @@ import {
   type Store,
   type SelectionState,
 } from '@/stores'
-import { WORKSPACE_CONTRIBUTIONS, type PanelsState, type LayoutPreset } from '@/workspaces'
+import { WORKSPACE_CONTRIBUTIONS, registerCanvasCommands, type PanelsState, type LayoutPreset } from '@/workspaces'
 
 export interface BootedKernel {
   config: ConfigurationService
@@ -137,6 +137,11 @@ export async function runAppBoot(): Promise<BootedKernel> {
   // all subscribe to this one store; the engine is the only writer.
   const selectionStore = createSelectionStore()
   const selection = new SelectionEngine(selectionStore)
+  // Canvas authoring commands (CD-308): the minibar + palette dispatch these; the
+  // handler resolves the live model/selection/undo at execution time.
+  registerCanvasCommands(commands, () =>
+    project.model ? { model: project.model, engine: selection, undo } : null,
+  )
   // Canvas authoring settings (CD-307): snap-to-guides toggle + grid size, persisted.
   const canvasSettings = createStore<{ snap: boolean; grid: number }>(
     { snap: true, grid: 8 },

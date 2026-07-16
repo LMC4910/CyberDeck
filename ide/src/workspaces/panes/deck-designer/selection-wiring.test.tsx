@@ -1,40 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, act, fireEvent } from '@testing-library/react'
-import { ProjectModel, type WidgetInstance } from '@/shared/project'
-import { createSelectionStore, SelectionEngine, createStore } from '@/stores'
-import { UndoStack } from '@/platform/undo'
-import { ProjectModelProvider } from './use-project-model'
-import { SelectionProvider } from './use-selection'
-import { UndoProvider } from './use-undo'
-import { CanvasSettingsProvider } from './use-canvas-settings'
-import DeckDesignerPane from '../deck-designer-pane'
+import { act, fireEvent } from '@testing-library/react'
+import { type WidgetInstance } from '@/shared/project'
+import { renderDeckPane, docWith } from './test-harness'
 
 function w(id: string, x: number): WidgetInstance {
   return { id, type: 'gauge.circular', frame: { x, y: 0, w: 50, h: 50 } }
 }
 
 function setup() {
-  const model = new ProjectModel({
-    format: 'cyberdeck.project',
-    version: 1,
-    meta: { name: 'Sel' },
-    pages: [{ id: 'page_seltst', name: 'P', canvas: { w: 800, h: 600 }, widgets: [w('w_aaaaaa', 0), w('w_bbbbbb', 100), w('w_cccccc', 200)] }],
-  })
-  const engine = new SelectionEngine(createSelectionStore())
-  const undo = new UndoStack()
-  const canvasSettings = createStore({ snap: false, grid: 8 }, { name: 'canvas', kind: 'temp' })
-  const view = render(
-    <ProjectModelProvider value={model}>
-      <SelectionProvider value={engine}>
-        <UndoProvider value={undo}>
-          <CanvasSettingsProvider value={canvasSettings}>
-            <DeckDesignerPane />
-          </CanvasSettingsProvider>
-        </UndoProvider>
-      </SelectionProvider>
-    </ProjectModelProvider>,
-  )
-  return { model, engine, undo, ...view }
+  return renderDeckPane(docWith([w('w_aaaaaa', 0), w('w_bbbbbb', 100), w('w_cccccc', 200)], 'Sel'), { snap: false })
 }
 
 const rings = (c: HTMLElement) => c.querySelectorAll('.dd-widget-ring').length

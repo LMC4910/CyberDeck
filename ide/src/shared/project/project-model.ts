@@ -64,6 +64,7 @@ export class ProjectModel {
    *  on add/remove/reorder. */
   private versions = new Map<string, number>()
   private structuralRevCounter = 0
+  private globalRevCounter = 0
 
   constructor(doc?: ProjectDocument) {
     this.doc = doc ? structuredClone(doc) : blankDocument()
@@ -93,6 +94,7 @@ export class ProjectModel {
       this.structuralRevCounter++
     }
     for (const id of dirtyIds) this.versions.set(id, (this.versions.get(id) ?? 0) + 1)
+    this.globalRevCounter++
     const change: ModelChange = { structural, dirtyIds }
     for (const l of this.listeners) l(change)
   }
@@ -100,6 +102,10 @@ export class ProjectModel {
   /** Change counter for one entity — bumps whenever that id is a dirty target. */
   version(id: string): number {
     return this.versions.get(id) ?? 0
+  }
+  /** Monotonic counter that bumps on ANY change (for coarse "follow" views). */
+  get revision(): number {
+    return this.globalRevCounter
   }
   /** Revision that bumps on any structural change (add/remove/reorder/group). */
   get structuralRev(): number {

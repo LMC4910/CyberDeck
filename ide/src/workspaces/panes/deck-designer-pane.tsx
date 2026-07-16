@@ -10,16 +10,20 @@ import { Board } from './deck-designer/board'
 import { useProjectModel } from './deck-designer/use-project-model'
 import { useSelection, useSelectionState } from './deck-designer/use-selection'
 import { useUndo } from './deck-designer/use-undo'
+import { useCommands } from './deck-designer/use-commands'
 import { useCanvasSettings } from './deck-designer/use-canvas-settings'
 import { useCanvasSelection } from './deck-designer/use-canvas-selection'
 import { useTransformGestures } from './deck-designer/use-transform-gestures'
+import { useCanvasShortcuts } from './deck-designer/use-canvas-shortcuts'
 import { SelectionGizmo } from './deck-designer/selection-gizmo'
+import { SelectionMinibar } from './deck-designer/selection-minibar'
 import './deck-designer/deck-designer.css'
 
 export default function DeckDesignerPane() {
   const model = useProjectModel()
   const engine = useSelection()
   const undo = useUndo()
+  const commands = useCommands()
   const { snap, grid } = useCanvasSettings()
   const pageId = useMemo(() => model.pages()[0]!.id, [model])
   const canvas = model.page(pageId)?.canvas
@@ -31,6 +35,7 @@ export default function DeckDesignerPane() {
 
   const { marquee, lasso } = useCanvasSelection({ element, getTransform, model, pageId, engine })
   const gestures = useTransformGestures({ model, engine, undo, pageId, element, getTransform, snapEnabled: snap, grid })
+  const tool = useCanvasShortcuts({ element, model, engine, undo, commands })
   const selection = useSelectionState()
   const selectedIds = useMemo(
     () => new Set(selection.kind === 'widget' ? selection.ids : []),
@@ -38,11 +43,12 @@ export default function DeckDesignerPane() {
   )
 
   return (
-    <section className="dd-pane" data-pane="deck-designer" aria-label="Deck Designer workspace">
+    <section className="dd-pane" data-pane="deck-designer" data-tool={tool} aria-label="Deck Designer workspace">
       <PanZoomSurface
         ref={surfaceRef}
         aria-label="Deck canvas"
         getFitBounds={() => (canvas?.w && canvas?.h ? { x: 0, y: 0, w: canvas.w, h: canvas.h } : null)}
+        overlay={({ transform }) => <SelectionMinibar transform={transform} />}
       >
         <Board
           model={model}

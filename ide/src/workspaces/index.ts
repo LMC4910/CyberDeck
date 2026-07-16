@@ -51,6 +51,8 @@ export {
 export { SelectionProvider, useSelection, useSelectionState } from './panes/deck-designer/use-selection'
 export { UndoProvider, useUndo } from './panes/deck-designer/use-undo'
 export { CanvasSettingsProvider, useCanvasSettings, type CanvasSettings } from './panes/deck-designer/use-canvas-settings'
+export { CommandsProvider, useCommands } from './panes/deck-designer/use-commands'
+export { registerCanvasCommands, CANVAS_COMMANDS, type CanvasCtx } from './panes/deck-designer/canvas-commands'
 export {
   LayoutPresetMenu,
   BUILTIN_PRESETS,
