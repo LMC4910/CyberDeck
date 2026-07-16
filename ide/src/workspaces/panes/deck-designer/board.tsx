@@ -6,6 +6,7 @@
 import { memo } from 'react'
 import { GROUP_TYPE, isContainer, type ProjectModel, type WidgetInstance } from '@/shared/project'
 import { useAllWidgetIds, useWidget } from './use-project-model'
+import { useVariableRuntimeOptional, useBindingTick, resolvedBindings } from './use-variable-runtime'
 import './board.css'
 
 export interface BoardProps {
@@ -55,10 +56,15 @@ interface WidgetViewProps {
 
 const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onPointerDown }: WidgetViewProps) {
   const widget = useWidget(model, id)
+  // Re-render on a binding dependency tick (CD-326) — event-driven, exactly the
+  // widgets that depend on the ticked variable.
+  const runtime = useVariableRuntimeOptional()
+  useBindingTick(runtime, model, id, model.version(id))
   // Report the paint AFTER the model read so the render-count test sees one call
   // per actual re-render of this view.
   onRender?.(id)
   if (!widget) return null
+  const bound = runtime ? resolvedBindings(runtime, model, id) : null
 
   const { frame } = widget
   const container = isContainer(widget)
@@ -82,7 +88,7 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
       style={{ transform, width: frame.w, height: frame.h, opacity }}
       onPointerDown={onPointerDown ? (e) => onPointerDown(id, e) : undefined}
     >
-      <WidgetBody widget={widget} model={model} />
+      <WidgetBody widget={widget} model={model} bound={bound} />
       {selected && <div className="dd-widget-ring" aria-hidden="true" />}
       {model.bindingsOf(id) && Object.keys(model.bindingsOf(id)!).length > 0 && (
         <div className="dd-widget-bind" data-testid={`bind-dot-${id}`} aria-hidden="true" title="Bound" />
@@ -97,7 +103,7 @@ const WidgetView = memo(function WidgetView({ model, id, selected, onRender, onP
 })
 
 /** Honest placeholder body — real widget rendering is the widget platform (M4). */
-function WidgetBody({ widget, model }: { widget: WidgetInstance; model: ProjectModel }) {
+function WidgetBody({ widget, model, bound }: { widget: WidgetInstance; model: ProjectModel; bound?: Record<string, unknown> | null }) {
   if (widget.component) {
     return <InstanceBody widget={widget} model={model} />
   }
@@ -109,10 +115,16 @@ function WidgetBody({ widget, model }: { widget: WidgetInstance; model: ProjectM
     return <div className="dd-widget-symbol" data-testid="widget-symbol">{symbolGlyph}</div>
   }
   const kind = widget.type.split('.')[0] ?? widget.type
+  // Live bound value (CD-326): show the resolved 'value'/'text' when present.
+  const liveKey = bound && ('value' in bound ? 'value' : 'text' in bound ? 'text' : undefined)
   return (
     <div className="dd-widget-body">
       <span className="dd-widget-kind">{kind}</span>
-      {widget.name && <span className="dd-widget-name">{widget.name}</span>}
+      {liveKey ? (
+        <span className="dd-widget-value" data-testid={`live-${widget.id}`}>{String(bound![liveKey] ?? '')}</span>
+      ) : (
+        widget.name && <span className="dd-widget-name">{widget.name}</span>
+      )}
     </div>
   )
 }

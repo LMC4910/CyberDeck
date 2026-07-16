@@ -37,3 +37,32 @@ export function catalogResolver(path: string): unknown {
 }
 
 export const KNOWN_VARIABLE_PATHS = VARIABLES_CATALOG.map((v) => v.path)
+
+import type { VariableRuntime } from '@/stores'
+
+/** Seed the runtime with the catalog's current values. */
+export function seedRuntime(runtime: VariableRuntime): void {
+  for (const v of VARIABLES_CATALOG) runtime.tick(v.path, v.value)
+}
+
+/**
+ * A mock live stream (CD-326): jitters a few numeric variables each interval and
+ * ticks them. Returns a cleanup. `schedule`/`cancel` are injectable for tests.
+ */
+export function startMockTicks(
+  runtime: VariableRuntime,
+  opts: { intervalMs?: number; schedule?: (fn: () => void, ms: number) => number; cancel?: (h: number) => void } = {},
+): () => void {
+  const schedule = opts.schedule ?? ((fn, ms) => setInterval(fn, ms) as unknown as number)
+  const cancel = opts.cancel ?? ((h) => clearInterval(h))
+  const live = ['system.cpu.percent', 'system.gpu.percent', 'fps.current']
+  let seed = 1
+  const h = schedule(() => {
+    for (const path of live) {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff
+      const base = VARIABLES_CATALOG.find((v) => v.path === path)?.value
+      if (typeof base === 'number') runtime.tick(path, Math.round(base + ((seed % 20) - 10)))
+    }
+  }, opts.intervalMs ?? 1000)
+  return () => cancel(h)
+}

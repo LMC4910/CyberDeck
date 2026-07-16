@@ -29,6 +29,7 @@ import {
   Minimap,
   LiveMirror,
   CanvasViewProvider,
+  VariableRuntimeProvider,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -138,6 +139,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
    <CanvasSettingsProvider value={kernel.canvasSettings}>
    <CommandsProvider value={kernel.commands}>
    <CanvasViewProvider value={kernel.canvasView}>
+   <VariableRuntimeProvider value={kernel.variables}>
     <div className="shell" data-boot="interactive" data-testid="shell">
       <header className="shell-topbar">
         <span className="shell-brand">CyberDeck IDE</span>
@@ -291,6 +293,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         }
       />
     </div>
+   </VariableRuntimeProvider>
    </CanvasViewProvider>
    </CommandsProvider>
    </CanvasSettingsProvider>

@@ -61,6 +61,7 @@ export { InspectorPanel as DeckInspectorPanel } from './panes/deck-designer/insp
 export { Minimap } from './panes/deck-designer/minimap'
 export { LiveMirror } from './panes/deck-designer/live-mirror'
 export { CanvasViewProvider } from './panes/deck-designer/use-canvas-view'
+export { VariableRuntimeProvider } from './panes/deck-designer/use-variable-runtime'
 export {
   LayoutPresetMenu,
   BUILTIN_PRESETS,

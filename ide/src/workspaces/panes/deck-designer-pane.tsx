@@ -20,6 +20,8 @@ import { SelectionMinibar } from './deck-designer/selection-minibar'
 import { useCanvasViewBus } from './deck-designer/use-canvas-view'
 import { screenToWorld } from '@/shared/canvas'
 import { INSERT_CATALOG, INSERT_DND_TYPE, insertManifest } from './deck-designer/insert-catalog'
+import { useVariableRuntimeOptional } from './deck-designer/use-variable-runtime'
+import { seedRuntime, startMockTicks } from './deck-designer/variables-catalog'
 import './deck-designer/deck-designer.css'
 
 export default function DeckDesignerPane() {
@@ -56,6 +58,16 @@ export default function DeckDesignerPane() {
   const { marquee, lasso } = useCanvasSelection({ element, getTransform, model, pageId, engine })
   const gestures = useTransformGestures({ model, engine, undo, pageId, element, getTransform, snapEnabled: snap, grid })
   const tool = useCanvasShortcuts({ element, model, engine, undo, commands })
+
+  // Live variable stream (CD-326): seed + drive the mock ticks while the pane is
+  // open. Skipped under test (MODE==='test') to keep unit tests deterministic.
+  const variables = useVariableRuntimeOptional()
+  useEffect(() => {
+    if (!variables) return
+    seedRuntime(variables)
+    if (import.meta.env.MODE === 'test') return
+    return startMockTicks(variables)
+  }, [variables])
   const selection = useSelectionState()
   const selectedIds = useMemo(
     () => new Set(selection.kind === 'widget' ? selection.ids : []),
