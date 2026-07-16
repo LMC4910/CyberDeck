@@ -1,10 +1,9 @@
-// A small starter document so the Deck Designer shows something real before the
-// Projects workspace can open a saved project (CD-304 wires ProjectService + the
-// project store; this seed is replaced then). Valid against the cyberdeck.project
-// schema and the ProjectModel invariants.
-import type { ProjectDocument } from '@/shared/project'
+// Starter document (CD-304). Seeds a new/empty workspace with something real to
+// author until the Projects workspace can open a saved project. Valid against the
+// cyberdeck.project schema and the ProjectModel invariants.
+import type { ProjectDocument } from './types'
 
-export function demoProject(): ProjectDocument {
+export function starterProject(): ProjectDocument {
   return {
     format: 'cyberdeck.project',
     version: 1,

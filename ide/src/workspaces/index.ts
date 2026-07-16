@@ -41,6 +41,14 @@ export {
 } from './panels'
 export { DockHost, computeInsets, type DockHostProps, type Insets } from './dock'
 export {
+  ProjectModelProvider,
+  useProjectModel,
+  useAllWidgetIds,
+  useRootWidgetIds,
+  useWidget,
+  usePage,
+} from './panes/deck-designer/use-project-model'
+export {
   LayoutPresetMenu,
   BUILTIN_PRESETS,
   applyPreset,

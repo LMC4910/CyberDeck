@@ -113,6 +113,22 @@ export class ProjectModel {
   snapshot(): ProjectDocument {
     return structuredClone(this.doc)
   }
+
+  /** Canonical, schema-valid serialization of the document. Optionally stamps
+   *  `savedAt`. Mutations keep the document canonical (empty registries pruned), so
+   *  serialize→restore→serialize is idempotent (the CD-304 round-trip property). */
+  serialize(opts: { savedAt?: string } = {}): ProjectDocument {
+    const doc = structuredClone(this.doc)
+    if (opts.savedAt) doc.savedAt = opts.savedAt
+    return doc
+  }
+
+  /** Restore a model from a serialized document, enforcing referential closure. */
+  static restore(doc: ProjectDocument): ProjectModel {
+    const model = new ProjectModel(doc)
+    model.assertValid()
+    return model
+  }
   pages(): readonly Page[] {
     return this.doc.pages
   }

@@ -12,4 +12,11 @@ describe('App (shell)', () => {
     expect(getByRole('main')).toBeInTheDocument()
     expect(getByTestId('shell')).toHaveAttribute('data-boot') // booting or interactive
   })
+
+  it('surfaces the project saved-state in the status bar after boot (CD-304)', async () => {
+    // Once boot opens the project model, ProjectService is in the 'saved' state and
+    // the status bar's saved-state indicator reflects it.
+    const { findByText } = renderWithProviders(<App />)
+    expect(await findByText('Saved')).toBeInTheDocument()
+  })
 })

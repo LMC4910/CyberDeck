@@ -17,10 +17,12 @@ import {
   LayoutPresetMenu,
   Toaster,
   NotificationDrawer,
+  ProjectModelProvider,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
 import { LocalStorageAdapter } from '@/services/persistence'
+import type { SaveState } from '@/services/project'
 import type { Store } from '@/stores'
 import type { WhenContext } from '@/platform/commands'
 
@@ -72,8 +74,10 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
   const userPresets = useStore(kernel.userPresets, (s) => s)
   const toasts = useStore(kernel.toastStore, (s) => s.items)
   const unread = useStore(kernel.notificationStore, (s) => s.items.filter((n) => !n.read).length)
+  const [saveState, setSaveState] = useState<SaveState>(kernel.project.saveState)
 
   useEffect(() => kernel.workspaces.subscribe((id) => setActive(id)), [kernel])
+  useEffect(() => kernel.project.subscribe(setSaveState), [kernel])
 
   const toggleSide = (side: 'left' | 'right') => {
     if (active) togglePanel(kernel.panels, active, side)
@@ -112,8 +116,10 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
     flags: kernel.config.get<Record<string, boolean>>('features'),
   }
   const panel = active ? panelFor(panelsState, active) : undefined
+  const savedLabel = SAVE_LABELS[saveState]
 
   return (
+   <ProjectModelProvider value={kernel.project.model}>
     <div className="shell" data-boot="interactive" data-testid="shell">
       <header className="shell-topbar">
         <span className="shell-brand">CyberDeck IDE</span>
@@ -163,7 +169,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         <StatusBar
           activeWorkspaceLabel={activeLabel}
           editorStore={kernel.stores.editor as unknown as Store<{ selection: string[] }>}
-          savedLabel="Ready"
+          savedLabel={savedLabel}
         />
         {active && (
           <LayoutPresetMenu
@@ -224,7 +230,16 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         }
       />
     </div>
+   </ProjectModelProvider>
   )
+}
+
+/** Saved-state indicator copy (CD-304), driven by ProjectService.saveState. */
+const SAVE_LABELS: Record<SaveState, string> = {
+  saved: 'Saved',
+  dirty: 'Unsaved changes',
+  saving: 'Saving…',
+  error: 'Save failed',
 }
 
 export default App

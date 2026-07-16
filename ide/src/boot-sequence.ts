@@ -14,6 +14,8 @@ import { DockManager } from '@/platform/dock'
 import { UndoStack } from '@/platform/undo'
 import { EventBus, TypedEventBus } from '@/platform/eventbus'
 import { NotificationService, type Notification } from '@/services/notification'
+import { ProjectService } from '@/services/project'
+import { ProjectModel, starterProject, type ProjectDocument } from '@/shared/project'
 import { createAllStores, createStore, StoreManager, type AllStores, type Store } from '@/stores'
 import { WORKSPACE_CONTRIBUTIONS, type PanelsState, type LayoutPreset } from '@/workspaces'
 
@@ -31,6 +33,8 @@ export interface BootedKernel {
   dock: DockManager
   undo: UndoStack
   notifications: NotificationService
+  /** Owns the open ProjectModel + debounced autosave (CD-304). */
+  project: ProjectService
   /** Drawer projection (all notifications) + active toasts. */
   notificationStore: Store<{ items: Notification[] }>
   toastStore: Store<{ items: Notification[] }>
@@ -104,6 +108,17 @@ export async function runAppBoot(): Promise<BootedKernel> {
   storeManager.register(panels)
   storeManager.register(dockStore as unknown as Store<unknown>)
   storeManager.register(userPresets as unknown as Store<unknown>)
+  // Project document autosave (CD-304): the ProjectService serializes the open model
+  // and writes it into the persisted `project` store, whose write-behind lands it in
+  // localStorage now (and the gateway-backed ProjectsRepository at the M5 swap).
+  storeManager.register(stores.project as unknown as Store<unknown>)
+  const project = new ProjectService({
+    persistence: {
+      save: async (doc) => {
+        stores.project.setState({ doc } as never)
+      },
+    },
+  })
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -147,6 +162,22 @@ export async function runAppBoot(): Promise<BootedKernel> {
         if (rows.length) dock.hydrate(rows)
       },
     },
+    // Open the project model AFTER the project store is restored (CD-304): restore a
+    // saved document, or seed the starter. A corrupt blob falls back to the starter.
+    {
+      id: 'project-open',
+      blocking: false,
+      run: () => {
+        const saved = (stores.project.getState() as { doc: ProjectDocument | null }).doc
+        let model: ProjectModel
+        try {
+          model = saved ? ProjectModel.restore(saved) : new ProjectModel(starterProject())
+        } catch {
+          model = new ProjectModel(starterProject())
+        }
+        project.open(model)
+      },
+    },
     // Session restore (CD-212, boot stage 4): restore the last workspace + editor
     // state, then wire debounced write-behind. Corrupt blob → defaults (SessionManager notices).
     {
@@ -173,7 +204,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   ]
 
   const report = await runBoot(phases, {
-    order: ['configuration', 'theme', 'commands', 'workspaces', 'keymap', 'session-restore', 'panels-restore'],
+    order: ['configuration', 'theme', 'commands', 'workspaces', 'keymap', 'session-restore', 'panels-restore', 'project-open'],
     onComplete: () => {
       // mark the app interactive for the E2E / perf tooling
       try {
@@ -185,6 +216,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   })
 
   const flush = () => {
+    void project.flush()
     session.flush()
     storeManager.flush()
   }
@@ -192,6 +224,6 @@ export async function runAppBoot(): Promise<BootedKernel> {
   notifications.notify({ level: 'info', source: 'CyberDeck', title: 'Welcome to CyberDeck', body: 'The shell is ready.' })
   return {
     config, theme, workspaces, commands, keymap, bus, stores, session, panels, userPresets,
-    dock, undo, notifications, notificationStore, toastStore, saveDock, flush, report,
+    dock, undo, notifications, project, notificationStore, toastStore, saveDock, flush, report,
   }
 }

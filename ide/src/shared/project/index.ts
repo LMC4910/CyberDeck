@@ -22,3 +22,5 @@ export {
   type Diagnostic,
 } from './types'
 export { IdAllocator, isStableId, ID_PREFIX } from './id'
+export type { RandomSource } from './id'
+export { starterProject } from './starter'
