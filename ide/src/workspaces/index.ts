@@ -53,6 +53,7 @@ export { UndoProvider, useUndo } from './panes/deck-designer/use-undo'
 export { CanvasSettingsProvider, useCanvasSettings, type CanvasSettings } from './panes/deck-designer/use-canvas-settings'
 export { CommandsProvider, useCommands } from './panes/deck-designer/use-commands'
 export { registerCanvasCommands, CANVAS_COMMANDS, type CanvasCtx } from './panes/deck-designer/canvas-commands'
+export { generatePerfProject } from './panes/deck-designer/perf-fixture'
 export {
   LayoutPresetMenu,
   BUILTIN_PRESETS,

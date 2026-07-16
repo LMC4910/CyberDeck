@@ -13,7 +13,7 @@
 - [x] CD-306 Drag/resize/rotate controllers
 - [x] CD-307 Snapping + smart guides
 - [x] CD-308 Nudge, canvas shortcuts, selection minibar
-- [ ] CD-309 Canvas perf harness (200 widgets)
+- [x] CD-309 Canvas perf harness (200 widgets) — recorded ~60 fps @ 200 widgets (16.70 ms median, headless chromium)
 - [ ] CD-310 Layers tree + command mutations
 - [ ] CD-311 Layers filters/search + tree a11y
 - [ ] CD-312 Contextual inspector registry + page/multi states

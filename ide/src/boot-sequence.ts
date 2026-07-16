@@ -26,7 +26,7 @@ import {
   type Store,
   type SelectionState,
 } from '@/stores'
-import { WORKSPACE_CONTRIBUTIONS, registerCanvasCommands, type PanelsState, type LayoutPreset } from '@/workspaces'
+import { WORKSPACE_CONTRIBUTIONS, registerCanvasCommands, generatePerfProject, type PanelsState, type LayoutPreset } from '@/workspaces'
 
 export interface BootedKernel {
   config: ConfigurationService
@@ -197,6 +197,13 @@ export async function runAppBoot(): Promise<BootedKernel> {
       id: 'project-open',
       blocking: false,
       run: () => {
+        // Perf harness hook (CD-309): ?perf=<n> seeds an N-widget board.
+        const perf =
+          typeof location !== 'undefined' ? Number(new URLSearchParams(location.search).get('perf')) : NaN
+        if (Number.isFinite(perf) && perf > 0) {
+          project.open(new ProjectModel(generatePerfProject(perf)))
+          return
+        }
         const saved = (stores.project.getState() as { doc: ProjectDocument | null }).doc
         let model: ProjectModel
         try {
