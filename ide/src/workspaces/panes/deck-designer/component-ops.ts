@@ -154,6 +154,89 @@ export function deleteVariantAndRemap(ctx: CompCtx, componentId: string, variant
   })
 }
 
+// ── nested components (CD-319) ────────────────────────────────────────────────
+export class CircularComponentError extends Error {
+  constructor(chain: string[]) {
+    super(`circular component nesting: ${chain.join(' › ')}`)
+    this.name = 'CircularComponentError'
+  }
+}
+
+/** Component ids this component's template (transitively) instantiates. Throws on a cycle. */
+export function componentRefs(model: ProjectModel, componentId: string, seen: string[] = []): Set<string> {
+  if (seen.includes(componentId)) throw new CircularComponentError([...seen, componentId])
+  const def = model.component(componentId)
+  const out = new Set<string>()
+  if (!def) return out
+  for (const w of def.widgets) {
+    if (w.component) {
+      out.add(w.component)
+      for (const r of componentRefs(model, w.component, [...seen, componentId])) out.add(r)
+    }
+  }
+  return out
+}
+
+/** The nested-component name path for a component (breadcrumb "Outer › Inner"). */
+export function nestingPath(model: ProjectModel, componentId: string): string[] {
+  const names: string[] = []
+  const def = model.component(componentId)
+  if (def) names.push(def.name)
+  for (const ref of componentRefs(model, componentId)) {
+    const d = model.component(ref)
+    if (d) names.push(d.name)
+  }
+  return names
+}
+
+/**
+ * Recursively expand a component into fresh PLAIN widgets: nested instances are
+ * deep-instantiated with fresh ids at each level. Throws CircularComponentError on a
+ * cycle. Used by deep-detach + the publish preview.
+ */
+export function expandComponentDeep(
+  model: ProjectModel,
+  componentId: string,
+  at: { x: number; y: number },
+  seen: string[] = [],
+): WidgetInstance[] {
+  if (seen.includes(componentId)) throw new CircularComponentError([...seen, componentId])
+  const def = model.component(componentId)
+  if (!def) return []
+  const out: WidgetInstance[] = []
+  for (const t of def.widgets) {
+    const pos = { x: t.frame.x + at.x, y: t.frame.y + at.y }
+    if (t.component) {
+      // nested master → deep-instantiate its template with fresh ids
+      out.push(...expandComponentDeep(model, t.component, pos, [...seen, componentId]))
+    } else {
+      const c = structuredClone(t)
+      c.id = model.newId('widget')
+      c.frame = { ...t.frame, x: pos.x, y: pos.y }
+      out.push(c)
+    }
+  }
+  return out
+}
+
+/** Deep-detach: replace an instance with fully-expanded fresh plain widgets. */
+export function deepDetachInstance(ctx: CompCtx, instanceId: string): string[] {
+  const { model, engine, undo, pageId } = ctx
+  const inst = model.widget(instanceId)
+  if (!inst?.component) return []
+  const widgets = expandComponentDeep(model, inst.component, { x: inst.frame.x, y: inst.frame.y })
+  undo.execUndoable('Detach (deep)', () => {
+    const removed = model.removeWidget(instanceId)
+    const added = widgets.map((c) => model.addWidget(pageId, c))
+    return () => {
+      added.reverse().forEach((inv) => inv())
+      removed()
+    }
+  })
+  engine.selectMany(widgets.map((c) => c.id))
+  return widgets.map((c) => c.id)
+}
+
 /** Detach an instance: replace it with fresh copies of the master template. */
 export function detachInstance(ctx: CompCtx, instanceId: string): string[] {
   const { model, engine, undo, pageId } = ctx

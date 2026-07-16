@@ -889,6 +889,24 @@ export function validateDocument(doc: ProjectDocument): Diagnostic[] {
     }
   }
 
+  // Circular component nesting: a component template must not (transitively)
+  // instantiate itself (CD-319).
+  const componentById = new Map((doc.components ?? []).map((c) => [c.id, c]))
+  const refsOf = (id: string): string[] =>
+    (componentById.get(id)?.widgets ?? []).map((w) => w.component).filter((r): r is string => !!r)
+  for (const c of doc.components ?? []) {
+    const path = new Set<string>()
+    const visit = (id: string): boolean => {
+      if (id === c.id && path.size > 0) return true
+      if (path.has(id)) return false
+      path.add(id)
+      return refsOf(id).some(visit)
+    }
+    if (refsOf(c.id).some(visit)) {
+      out.push({ code: 'circular-nesting', id: c.id, message: `component ${c.id} nests itself` })
+    }
+  }
+
   // Instance component/variant refs + container child refs + cycles.
   for (const p of doc.pages) {
     const onPage = new Set(p.widgets.map((w) => w.id))
