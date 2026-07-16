@@ -22,6 +22,7 @@ import {
   StoreManager,
   createSelectionStore,
   SelectionEngine,
+  CanvasViewBus,
   type AllStores,
   type Store,
   type SelectionState,
@@ -49,6 +50,8 @@ export interface BootedKernel {
   selectionStore: Store<SelectionState>
   /** Canvas authoring settings — snap toggle + grid (CD-307). */
   canvasSettings: Store<{ snap: boolean; grid: number }>
+  /** Shares the canvas pan/zoom view with the minimap + Live Mirror (CD-314). */
+  canvasView: CanvasViewBus
   /** Drawer projection (all notifications) + active toasts. */
   notificationStore: Store<{ items: Notification[] }>
   toastStore: Store<{ items: Notification[] }>
@@ -148,6 +151,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
     { name: 'canvas', kind: 'persisted', location: 'cdk-canvas' },
   )
   storeManager.register(canvasSettings as unknown as Store<unknown>)
+  const canvasView = new CanvasViewBus()
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -260,7 +264,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   notifications.notify({ level: 'info', source: 'CyberDeck', title: 'Welcome to CyberDeck', body: 'The shell is ready.' })
   return {
     config, theme, workspaces, commands, keymap, bus, stores, session, panels, userPresets,
-    dock, undo, notifications, project, selection, selectionStore, canvasSettings,
+    dock, undo, notifications, project, selection, selectionStore, canvasSettings, canvasView,
     notificationStore, toastStore, saveDock, flush, report,
   }
 }

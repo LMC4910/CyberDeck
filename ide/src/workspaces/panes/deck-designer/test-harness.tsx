@@ -3,7 +3,7 @@
 // stubs the surface bounding rect so client coords == world coords at scale 1.
 import { render } from '@testing-library/react'
 import { ProjectModel, type ProjectDocument } from '@/shared/project'
-import { createSelectionStore, SelectionEngine, createStore } from '@/stores'
+import { createSelectionStore, SelectionEngine, createStore, CanvasViewBus } from '@/stores'
 import { UndoStack } from '@/platform/undo'
 import { CommandRegistry } from '@/platform/commands'
 import { ProjectModelProvider } from './use-project-model'
@@ -11,6 +11,7 @@ import { SelectionProvider } from './use-selection'
 import { UndoProvider } from './use-undo'
 import { CommandsProvider } from './use-commands'
 import { CanvasSettingsProvider } from './use-canvas-settings'
+import { CanvasViewProvider } from './use-canvas-view'
 import { registerCanvasCommands } from './canvas-commands'
 import { LayersPanel } from './layers-panel'
 import { InspectorPanel } from './inspector-panel'
@@ -31,6 +32,7 @@ export function renderDeckPane(doc: ProjectDocument, opts: RenderDeckOptions = {
     { snap: opts.snap ?? false, grid: opts.grid ?? 8 },
     { name: 'canvas', kind: 'temp' },
   )
+  const canvasView = new CanvasViewBus()
 
   const view = render(
     <ProjectModelProvider value={model}>
@@ -38,7 +40,9 @@ export function renderDeckPane(doc: ProjectDocument, opts: RenderDeckOptions = {
         <UndoProvider value={undo}>
           <CommandsProvider value={commands}>
             <CanvasSettingsProvider value={canvasSettings}>
-              <DeckDesignerPane />
+              <CanvasViewProvider value={canvasView}>
+                <DeckDesignerPane />
+              </CanvasViewProvider>
             </CanvasSettingsProvider>
           </CommandsProvider>
         </UndoProvider>

@@ -1,0 +1,21 @@
+/* Minimap (CD-314): scaled board thumbnail + live viewport rectangle. */
+.dd-minimap {
+  position: relative;
+  overflow: hidden;
+  background: var(--canvas-bg, #1a1a1e);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  cursor: crosshair;
+  touch-action: none;
+}
+.dd-minimap-cell {
+  position: absolute;
+  background: var(--widget-bg, rgba(255, 255, 255, 0.28));
+  border-radius: 1px;
+}
+.dd-minimap-viewport {
+  position: absolute;
+  border: 1px solid var(--focus-ring, #4c9aff);
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 12%, transparent);
+  pointer-events: none;
+}

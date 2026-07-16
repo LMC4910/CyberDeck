@@ -5,7 +5,7 @@
 // Tab cycle, Esc, history). The ProjectModel is the source of truth. Drag/resize,
 // snapping, inspector and layers arrive across CD-306…328.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PanZoomSurface, IDENTITY, type PanZoomHandle, type ViewTransform } from '@/shared/canvas'
+import { PanZoomSurface, IDENTITY, type PanZoomHandle, type ViewTransform, type Point } from '@/shared/canvas'
 import { Board } from './deck-designer/board'
 import { useProjectModel } from './deck-designer/use-project-model'
 import { useSelection, useSelectionState } from './deck-designer/use-selection'
@@ -17,6 +17,7 @@ import { useTransformGestures } from './deck-designer/use-transform-gestures'
 import { useCanvasShortcuts } from './deck-designer/use-canvas-shortcuts'
 import { SelectionGizmo } from './deck-designer/selection-gizmo'
 import { SelectionMinibar } from './deck-designer/selection-minibar'
+import { useCanvasViewBus } from './deck-designer/use-canvas-view'
 import './deck-designer/deck-designer.css'
 
 export default function DeckDesignerPane() {
@@ -24,6 +25,7 @@ export default function DeckDesignerPane() {
   const engine = useSelection()
   const undo = useUndo()
   const commands = useCommands()
+  const viewBus = useCanvasViewBus()
   const { snap, grid } = useCanvasSettings()
   const pageId = useMemo(() => model.pages()[0]!.id, [model])
   const canvas = model.page(pageId)?.canvas
@@ -32,6 +34,22 @@ export default function DeckDesignerPane() {
   const [element, setElement] = useState<HTMLElement | null>(null)
   useEffect(() => setElement(surfaceRef.current?.getElement() ?? null), [])
   const getTransform = useCallback((): ViewTransform => surfaceRef.current?.getTransform() ?? IDENTITY, [])
+
+  // Publish the view + register a navigator so the minimap/Live Mirror stay in sync
+  // and can recenter the canvas (CD-314).
+  const surfaceSize = useCallback(() => {
+    const r = surfaceRef.current?.getElement()?.getBoundingClientRect()
+    return { w: r?.width ?? 0, h: r?.height ?? 0 }
+  }, [])
+  const publishView = useCallback(() => viewBus.setView(getTransform(), surfaceSize()), [viewBus, getTransform, surfaceSize])
+  useEffect(() => {
+    publishView()
+    return viewBus.registerNavigator((world: Point) => {
+      const size = surfaceSize()
+      const scale = getTransform().scale
+      surfaceRef.current?.actions.setTransform({ scale, tx: size.w / 2 - world.x * scale, ty: size.h / 2 - world.y * scale })
+    })
+  }, [viewBus, publishView, surfaceSize, getTransform, element])
 
   const { marquee, lasso } = useCanvasSelection({ element, getTransform, model, pageId, engine })
   const gestures = useTransformGestures({ model, engine, undo, pageId, element, getTransform, snapEnabled: snap, grid })
@@ -48,6 +66,7 @@ export default function DeckDesignerPane() {
         ref={surfaceRef}
         aria-label="Deck canvas"
         getFitBounds={() => (canvas?.w && canvas?.h ? { x: 0, y: 0, w: canvas.w, h: canvas.h } : null)}
+        onChange={publishView}
         overlay={({ transform }) => <SelectionMinibar transform={transform} />}
       >
         <Board

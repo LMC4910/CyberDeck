@@ -24,6 +24,9 @@ import {
   CommandsProvider,
   LayersPanel,
   DeckInspectorPanel,
+  Minimap,
+  LiveMirror,
+  CanvasViewProvider,
   type PreferencesTab,
 } from '@/workspaces'
 import { useStore } from '@/stores'
@@ -131,6 +134,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
    <UndoProvider value={kernel.undo}>
    <CanvasSettingsProvider value={kernel.canvasSettings}>
    <CommandsProvider value={kernel.commands}>
+   <CanvasViewProvider value={kernel.canvasView}>
     <div className="shell" data-boot="interactive" data-testid="shell">
       <header className="shell-topbar">
         <span className="shell-brand">CyberDeck IDE</span>
@@ -183,8 +187,18 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
           manager={kernel.dock}
           windows={dockRows}
           content={{
-            mirror: <div className="panel-placeholder">Live Mirror — device preview arrives in M4.</div>,
-            minimap: <div className="panel-placeholder">Minimap — arrives in M3.</div>,
+            mirror:
+              active === 'deck-designer' && kernel.project.model ? (
+                <LiveMirror pageId={kernel.project.model.pages()[0]!.id} />
+              ) : (
+                <div className="panel-placeholder">Live Mirror — select the Deck Designer.</div>
+              ),
+            minimap:
+              active === 'deck-designer' && kernel.project.model ? (
+                <Minimap pageId={kernel.project.model.pages()[0]!.id} />
+              ) : (
+                <div className="panel-placeholder">Minimap — select the Deck Designer.</div>
+              ),
           }}
           onChange={() => {
             setDockRows(kernel.dock.list())
@@ -259,6 +273,7 @@ function Shell({ kernel }: { kernel: BootedKernel }) {
         }
       />
     </div>
+   </CanvasViewProvider>
    </CommandsProvider>
    </CanvasSettingsProvider>
    </UndoProvider>
