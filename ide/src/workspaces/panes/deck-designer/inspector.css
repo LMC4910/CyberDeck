@@ -110,6 +110,23 @@
   border-color: var(--component, #a960e8);
 }
 
+.dd-override-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dd-override-field > .dd-field {
+  flex: 1 1 auto;
+}
+.dd-override-dot {
+  background: none;
+  border: none;
+  color: var(--component, #a960e8);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0 2px;
+}
+
 .dd-insp-row {
   display: flex;
   gap: 4px;

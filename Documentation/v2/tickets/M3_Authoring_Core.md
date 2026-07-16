@@ -22,7 +22,7 @@
 - [x] CD-315 Insert panel v1 (mock manifests)
 - [x] CD-316 Component registry + create/instantiate/detach
 - [x] CD-317 Variants
-- [ ] CD-318 Overrides
+- [x] CD-318 Overrides
 - [ ] CD-319 Nested components
 - [ ] CD-320 Component inspector section
 - [ ] CD-321 Shared styles

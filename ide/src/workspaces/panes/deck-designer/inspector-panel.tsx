@@ -10,6 +10,16 @@ import { useSelection, useSelectionState } from './use-selection'
 import { useUndo } from './use-undo'
 import type { SelectionEngine } from '@/stores'
 import { addVariant, swapVariant, deleteVariantAndRemap } from './component-ops'
+import {
+  OVERRIDE_FIELDS,
+  effectiveValue,
+  isOverridden,
+  overrideCount,
+  setInstanceOverride,
+  revertOverride,
+  resetAllOverrides,
+} from './override-ops'
+import { ColorField } from './inspector-fields'
 import { useCanvasSettings, useCanvasSettingsStore } from './use-canvas-settings'
 import {
   InspectorSection,
@@ -44,6 +54,7 @@ export function InspectorPanel({ pageId }: { pageId: string }) {
       {ids.length === 0 && <PageProperties model={model} pageId={pageId} undo={undo} />}
       {ids.length === 1 && <SingleWidget model={model} id={ids[0]!} undo={undo} />}
       {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
+      {single?.component && <OverrideSection model={model} instanceId={single.id} undo={undo} engine={engine} />}
       {ids.length > 1 && <MultiArrange model={model} ids={ids} undo={undo} />}
     </div>
   )
@@ -149,6 +160,48 @@ function SingleWidget({ model, id, undo }: { model: ProjectModel; id: string; un
       </InspectorSection>
       <TypeSection widget={widget} commitConfig={setConfig} />
     </>
+  )
+}
+
+// ── instance overrides (CD-318) ─────────────────────────────────────────────────
+function OverrideSection({ model, instanceId, undo, engine }: { model: ProjectModel; instanceId: string; undo: UndoStack; engine: SelectionEngine }) {
+  const inst = model.widget(instanceId)
+  if (!inst) return null
+  const ctx = { model, undo, engine }
+  const count = overrideCount(inst)
+  const asStr = (v: unknown) => (typeof v === 'string' ? v : '')
+  const asNum = (v: unknown) => (typeof v === 'number' ? v : 0)
+  const asBool = (v: unknown) => v !== false
+  return (
+    <InspectorSection title={`Overrides${count ? ` (${count})` : ''}`}>
+      {OVERRIDE_FIELDS.map(({ prop, label, kind }) => {
+        const overridden = isOverridden(inst, prop)
+        const value = effectiveValue(model, inst, prop)
+        const dot = (
+          <span className="dd-override-row" data-prop={prop} data-overridden={overridden || undefined}>
+            {overridden && (
+              <button type="button" className="dd-override-dot" data-testid={`revert-${prop}`} aria-label={`Revert ${label}`} title="Revert to master" onClick={() => revertOverride(ctx, instanceId, prop)}>
+                ●
+              </button>
+            )}
+          </span>
+        )
+        return (
+          <div key={prop} className="dd-override-field">
+            {kind === 'text' && <TextField label={label} value={asStr(value)} onCommit={(v) => setInstanceOverride(ctx, instanceId, prop, v)} />}
+            {kind === 'number' && <NumberField label={label} value={asNum(value)} onCommit={(v) => setInstanceOverride(ctx, instanceId, prop, v)} />}
+            {kind === 'color' && <ColorField label={label} value={asStr(value)} onCommit={(v) => setInstanceOverride(ctx, instanceId, prop, v)} />}
+            {kind === 'toggle' && <ToggleField label={label} value={asBool(value)} onCommit={(v) => setInstanceOverride(ctx, instanceId, prop, v)} />}
+            {dot}
+          </div>
+        )
+      })}
+      {count > 0 && (
+        <button type="button" className="dd-insp-btn" data-testid="reset-overrides" onClick={() => resetAllOverrides(ctx, instanceId)}>
+          Reset all ({count})
+        </button>
+      )}
+    </InspectorSection>
   )
 }
 
