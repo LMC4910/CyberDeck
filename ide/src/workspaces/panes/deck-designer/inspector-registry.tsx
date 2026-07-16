@@ -4,7 +4,7 @@
 // keys with the right field primitive. Config keys owned by other sections
 // (geometry, layer chrome) are excluded here.
 import { NumberField, TextField, ToggleField, InspectorSection } from './inspector-fields'
-import type { WidgetInstance } from '@/shared/project'
+import { GROUP_TYPE, type WidgetInstance } from '@/shared/project'
 
 export interface TypeSectionProps {
   widget: WidgetInstance
@@ -20,8 +20,15 @@ export function registerTypeSection(type: string, section: TypeSection): void {
   REGISTRY.set(type, section)
 }
 
+/** The canon inspector kind for a widget type (CD-313). */
+export function kindOf(type: string): string {
+  if (type === GROUP_TYPE) return 'container'
+  return type.split('.')[0] ?? 'generic'
+}
+
+/** Resolve the type section: exact type → kind → Generic fallback. */
 export function sectionFor(type: string): TypeSection {
-  return REGISTRY.get(type) ?? GenericSection
+  return REGISTRY.get(type) ?? REGISTRY.get(kindOf(type)) ?? GenericSection
 }
 
 /** Config keys the geometry / layer sections own — never shown in a type section. */

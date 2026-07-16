@@ -17,6 +17,7 @@ import {
   SegmentedField,
 } from './inspector-fields'
 import { sectionFor } from './inspector-registry'
+import './inspector-sections' // registers the 10 canon kinds (CD-313)
 import { alignFrames, distributeFrames, type AlignKind, type DistributeKind } from './align'
 import { CANVAS_COMMANDS } from './canvas-commands'
 import { useCommands } from './use-commands'

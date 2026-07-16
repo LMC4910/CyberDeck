@@ -17,7 +17,7 @@
 - [x] CD-310 Layers tree + command mutations
 - [x] CD-311 Layers filters/search + tree a11y
 - [x] CD-312 Contextual inspector registry + page/multi states
-- [ ] CD-313 Per-type inspector sections (10 canon kinds)
+- [x] CD-313 Per-type inspector sections (10 canon kinds)
 - [ ] CD-314 Board model + minimap + Live Mirror
 - [ ] CD-315 Insert panel v1 (mock manifests)
 - [ ] CD-316 Component registry + create/instantiate/detach
