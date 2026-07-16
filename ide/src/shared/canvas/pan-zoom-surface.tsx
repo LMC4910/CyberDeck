@@ -20,6 +20,8 @@ export interface PanZoomSurfaceProps extends UsePanZoomOptions {
 export interface PanZoomHandle {
   actions: PanZoomActions
   getTransform: () => ViewTransform
+  /** The surface DOM element (for consumers that need screen↔world conversion). */
+  getElement: () => HTMLElement | null
 }
 
 export const PanZoomSurface = forwardRef<PanZoomHandle, PanZoomSurfaceProps>(
@@ -31,7 +33,11 @@ export const PanZoomSurface = forwardRef<PanZoomHandle, PanZoomSurfaceProps>(
       options as UsePanZoomOptions,
     )
 
-    useImperativeHandle(ref, () => ({ actions, getTransform: () => transform }), [actions, transform])
+    useImperativeHandle(
+      ref,
+      () => ({ actions, getTransform: () => transform, getElement: () => surfaceRef.current }),
+      [actions, transform],
+    )
 
     const ctx = { transform, actions }
     const cursor = isPanning ? 'grabbing' : handArmed ? 'grab' : undefined

@@ -16,7 +16,16 @@ import { EventBus, TypedEventBus } from '@/platform/eventbus'
 import { NotificationService, type Notification } from '@/services/notification'
 import { ProjectService } from '@/services/project'
 import { ProjectModel, starterProject, type ProjectDocument } from '@/shared/project'
-import { createAllStores, createStore, StoreManager, type AllStores, type Store } from '@/stores'
+import {
+  createAllStores,
+  createStore,
+  StoreManager,
+  createSelectionStore,
+  SelectionEngine,
+  type AllStores,
+  type Store,
+  type SelectionState,
+} from '@/stores'
 import { WORKSPACE_CONTRIBUTIONS, type PanelsState, type LayoutPreset } from '@/workspaces'
 
 export interface BootedKernel {
@@ -35,6 +44,9 @@ export interface BootedKernel {
   notifications: NotificationService
   /** Owns the open ProjectModel + debounced autosave (CD-304). */
   project: ProjectService
+  /** The single selection source every panel subscribes to (CD-305, AUDIT C2). */
+  selection: SelectionEngine
+  selectionStore: Store<SelectionState>
   /** Drawer projection (all notifications) + active toasts. */
   notificationStore: Store<{ items: Notification[] }>
   toastStore: Store<{ items: Notification[] }>
@@ -119,6 +131,10 @@ export async function runAppBoot(): Promise<BootedKernel> {
       },
     },
   })
+  // The single selection source (CD-305): canvas ring, layers, inspector, breadcrumb
+  // all subscribe to this one store; the engine is the only writer.
+  const selectionStore = createSelectionStore()
+  const selection = new SelectionEngine(selectionStore)
 
   const phases: BootPhase[] = [
     { id: 'configuration', blocking: true, run: () => void config.getAll() },
@@ -224,6 +240,7 @@ export async function runAppBoot(): Promise<BootedKernel> {
   notifications.notify({ level: 'info', source: 'CyberDeck', title: 'Welcome to CyberDeck', body: 'The shell is ready.' })
   return {
     config, theme, workspaces, commands, keymap, bus, stores, session, panels, userPresets,
-    dock, undo, notifications, project, notificationStore, toastStore, saveDock, flush, report,
+    dock, undo, notifications, project, selection, selectionStore,
+    notificationStore, toastStore, saveDock, flush, report,
   }
 }

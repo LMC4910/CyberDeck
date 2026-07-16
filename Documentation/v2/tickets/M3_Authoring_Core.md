@@ -9,7 +9,7 @@
 - [x] CD-302 ProjectModel document core
 - [x] CD-303 Model→React reconciliation + board render
 - [x] CD-304 Serialize/restore + autosave + property tests
-- [ ] CD-305 Selection engine + store
+- [x] CD-305 Selection engine + store
 - [ ] CD-306 Drag/resize/rotate controllers
 - [ ] CD-307 Snapping + smart guides
 - [ ] CD-308 Nudge, canvas shortcuts, selection minibar

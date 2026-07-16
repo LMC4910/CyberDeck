@@ -11,3 +11,28 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+
+/* Marquee + lasso overlays render in world coords inside the pan/zoom world layer. */
+.dd-marquee {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid var(--focus-ring, #4c9aff);
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 12%, transparent);
+  pointer-events: none;
+}
+
+.dd-lasso {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dd-lasso polygon {
+  fill: color-mix(in srgb, var(--focus-ring, #4c9aff) 10%, transparent);
+  stroke: var(--focus-ring, #4c9aff);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}

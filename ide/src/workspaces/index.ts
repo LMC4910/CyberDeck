@@ -48,6 +48,7 @@ export {
   useWidget,
   usePage,
 } from './panes/deck-designer/use-project-model'
+export { SelectionProvider, useSelection, useSelectionState } from './panes/deck-designer/use-selection'
 export {
   LayoutPresetMenu,
   BUILTIN_PRESETS,
