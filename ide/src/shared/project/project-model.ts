@@ -508,6 +508,46 @@ export class ProjectModel {
     }
   }
 
+  renameComponent(componentId: string, name: string): Inverse {
+    const c = this.component(componentId)
+    if (!c) return () => {}
+    const prev = c.name
+    c.name = name
+    this.emit([componentId])
+    return () => {
+      const t = this.component(componentId)
+      if (t) t.name = prev
+      this.emit([componentId])
+    }
+  }
+
+  /** Set (or clear, value=undefined) a component prop/default (also holds meta keys). */
+  setComponentProp(componentId: string, prop: string, value: unknown): Inverse {
+    const c = this.component(componentId)
+    if (!c) return () => {}
+    const had = c.props && prop in c.props
+    const prev = had ? (c.props as Record<string, unknown>)[prop] : undefined
+    if (value === undefined) {
+      if (c.props) {
+        delete c.props[prop]
+        if (Object.keys(c.props).length === 0) delete c.props
+      }
+    } else {
+      ;(c.props ??= {})[prop] = value as never
+    }
+    this.emit([componentId])
+    return () => {
+      const t = this.component(componentId)
+      if (!t) return
+      if (had) (t.props ??= {})[prop] = prev as never
+      else if (t.props) {
+        delete t.props[prop]
+        if (Object.keys(t.props).length === 0) delete t.props
+      }
+      this.emit([componentId])
+    }
+  }
+
   removeComponent(componentId: string): Inverse {
     const list = this.doc.components
     const index = list?.findIndex((c) => c.id === componentId) ?? -1

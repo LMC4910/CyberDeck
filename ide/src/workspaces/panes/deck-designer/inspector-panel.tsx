@@ -9,7 +9,7 @@ import { useProjectModel } from './use-project-model'
 import { useSelection, useSelectionState } from './use-selection'
 import { useUndo } from './use-undo'
 import type { SelectionEngine } from '@/stores'
-import { addVariant, swapVariant, deleteVariantAndRemap } from './component-ops'
+import { addVariant, swapVariant, deleteVariantAndRemap, detachInstance, findInstances, nestingPath } from './component-ops'
 import {
   OVERRIDE_FIELDS,
   effectiveValue,
@@ -53,10 +53,65 @@ export function InspectorPanel({ pageId }: { pageId: string }) {
     <div className="dd-inspector" data-testid="inspector-panel" data-mode={inspectorMode(selection.kind, ids.length)}>
       {ids.length === 0 && <PageProperties model={model} pageId={pageId} undo={undo} />}
       {ids.length === 1 && <SingleWidget model={model} id={ids[0]!} undo={undo} />}
+      {single?.component && <ComponentSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <OverrideSection model={model} instanceId={single.id} undo={undo} engine={engine} />}
       {ids.length > 1 && <MultiArrange model={model} ids={ids} undo={undo} />}
     </div>
+  )
+}
+
+// ── component section (CD-320): master info + instance actions, adapts to nesting ──
+const META_DESC = '__description'
+const META_CAT = '__category'
+const META_EXPOSED = '__exposed'
+
+function ComponentSection({ model, instanceId, componentId, undo, engine, pageId }: { model: ProjectModel; instanceId: string; componentId: string; undo: UndoStack; engine: SelectionEngine; pageId: string }) {
+  const def = model.component(componentId)
+  if (!def) return null
+  const props = (def.props ?? {}) as Record<string, unknown>
+  const exposed = Array.isArray(props[META_EXPOSED]) ? (props[META_EXPOSED] as string[]) : OVERRIDE_FIELDS.map((f) => f.prop)
+  const instances = findInstances(model, componentId)
+  const path = nestingPath(model, componentId)
+  const setMeta = (key: string, value: unknown) => undo.execUndoable('Component meta', () => model.setComponentProp(componentId, key, value), { coalesceKey: `cmeta:${componentId}:${key}` })
+
+  return (
+    <InspectorSection title="Component">
+      {path.length > 1 && (
+        <p className="dd-nesting-crumb" data-testid="nesting-crumb">
+          Nested: {path.join(' › ')}
+        </p>
+      )}
+      <TextField label="Name" value={def.name} onCommit={(v) => undo.execUndoable('Rename component', () => model.renameComponent(componentId, v))} />
+      <TextField label="Description" value={typeof props[META_DESC] === 'string' ? (props[META_DESC] as string) : ''} onCommit={(v) => setMeta(META_DESC, v || undefined)} />
+      <TextField label="Category" value={typeof props[META_CAT] === 'string' ? (props[META_CAT] as string) : ''} onCommit={(v) => setMeta(META_CAT, v || undefined)} />
+
+      <div className="dd-insp-exposed" role="group" aria-label="Exposed properties">
+        <span className="dd-field-label">Exposed</span>
+        {OVERRIDE_FIELDS.map((f) => (
+          <label key={f.prop} className="dd-expose-chip">
+            <input
+              type="checkbox"
+              checked={exposed.includes(f.prop)}
+              onChange={(e) => {
+                const next = e.target.checked ? [...new Set([...exposed, f.prop])] : exposed.filter((p) => p !== f.prop)
+                setMeta(META_EXPOSED, next)
+              }}
+            />
+            {f.label}
+          </label>
+        ))}
+      </div>
+
+      <div className="dd-insp-row">
+        <button type="button" className="dd-insp-btn" data-testid="find-instances" onClick={() => engine.selectMany(instances)}>
+          {instances.length} instance{instances.length === 1 ? '' : 's'}
+        </button>
+        <button type="button" className="dd-insp-btn" data-testid="detach-instance" onClick={() => detachInstance({ model, engine, undo, pageId }, instanceId)}>
+          Detach
+        </button>
+      </div>
+    </InspectorSection>
   )
 }
 

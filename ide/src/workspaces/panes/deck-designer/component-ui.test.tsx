@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { act, fireEvent } from '@testing-library/react'
+import { act, fireEvent, within } from '@testing-library/react'
 import { INSTANCE_TYPE } from './component-ops'
 import { type WidgetInstance, type ProjectDocument } from '@/shared/project'
 import { renderDeckPane, renderLayers, renderInspector, docWith } from './test-harness'
+
+const panel = (c: HTMLElement) => c.querySelector('[data-testid="inspector-panel"]') as HTMLElement
 
 function w(id: string, x: number, over: Partial<WidgetInstance> = {}): WidgetInstance {
   return { id, type: 'gauge.circular', frame: { x, y: 0, w: 60, h: 40 }, ...over }
@@ -64,5 +66,48 @@ describe('Variant inspector (CD-317)', () => {
     act(() => (container.querySelector('[data-testid="variant-delete"]') as HTMLButtonElement).click())
     expect(model.component('cmp_test01')!.variants!.some((v) => v.id === 'var_aaaaaa')).toBe(false)
     expect(model.widget('w_inst01')!.variant).not.toBe('var_aaaaaa')
+  })
+})
+
+describe('Component inspector section (CD-320)', () => {
+  it('shows master info + a find-instances count for a selected instance', () => {
+    const { container, engine, model } = renderInspector(instanceDoc())
+    act(() => engine.selectOnly('w_inst01'))
+    const section = within(panel(container)).getByLabelText('Component')
+    expect(section).toBeInTheDocument()
+    expect(container.querySelector('[data-testid="find-instances"]')).toHaveTextContent('1 instance')
+    // rename the master
+    const nameRow = [...section.querySelectorAll('.dd-field')].find((r) => r.textContent?.startsWith('Name'))!
+    const input = nameRow.querySelector('input') as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'Card 2' } })
+    fireEvent.blur(input)
+    expect(model.component('cmp_test01')!.name).toBe('Card 2')
+  })
+
+  it('find-instances selects all instances; detach removes the instance', () => {
+    const doc = instanceDoc()
+    doc.pages[0]!.widgets.push(w('w_inst02', 300, { type: INSTANCE_TYPE, component: 'cmp_test01', name: 'Card' }))
+    const { container, engine, model } = renderInspector(doc)
+    act(() => engine.selectOnly('w_inst01'))
+    act(() => (container.querySelector('[data-testid="find-instances"]') as HTMLButtonElement).click())
+    expect(engine.state.ids.sort()).toEqual(['w_inst01', 'w_inst02'])
+    // re-select one and detach it
+    act(() => engine.selectOnly('w_inst01'))
+    act(() => (container.querySelector('[data-testid="detach-instance"]') as HTMLButtonElement).click())
+    expect(model.widget('w_inst01')).toBeUndefined()
+  })
+
+  it('exposes a nesting breadcrumb for a nested-component instance', () => {
+    const doc = instanceDoc()
+    // Outer component whose template instantiates the inner (cmp_test01)
+    doc.components!.push({
+      id: 'cmp_outer1',
+      name: 'Outer',
+      widgets: [{ id: 'w_nestin', type: INSTANCE_TYPE, component: 'cmp_test01', frame: { x: 0, y: 0, w: 60, h: 40 } }],
+    })
+    doc.pages[0]!.widgets.push(w('w_outer1', 400, { type: INSTANCE_TYPE, component: 'cmp_outer1', name: 'Outer' }))
+    const { container, engine } = renderInspector(doc)
+    act(() => engine.selectOnly('w_outer1'))
+    expect(container.querySelector('[data-testid="nesting-crumb"]')).toHaveTextContent('Outer › Card')
   })
 })

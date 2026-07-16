@@ -24,7 +24,7 @@
 - [x] CD-317 Variants
 - [x] CD-318 Overrides
 - [x] CD-319 Nested components
-- [ ] CD-320 Component inspector section
+- [x] CD-320 Component inspector section
 - [ ] CD-321 Shared styles
 - [ ] CD-322 Symbols
 - [ ] CD-323 Expression sandbox parser + conformance corpus
