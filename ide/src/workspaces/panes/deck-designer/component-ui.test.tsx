@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act, fireEvent } from '@testing-library/react'
 import { INSTANCE_TYPE } from './component-ops'
-import { type WidgetInstance } from '@/shared/project'
-import { renderDeckPane, renderLayers, docWith } from './test-harness'
+import { type WidgetInstance, type ProjectDocument } from '@/shared/project'
+import { renderDeckPane, renderLayers, renderInspector, docWith } from './test-harness'
 
 function w(id: string, x: number, over: Partial<WidgetInstance> = {}): WidgetInstance {
   return { id, type: 'gauge.circular', frame: { x, y: 0, w: 60, h: 40 }, ...over }
@@ -33,5 +33,36 @@ describe('Component UI (CD-316)', () => {
     doc.components = [{ id: 'cmp_test01', name: 'Card', widgets: [w('w_tmpl01', 0)] }]
     const { container } = renderLayers(doc)
     expect(container.querySelector('[data-testid="instance-badge-w_inst01"]')).toBeTruthy()
+  })
+})
+
+function instanceDoc(): ProjectDocument {
+  const doc = docWith([w('w_inst01', 0, { type: INSTANCE_TYPE, component: 'cmp_test01', name: 'Card' })])
+  doc.components = [
+    { id: 'cmp_test01', name: 'Card', widgets: [w('w_tmpl01', 0)], variants: [{ id: 'var_aaaaaa', name: 'A' }, { id: 'var_bbbbbb', name: 'B' }] },
+  ]
+  return doc
+}
+
+describe('Variant inspector (CD-317)', () => {
+  it('shows a Variants section for a selected instance and swaps per-instance', () => {
+    const { container, engine, model } = renderInspector(instanceDoc())
+    act(() => engine.selectOnly('w_inst01'))
+    const chipB = container.querySelector('[data-variant="var_bbbbbb"]') as HTMLButtonElement
+    expect(chipB).toBeTruthy()
+    act(() => chipB.click())
+    expect(model.widget('w_inst01')!.variant).toBe('var_bbbbbb')
+  })
+
+  it('add creates a variant; delete remaps + removes it', () => {
+    const { container, engine, model } = renderInspector(instanceDoc())
+    act(() => engine.selectOnly('w_inst01'))
+    act(() => (container.querySelector('[data-testid="variant-add"]') as HTMLButtonElement).click())
+    expect(model.component('cmp_test01')!.variants).toHaveLength(3)
+    // swap to A then delete it → remapped
+    act(() => (container.querySelector('[data-variant="var_aaaaaa"]') as HTMLButtonElement).click())
+    act(() => (container.querySelector('[data-testid="variant-delete"]') as HTMLButtonElement).click())
+    expect(model.component('cmp_test01')!.variants!.some((v) => v.id === 'var_aaaaaa')).toBe(false)
+    expect(model.widget('w_inst01')!.variant).not.toBe('var_aaaaaa')
   })
 })

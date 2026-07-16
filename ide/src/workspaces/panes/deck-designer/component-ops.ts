@@ -105,6 +105,55 @@ export function instantiateComponent(ctx: CompCtx, componentId: string, center: 
   return instanceId
 }
 
+// ── variants (CD-317) ─────────────────────────────────────────────────────────
+/** Add a variant to a component (undoable). Returns the new variant id. */
+export function addVariant(ctx: CompCtx, componentId: string, name: string): string | null {
+  const { model, undo } = ctx
+  if (!model.component(componentId)) return null
+  const variantId = model.newId('variant')
+  undo.execUndoable('Add variant', () => model.addVariant(componentId, { id: variantId, name }))
+  return variantId
+}
+
+/** Swap ONE instance's variant (per-instance; never touches siblings). Undoable. */
+export function swapVariant(ctx: CompCtx, instanceId: string, variantId: string | undefined): void {
+  const { model, undo } = ctx
+  undo.execUndoable('Swap variant', () => model.setVariant(instanceId, variantId))
+}
+
+/** Cycle an instance's variant (,/. keys). Undoable. */
+export function cycleVariant(ctx: CompCtx, instanceId: string, dir: 1 | -1): void {
+  const { model } = ctx
+  const inst = model.widget(instanceId)
+  const def = inst?.component ? model.component(inst.component) : undefined
+  const variants = def?.variants ?? []
+  if (variants.length === 0) return
+  const cur = variants.findIndex((v) => v.id === inst!.variant)
+  const next = (((cur < 0 ? -dir : cur) + dir) + variants.length) % variants.length
+  swapVariant(ctx, instanceId, variants[next]!.id)
+}
+
+/**
+ * Delete a variant and remap every affected instance to the first remaining variant
+ * (or clear it if none remain). One undo entry.
+ */
+export function deleteVariantAndRemap(ctx: CompCtx, componentId: string, variantId: string): void {
+  const { model, undo } = ctx
+  const def = model.component(componentId)
+  if (!def) return
+  const remaining = (def.variants ?? []).filter((v) => v.id !== variantId)
+  const fallback = remaining[0]?.id
+  const affected: string[] = []
+  for (const p of model.pages()) {
+    for (const w of p.widgets) if (w.component === componentId && w.variant === variantId) affected.push(w.id)
+  }
+  undo.execUndoable('Delete variant', () => {
+    const inverses = affected.map((id) => model.setVariant(id, fallback))
+    inverses.push(model.removeVariant(componentId, variantId))
+    return () => inverses.reverse().forEach((inv) => inv())
+  })
+}
+
 /** Detach an instance: replace it with fresh copies of the master template. */
 export function detachInstance(ctx: CompCtx, instanceId: string): string[] {
   const { model, engine, undo, pageId } = ctx

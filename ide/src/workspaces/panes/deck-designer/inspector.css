@@ -90,6 +90,26 @@
   border-color: var(--focus-ring, #4c9aff);
 }
 
+.dd-variant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.dd-variant-chip {
+  font: inherit;
+  font-size: 10px;
+  color: inherit;
+  background: var(--chip-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.dd-variant-chip[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--component, #a960e8) 32%, transparent);
+  border-color: var(--component, #a960e8);
+}
+
 .dd-insp-row {
   display: flex;
   gap: 4px;

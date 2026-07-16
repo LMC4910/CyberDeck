@@ -6,8 +6,10 @@ import { useSyncExternalStore } from 'react'
 import { isContainer, type ProjectModel } from '@/shared/project'
 import type { UndoStack } from '@/platform/undo'
 import { useProjectModel } from './use-project-model'
-import { useSelectionState } from './use-selection'
+import { useSelection, useSelectionState } from './use-selection'
 import { useUndo } from './use-undo'
+import type { SelectionEngine } from '@/stores'
+import { addVariant, swapVariant, deleteVariantAndRemap } from './component-ops'
 import { useCanvasSettings, useCanvasSettingsStore } from './use-canvas-settings'
 import {
   InspectorSection,
@@ -15,6 +17,7 @@ import {
   TextField,
   ToggleField,
   SegmentedField,
+  SelectField,
 } from './inspector-fields'
 import { sectionFor } from './inspector-registry'
 import './inspector-sections' // registers the 10 canon kinds (CD-313)
@@ -29,17 +32,65 @@ function useModelRevision(model: ProjectModel): number {
 
 export function InspectorPanel({ pageId }: { pageId: string }) {
   const model = useProjectModel()
+  const engine = useSelection()
   const undo = useUndo()
   const selection = useSelectionState()
   useModelRevision(model)
 
   const ids = selection.kind === 'widget' ? selection.ids : []
+  const single = ids.length === 1 ? model.widget(ids[0]!) : undefined
   return (
     <div className="dd-inspector" data-testid="inspector-panel" data-mode={inspectorMode(selection.kind, ids.length)}>
       {ids.length === 0 && <PageProperties model={model} pageId={pageId} undo={undo} />}
       {ids.length === 1 && <SingleWidget model={model} id={ids[0]!} undo={undo} />}
+      {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {ids.length > 1 && <MultiArrange model={model} ids={ids} undo={undo} />}
     </div>
+  )
+}
+
+// ── instance variants (CD-317) ──────────────────────────────────────────────────
+function VariantSection({ model, instanceId, componentId, undo, engine, pageId }: { model: ProjectModel; instanceId: string; componentId: string; undo: UndoStack; engine: SelectionEngine; pageId: string }) {
+  const def = model.component(componentId)
+  if (!def) return null
+  const variants = def.variants ?? []
+  const instance = model.widget(instanceId)
+  const ctx = { model, undo, engine, pageId }
+  return (
+    <InspectorSection title="Variants">
+      <SelectField
+        label="Variant"
+        value={instance?.variant ?? ''}
+        options={[{ value: '', label: 'Default' }, ...variants.map((v) => ({ value: v.id, label: v.name }))]}
+        onCommit={(v) => swapVariant(ctx, instanceId, v || undefined)}
+      />
+      <div className="dd-insp-row">
+        <button type="button" className="dd-insp-btn" data-testid="variant-add" onClick={() => addVariant(ctx, componentId, `Variant ${variants.length + 1}`)}>
+          Add variant
+        </button>
+        {instance?.variant && (
+          <button type="button" className="dd-insp-btn" data-testid="variant-delete" onClick={() => deleteVariantAndRemap(ctx, componentId, instance.variant!)}>
+            Delete
+          </button>
+        )}
+      </div>
+      {variants.length > 0 && (
+        <div className="dd-variant-chips" role="group" aria-label="Variants">
+          {variants.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              className="dd-variant-chip"
+              aria-pressed={instance?.variant === v.id}
+              data-variant={v.id}
+              onClick={() => swapVariant(ctx, instanceId, v.id)}
+            >
+              {v.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </InspectorSection>
   )
 }
 

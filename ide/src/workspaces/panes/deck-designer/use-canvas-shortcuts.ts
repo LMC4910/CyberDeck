@@ -7,6 +7,7 @@ import type { SelectionEngine } from '@/stores'
 import type { UndoStack } from '@/platform/undo'
 import type { CommandRegistry } from '@/platform/commands'
 import { CANVAS_COMMANDS } from './canvas-commands'
+import { cycleVariant } from './component-ops'
 
 export type CanvasTool = 'select' | 'hand' | 'insert'
 
@@ -99,6 +100,15 @@ export function useCanvasShortcuts({ element, model, engine, undo, commands }: O
       } else if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {
         e.preventDefault()
         void commands.execute(CANVAS_COMMANDS.delete, undefined, {})
+      } else if (!mod && (e.key === ',' || e.key === '.')) {
+        // Cycle the selected instance's variant (CD-317).
+        const ids = engine.state.ids
+        const id = ids.length === 1 ? ids[0]! : undefined
+        const pageId = id ? model.pageOf(id) : undefined
+        if (id && pageId && model.widget(id)?.component) {
+          e.preventDefault()
+          cycleVariant({ model, engine, undo, pageId }, id, e.key === '.' ? 1 : -1)
+        }
       } else if (!mod && e.key.toLowerCase() === 'v') {
         setTool('select')
       } else if (!mod && e.key.toLowerCase() === 'h') {

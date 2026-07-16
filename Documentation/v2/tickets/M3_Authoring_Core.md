@@ -21,7 +21,7 @@
 - [x] CD-314 Board model + minimap + Live Mirror
 - [x] CD-315 Insert panel v1 (mock manifests)
 - [x] CD-316 Component registry + create/instantiate/detach
-- [ ] CD-317 Variants
+- [x] CD-317 Variants
 - [ ] CD-318 Overrides
 - [ ] CD-319 Nested components
 - [ ] CD-320 Component inspector section

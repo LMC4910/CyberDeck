@@ -551,6 +551,46 @@ export class ProjectModel {
     }
   }
 
+  renameVariant(componentId: string, variantId: string, name: string): Inverse {
+    const v = this.component(componentId)?.variants?.find((x) => x.id === variantId)
+    if (!v) return () => {}
+    const prev = v.name
+    v.name = name
+    this.emit([componentId, variantId])
+    return () => {
+      const t = this.component(componentId)?.variants?.find((x) => x.id === variantId)
+      if (t) t.name = prev
+      this.emit([componentId, variantId])
+    }
+  }
+
+  /** Set (or clear, value=undefined) one prop in a variant's override table. */
+  setVariantOverride(componentId: string, variantId: string, prop: string, value: unknown): Inverse {
+    const v = this.component(componentId)?.variants?.find((x) => x.id === variantId)
+    if (!v) return () => {}
+    const had = v.overrides && prop in v.overrides
+    const prev = had ? (v.overrides as Record<string, unknown>)[prop] : undefined
+    if (value === undefined) {
+      if (v.overrides) {
+        delete v.overrides[prop]
+        if (Object.keys(v.overrides).length === 0) delete v.overrides
+      }
+    } else {
+      ;(v.overrides ??= {})[prop] = value as never
+    }
+    this.emit([componentId, variantId])
+    return () => {
+      const t = this.component(componentId)?.variants?.find((x) => x.id === variantId)
+      if (!t) return
+      if (had) (t.overrides ??= {})[prop] = prev as never
+      else if (t.overrides) {
+        delete t.overrides[prop]
+        if (Object.keys(t.overrides).length === 0) delete t.overrides
+      }
+      this.emit([componentId, variantId])
+    }
+  }
+
   // ── instances (a widget carrying component/variant/overrides) ────────────────
   setVariant(widgetId: string, variantId: string | undefined): Inverse {
     return this.setWidgetField(widgetId, 'variant', variantId)
