@@ -1,10 +1,3 @@
-// Placeholder pane for the Projects workspace (CD-203). Real content arrives in
-// M3/M4; this proves lazy code-splitting + the pane host. Its own chunk via import().
-export default function ProjectsPane() {
-  return (
-    <section data-pane="projects" aria-label="Projects workspace">
-      <h2>Projects</h2>
-      <p>The Projects workspace arrives in a later milestone.</p>
-    </section>
-  )
-}
+// Projects pane (CD-203 shell slot → CD-405/406 real workspace). Its own lazy chunk
+// via the contribution's import(); the workspace itself lives in ./projects.
+export { ProjectsWorkspace as default } from './projects/projects-workspace'
