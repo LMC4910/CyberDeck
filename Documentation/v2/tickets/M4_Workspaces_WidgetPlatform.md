@@ -7,7 +7,7 @@
 
 - [x] CD-401 Vars: table + scopes + filters/sort — ✅ Done 2026-07-17
 - [x] CD-402 Vars: CRUD + inline edit + secret masking — ✅ Done 2026-07-17
-- [ ] CD-403 Vars: computed vars + inspector + references
+- [x] CD-403 Vars: computed vars + inspector + references — ✅ Done 2026-07-17 (needs shell wiring: VariablesEnvProvider navigate cb)
 - [ ] CD-404 Library workspace (3 registry tabs)
 - [x] CD-405 Projects: dashboard + browse + inspector — ✅ Done 2026-07-17
 - [x] CD-406 Projects: wizard + open flow + recents — ✅ Done 2026-07-17
