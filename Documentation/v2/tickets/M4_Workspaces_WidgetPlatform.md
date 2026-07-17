@@ -10,7 +10,7 @@
 - [ ] CD-403 Vars: computed vars + inspector + references
 - [ ] CD-404 Library workspace (3 registry tabs)
 - [x] CD-405 Projects: dashboard + browse + inspector — ✅ Done 2026-07-17
-- [ ] CD-406 Projects: wizard + open flow + recents — 🚧 open-flow + wizard UI + recents landed & tested; wizard-input-validation test pending
+- [x] CD-406 Projects: wizard + open flow + recents — ✅ Done 2026-07-17
 - [x] CD-407 Runtime: log view — ✅ Done 2026-07-17 (Runtime workspace replaces Home placeholder)
 - [ ] CD-408 Runtime: perf panel + rails — 🚧 feed groundwork stashed; perf/rails UI not built
 - [ ] CD-409 Flows: model + tabs + armed — 🚧 model/ops/tabs/service+tests stashed; unfinished logic + 2 typecheck fixes remain
