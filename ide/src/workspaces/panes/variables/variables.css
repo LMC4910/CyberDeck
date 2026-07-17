@@ -1,0 +1,233 @@
+/* Variables workspace (CD-401). Rail | table | inspector. The table is windowed:
+   the scroll area sizes to the server's full row count via a spacer and only the
+   visible slice is mounted. */
+.vars-pane {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  font-size: 12px;
+  color: var(--panel-fg, rgba(255, 255, 255, 0.86));
+}
+
+.vars-pane[data-inspector='open'] {
+  grid-template-columns: 168px minmax(0, 1fr) 280px;
+}
+
+/* ── scopes rail ───────────────────────────────────────────────────────────── */
+.vars-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-right: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  overflow-y: auto;
+}
+
+.vars-rail-title,
+.vars-inspector-title {
+  padding: 6px 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.vars-rail-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+.vars-rail-option:hover {
+  background: var(--row-hover, rgba(255, 255, 255, 0.06));
+}
+
+.vars-rail-option[data-checked] {
+  background: var(--accent-soft, rgba(76, 154, 255, 0.18));
+  color: var(--accent-fg, #cfe3ff);
+}
+
+/* ── main column ───────────────────────────────────────────────────────────── */
+.vars-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.vars-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+}
+
+.vars-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vars-field-label {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.vars-search,
+.vars-plugin-filter,
+.vars-input {
+  font: inherit;
+  color: inherit;
+  background: var(--input-bg, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+
+.vars-plugin-filter:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.vars-count {
+  margin-left: auto;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.vars-toolbar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── table ─────────────────────────────────────────────────────────────────── */
+.vars-table,
+.vars-grid {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.vars-head {
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+}
+
+.vars-row {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+}
+
+.vars-row:not(.vars-headrow):hover {
+  background: var(--row-hover, rgba(255, 255, 255, 0.05));
+}
+
+.vars-row[data-selected] {
+  background: var(--accent-soft, rgba(76, 154, 255, 0.2));
+}
+
+.vars-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vars-colheader {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+}
+
+.vars-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.vars-sort-caret {
+  font-size: 8px;
+}
+
+.vars-path,
+.vars-value {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  opacity: 0.85;
+}
+
+.vars-scope-chip {
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  background: var(--chip-bg, rgba(255, 255, 255, 0.08));
+}
+
+.vars-scope-chip[data-scope='plugin'],
+.vars-scope-chip[data-scope='system'],
+.vars-scope-chip[data-scope='environment'] {
+  opacity: 0.75;
+}
+
+.vars-plugin-badge {
+  margin-left: 4px;
+  font-size: 9px;
+  opacity: 0.6;
+}
+
+.vars-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.vars-spacer {
+  position: relative;
+}
+
+.vars-window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.vars-skeleton-bar {
+  height: 8px;
+  border-radius: 3px;
+  background: var(--row-hover, rgba(255, 255, 255, 0.06));
+}
+
+.vars-empty {
+  padding: 16px;
+  opacity: 0.6;
+}
+
+.vars-notice {
+  padding: 4px 8px;
+  border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+}
+
+.vars-notice[data-kind='error'] {
+  color: var(--danger-fg, #ff9d9d);
+}
