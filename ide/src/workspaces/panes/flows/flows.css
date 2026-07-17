@@ -1,0 +1,155 @@
+/* Flows workspace chrome (CD-409): the pane frame, the flow tab strip with its
+   inline rename + armed toggle, and the arm confirm. Graph + palette styling lives
+   in graph.css. */
+.fw-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  color: var(--panel-fg, rgba(255, 255, 255, 0.86));
+  font-size: 12px;
+}
+
+.fw-empty {
+  margin: auto;
+  opacity: 0.6;
+}
+
+/* --- tab strip --- */
+.fw-tabbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  background: var(--panel-bg, rgba(255, 255, 255, 0.03));
+}
+
+.fw-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.fw-tab,
+.fw-tab-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font: inherit;
+  color: inherit;
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+}
+.fw-tab:hover,
+.fw-tab-new:hover {
+  background: var(--chip-bg, rgba(255, 255, 255, 0.06));
+}
+.fw-tab[aria-selected='true'] {
+  background: var(--chip-bg, rgba(255, 255, 255, 0.08));
+  border-color: var(--panel-border, rgba(255, 255, 255, 0.14));
+  border-bottom-color: transparent;
+}
+.fw-tab:focus-visible,
+.fw-tab-new:focus-visible,
+.fw-armed:focus-visible,
+.fw-btn:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+
+.fw-tab-armed {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--armed, #46d17f);
+  box-shadow: 0 0 6px var(--armed, #46d17f);
+}
+
+.fw-tab-rename {
+  font: inherit;
+  color: inherit;
+  padding: 3px 6px;
+  min-width: 100px;
+  background: var(--input-bg, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--focus-ring, #4c9aff);
+  border-radius: 4px;
+}
+
+.fw-tab-new {
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+/* --- armed toggle --- */
+.fw-armed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  font: inherit;
+  color: inherit;
+  background: var(--chip-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 999px;
+  cursor: pointer;
+}
+.fw-armed:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fw-armed-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+}
+.fw-armed[aria-pressed='true'] {
+  color: var(--armed, #46d17f);
+  border-color: color-mix(in srgb, var(--armed, #46d17f) 55%, transparent);
+  background: color-mix(in srgb, var(--armed, #46d17f) 14%, transparent);
+}
+.fw-armed[aria-pressed='true'] .fw-armed-dot {
+  opacity: 1;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* --- arm confirm --- */
+.fw-confirm-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.fw-confirm-body {
+  margin: 0 0 14px;
+  opacity: 0.75;
+  max-width: 42ch;
+}
+.fw-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.fw-btn {
+  font: inherit;
+  color: inherit;
+  padding: 4px 12px;
+  background: var(--chip-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.14));
+  border-radius: 4px;
+  cursor: pointer;
+}
+.fw-btn-primary {
+  background: color-mix(in srgb, var(--armed, #46d17f) 22%, transparent);
+  border-color: color-mix(in srgb, var(--armed, #46d17f) 60%, transparent);
+}
