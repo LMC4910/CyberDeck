@@ -596,10 +596,17 @@ export class ProjectModel {
     }
   }
 
-  /** Set a container's ordered child list (reorder / nest / unnest). */
+  /** Set a container's ordered child list (reorder / nest / unnest). Rejects a
+   *  child list that would nest the container inside itself (same guard as
+   *  reparent — the forest must stay acyclic). */
   setChildren(containerId: string, childIds: string[]): Inverse {
     const c = this.widget(containerId)
     if (!c) return () => {}
+    for (const childId of childIds) {
+      if (childId === containerId || this.collectSubtree(childId).has(containerId)) {
+        throw new Error('cannot nest a container into its own descendant')
+      }
+    }
     const prev = [...childIdsOf(c)]
     setChildIds(c, [...childIds])
     this.emit([containerId, ...childIds, ...prev], true)
@@ -665,16 +672,36 @@ export class ProjectModel {
     }
   }
 
+  /** Remove a component def. Instances referencing it are unlinked (their
+   *  component/variant/overrides cleared) so no dangling refs survive — the
+   *  inverse restores both the def and every instance's linkage. */
   removeComponent(componentId: string): Inverse {
     const list = this.doc.components
     const index = list?.findIndex((c) => c.id === componentId) ?? -1
     if (!list || index < 0) return () => {}
     const [def] = list.splice(index, 1)
     if (list.length === 0) delete this.doc.components
-    this.emit([componentId], true)
+    const unlinked: { id: string; variant?: string; overrides?: WidgetInstance['overrides'] }[] = []
+    for (const p of this.doc.pages) {
+      for (const w of p.widgets) {
+        if (w.component !== componentId) continue
+        unlinked.push({ id: w.id, variant: w.variant, overrides: w.overrides ? structuredClone(w.overrides) : undefined })
+        delete w.component
+        delete w.variant
+        delete w.overrides
+      }
+    }
+    this.emit([componentId, ...unlinked.map((u) => u.id)], true)
     return () => {
       ;(this.doc.components ??= []).splice(index, 0, def!)
-      this.emit([componentId], true)
+      for (const u of unlinked) {
+        const w = this.widget(u.id)
+        if (!w) continue
+        w.component = componentId
+        if (u.variant !== undefined) w.variant = u.variant
+        if (u.overrides !== undefined) w.overrides = u.overrides
+      }
+      this.emit([componentId, ...unlinked.map((u) => u.id)], true)
     }
   }
 
@@ -753,18 +780,28 @@ export class ProjectModel {
     return this.setWidgetField(widgetId, 'variant', variantId)
   }
 
+  /** Set (or clear, value=undefined) one instance override. Deleting on undefined
+   *  (rather than storing it) keeps `prop in overrides` aligned with what a JSON
+   *  round-trip preserves (CD-304 idempotency). */
   setOverride(widgetId: string, prop: string, value: unknown): Inverse {
     const w = this.widget(widgetId)
     if (!w) return () => {}
     const had = w.overrides && prop in w.overrides
     const prev = had ? (w.overrides as Record<string, unknown>)[prop] : undefined
-    ;(w.overrides ??= {})[prop] = value as never
+    if (value === undefined) {
+      if (w.overrides) {
+        delete w.overrides[prop]
+        if (Object.keys(w.overrides).length === 0) delete w.overrides
+      }
+    } else {
+      ;(w.overrides ??= {})[prop] = value as never
+    }
     this.emit([widgetId])
     return () => {
       const t = this.widget(widgetId)
-      if (!t?.overrides) return
-      if (had) t.overrides[prop] = prev as never
-      else {
+      if (!t) return
+      if (had) (t.overrides ??= {})[prop] = prev as never
+      else if (t.overrides) {
         delete t.overrides[prop]
         if (Object.keys(t.overrides).length === 0) delete t.overrides
       }
@@ -824,17 +861,24 @@ export class ProjectModel {
     const prev = s.active
     if (active === undefined) delete s.active
     else s.active = active
+    pruneEmptyRegistries(this.doc)
     this.emit([widgetId])
     return () => {
-      const t = this.doc.states?.[widgetId]
-      if (!t) return
-      if (prev === undefined) delete t.active
-      else t.active = prev
-      pruneEmptyRegistries(this.doc)
+      if (prev === undefined) {
+        const t = this.doc.states?.[widgetId]
+        if (t) delete t.active
+        pruneEmptyRegistries(this.doc)
+      } else {
+        // Rebuild the entry — the forward prune may have removed it.
+        ;((this.doc.states ??= {})[widgetId] ??= {}).active = prev
+      }
       this.emit([widgetId])
     }
   }
 
+  /** Set (or clear, value=undefined) one prop in a state's delta. Deleting on
+   *  undefined keeps the document canonical (no `{prop: undefined}` residue that a
+   *  JSON round-trip would silently drop — CD-304 idempotency). */
   setStateOverride(widgetId: string, state: string, prop: string, value: unknown): Inverse {
     const states = (this.doc.states ??= {})
     const s = (states[widgetId] ??= {})
@@ -842,14 +886,20 @@ export class ProjectModel {
     const forState = (ov[state] ??= {})
     const had = prop in forState
     const prev = forState[prop]
-    forState[prop] = value
+    if (value === undefined) delete forState[prop]
+    else forState[prop] = value
+    pruneEmptyRegistries(this.doc)
     this.emit([widgetId])
     return () => {
-      const forStateNow = this.doc.states?.[widgetId]?.ov?.[state]
-      if (!forStateNow) return
-      if (had) forStateNow[prop] = prev
-      else delete forStateNow[prop]
-      pruneEmptyRegistries(this.doc)
+      if (had) {
+        // Rebuild the scaffolding — the forward prune may have removed it.
+        const st = ((this.doc.states ??= {})[widgetId] ??= {})
+        ;((st.ov ??= {})[state] ??= {})[prop] = prev
+      } else {
+        const forStateNow = this.doc.states?.[widgetId]?.ov?.[state]
+        if (forStateNow) delete forStateNow[prop]
+        pruneEmptyRegistries(this.doc)
+      }
       this.emit([widgetId])
     }
   }
@@ -860,13 +910,17 @@ export class ProjectModel {
     const prev = s.custom ? [...s.custom] : undefined
     if (custom.length === 0) delete s.custom
     else s.custom = [...custom]
+    pruneEmptyRegistries(this.doc)
     this.emit([widgetId])
     return () => {
-      const t = this.doc.states?.[widgetId]
-      if (!t) return
-      if (prev) t.custom = prev
-      else delete t.custom
-      pruneEmptyRegistries(this.doc)
+      if (prev) {
+        // Rebuild the entry — the forward prune may have removed it.
+        ;((this.doc.states ??= {})[widgetId] ??= {}).custom = prev
+      } else {
+        const t = this.doc.states?.[widgetId]
+        if (t) delete t.custom
+        pruneEmptyRegistries(this.doc)
+      }
       this.emit([widgetId])
     }
   }

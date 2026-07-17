@@ -263,3 +263,118 @@ describe('ProjectModel — change notifications', () => {
     expect(changes[1]!.structural).toBe(false)
   })
 })
+
+describe('ProjectModel — canonical undefined semantics (CD-304 round-trip)', () => {
+  it('setOverride(undefined) deletes the key instead of storing undefined', () => {
+    const { model, pageId } = seed()
+    model.addWidget(pageId, w('w_ovxxxx'))
+    const i1 = model.setOverride('w_ovxxxx', 'text', 'A')
+    const i2 = model.setOverride('w_ovxxxx', 'text', undefined)
+    expect(model.widget('w_ovxxxx')!.overrides).toBeUndefined()
+    i2()
+    expect(model.widget('w_ovxxxx')!.overrides).toEqual({ text: 'A' })
+    i1()
+    expect(model.widget('w_ovxxxx')!.overrides).toBeUndefined()
+  })
+
+  it('setStateOverride(undefined) removes the prop, prunes scaffolding, and undoes exactly', () => {
+    const { model, pageId } = seed()
+    model.addWidget(pageId, w('w_stxxxx'))
+    const i1 = model.setStateOverride('w_stxxxx', 'hover', 'opacity', 0.5)
+    const i2 = model.setStateOverride('w_stxxxx', 'hover', 'opacity', undefined)
+    // fully pruned — no `{opacity: undefined}` residue a JSON round-trip would drop
+    expect(model.document.states).toBeUndefined()
+    i2()
+    expect(model.stateOf('w_stxxxx')?.ov?.hover).toEqual({ opacity: 0.5 })
+    i1()
+    expect(model.document.states).toBeUndefined()
+  })
+
+  it('serialize → JSON → restore → serialize is idempotent after clears', () => {
+    const { model, pageId } = seed()
+    model.addWidget(pageId, w('w_rtxxxx'))
+    model.setStateOverride('w_rtxxxx', 'hover', 'glow', 10)
+    model.setStateOverride('w_rtxxxx', 'hover', 'glow', undefined)
+    model.setActiveState('w_rtxxxx', 'hover')
+    model.setActiveState('w_rtxxxx', undefined)
+    const first = model.serialize()
+    const restored = ProjectModel.restore(JSON.parse(JSON.stringify(first)) as ProjectDocument)
+    expect(restored.serialize()).toEqual(first)
+  })
+})
+
+describe('ProjectModel — component removal cascade', () => {
+  function docWithInstance(): ProjectDocument {
+    return {
+      format: 'cyberdeck.project',
+      version: 1,
+      meta: { name: 'x' },
+      pages: [
+        {
+          id: 'page_aaaaaa',
+          name: 'P',
+          widgets: [
+            {
+              id: 'w_instaa',
+              type: 'core.instance',
+              frame: { x: 0, y: 0, w: 10, h: 10 },
+              component: 'cmp_aaaaaa',
+              variant: 'var_aaaaaa',
+              overrides: { text: 'Hi' },
+            },
+          ],
+        },
+      ],
+      components: [
+        {
+          id: 'cmp_aaaaaa',
+          name: 'Card',
+          props: { text: 'T' },
+          widgets: [w('w_tmplaa')],
+          variants: [{ id: 'var_aaaaaa', name: 'V' }],
+        },
+      ],
+    }
+  }
+
+  it('unlinks instances so no dangling refs survive; undo restores linkage', () => {
+    const model = new ProjectModel(docWithInstance())
+    const inv = model.removeComponent('cmp_aaaaaa')
+    expect(model.component('cmp_aaaaaa')).toBeUndefined()
+    expect(model.widget('w_instaa')!.component).toBeUndefined()
+    expect(model.widget('w_instaa')!.variant).toBeUndefined()
+    expect(model.widget('w_instaa')!.overrides).toBeUndefined()
+    expect(model.validate()).toEqual([])
+    inv()
+    expect(model.widget('w_instaa')).toMatchObject({
+      component: 'cmp_aaaaaa',
+      variant: 'var_aaaaaa',
+      overrides: { text: 'Hi' },
+    })
+    expect(model.validate()).toEqual([])
+  })
+})
+
+describe('ProjectModel — setChildren cycle guard', () => {
+  it('rejects nesting a container into its own descendant', () => {
+    const doc: ProjectDocument = {
+      format: 'cyberdeck.project',
+      version: 1,
+      meta: { name: 'x' },
+      pages: [
+        {
+          id: 'page_aaaaaa',
+          name: 'P',
+          widgets: [
+            w('grp_aaaaaa', { type: GROUP_TYPE, config: { childIds: ['grp_bbbbbb'] } }),
+            w('grp_bbbbbb', { type: GROUP_TYPE, config: { childIds: [] } }),
+          ],
+        },
+      ],
+    }
+    const model = new ProjectModel(doc)
+    expect(() => model.setChildren('grp_bbbbbb', ['grp_aaaaaa'])).toThrow(/own descendant/)
+    expect(() => model.setChildren('grp_bbbbbb', ['grp_bbbbbb'])).toThrow(/own descendant/)
+    expect(model.validate()).toEqual([])
+  })
+})

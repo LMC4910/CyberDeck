@@ -4,7 +4,10 @@
 // i.e. a lowercase prefix (a readability hint only — NO semantics), an underscore,
 // then ≥6 chars of [a-z0-9-] starting alnum. IDs are:
 //   • never derived from display names (renaming never touches a key), and
-//   • never reused after deletion / never regenerated on load.
+//   • never reused after deletion within a session / never regenerated on load.
+//     (The issued set reseeds from the LIVE document on load, so an id deleted in
+//     a previous session could in principle be re-minted — nothing may keep
+//     references to deleted ids across sessions.)
 // The random source is injectable so tests can make allocation deterministic.
 
 const ID_RE = /^[a-z][a-z0-9]*_[a-z0-9][a-z0-9-]{5,}$/
