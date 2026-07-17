@@ -49,7 +49,10 @@ export function tokenize(src: string): Token[] {
       let str = ''
       while (j < n && src[j] !== quote) {
         if (src[j] === '\\' && j + 1 < n) {
-          str += src[j + 1]
+          // Translate the common escapes; any other escaped char is itself
+          // (so \" and \\ work and nothing new becomes reachable).
+          const e = src[j + 1]!
+          str += e === 'n' ? '\n' : e === 't' ? '\t' : e === 'r' ? '\r' : e
           j += 2
         } else {
           str += src[j]

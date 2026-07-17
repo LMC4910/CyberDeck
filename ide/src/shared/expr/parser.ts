@@ -15,11 +15,24 @@ export type Ast =
   | { t: 'ternary'; c: Ast; a: Ast; b: Ast }
   | { t: 'call'; name: string; args: Ast[] }
 
+/** Max nesting depth (parens/calls/ternaries/unary chains). Keeps a hostile
+ *  expression from blowing the JS call stack (RangeError) — the sandbox contract
+ *  is that every failure is an ExprError. Generous for any real expression. */
+const MAX_DEPTH = 200
+
 class Parser {
   private i = 0
+  private depth = 0
   private readonly toks: Token[]
   constructor(toks: Token[]) {
     this.toks = toks
+  }
+
+  private enter(): void {
+    if (++this.depth > MAX_DEPTH) throw new ExprError('expression too deeply nested')
+  }
+  private exit(): void {
+    this.depth--
   }
 
   private peek(): Token {
@@ -42,15 +55,20 @@ class Parser {
   }
 
   private ternary(): Ast {
-    const c = this.or()
-    if (this.peek().type === 'question') {
-      this.next()
-      const a = this.ternary()
-      this.expect('colon')
-      const b = this.ternary()
-      return { t: 'ternary', c, a, b }
+    this.enter()
+    try {
+      const c = this.or()
+      if (this.peek().type === 'question') {
+        this.next()
+        const a = this.ternary()
+        this.expect('colon')
+        const b = this.ternary()
+        return { t: 'ternary', c, a, b }
+      }
+      return c
+    } finally {
+      this.exit()
     }
-    return c
   }
 
   private or(): Ast {
@@ -103,8 +121,13 @@ class Parser {
   }
   private unary(): Ast {
     if (this.peek().type === 'op' && ['-', '!'].includes(this.peek().value)) {
-      const op = this.next().value
-      return { t: 'unary', op, e: this.unary() }
+      this.enter()
+      try {
+        const op = this.next().value
+        return { t: 'unary', op, e: this.unary() }
+      } finally {
+        this.exit()
+      }
     }
     return this.primary()
   }

@@ -33,8 +33,8 @@ export const FORBIDDEN = new Set([
 type Fn = (...args: ExprValue[]) => ExprValue
 const num = (v: ExprValue): v is number => typeof v === 'number'
 export const FUNCTIONS: Record<string, Fn> = {
-  min: (...a) => (a.some((x) => !num(x)) ? undefined : Math.min(...(a as number[]))),
-  max: (...a) => (a.some((x) => !num(x)) ? undefined : Math.max(...(a as number[]))),
+  min: (...a) => (a.length === 0 || a.some((x) => !num(x)) ? undefined : Math.min(...(a as number[]))),
+  max: (...a) => (a.length === 0 || a.some((x) => !num(x)) ? undefined : Math.max(...(a as number[]))),
   abs: (x) => (num(x) ? Math.abs(x) : undefined),
   round: (x) => (num(x) ? Math.round(x) : undefined),
   floor: (x) => (num(x) ? Math.floor(x) : undefined),
@@ -52,9 +52,15 @@ interface Ctx {
   resolve: VarResolver
   ops: number
   maxOps: number
+  depth: number
   deadline: number | null
   now: (() => number) | null
 }
+
+/** Max ev() recursion. Parser nesting is capped at 200, but a long flat operator
+ *  chain parses iteratively into a left-deep tree the evaluator walks recursively —
+ *  this keeps that walk from blowing the JS stack (ExprError, never RangeError). */
+const EVAL_MAX_DEPTH = 1000
 
 function resolverOf(vars: EvalOptions['vars']): VarResolver {
   if (typeof vars === 'function') return vars
@@ -75,6 +81,15 @@ function tick(ctx: Ctx): void {
 
 function ev(node: Ast, ctx: Ctx): ExprValue {
   tick(ctx)
+  if (++ctx.depth > EVAL_MAX_DEPTH) throw new ExprError('expression too deeply nested')
+  try {
+    return evNode(node, ctx)
+  } finally {
+    ctx.depth--
+  }
+}
+
+function evNode(node: Ast, ctx: Ctx): ExprValue {
   switch (node.t) {
     case 'num': return node.v
     case 'str': return node.v
@@ -90,6 +105,13 @@ function ev(node: Ast, ctx: Ctx): ExprValue {
       if (FORBIDDEN.has(node.name)) throw new ExprError(`forbidden identifier '${node.name}'`)
       const fn = FUNCTIONS[node.name]
       if (!fn) throw new ExprError(`unknown function '${node.name}'`)
+      // if() short-circuits like ?: — only the taken branch evaluates, so
+      // if(x != 0, 1 / x, 0) never divides by zero.
+      if (node.name === 'if') {
+        const cond = node.args[0] ? ev(node.args[0], ctx) : undefined
+        const branch = truthy(cond) ? node.args[1] : node.args[2]
+        return branch ? ev(branch, ctx) : undefined
+      }
       return fn(...node.args.map((a) => ev(a, ctx)))
     }
     case 'unary': return unary(node.op, ev(node.e, ctx))
@@ -149,6 +171,7 @@ export function evaluate(src: string, options: EvalOptions = {}): ExprValue {
     resolve: resolverOf(options.vars),
     ops: 0,
     maxOps: options.maxOps ?? 10000,
+    depth: 0,
     deadline: options.maxMs != null && options.now ? options.now() + options.maxMs : null,
     now: options.now ?? null,
   }

@@ -103,6 +103,51 @@ describe('runaway expressions terminated by limits', () => {
   })
 })
 
+describe('if() short-circuits like ?:', () => {
+  it('does not evaluate the untaken branch', () => {
+    expect(evaluate('if(x != 0, 100 / x, -1)', { vars: { x: 0 } })).toBe(-1)
+    expect(evaluate('if(x != 0, 100 / x, -1)', { vars: { x: 4 } })).toBe(25)
+  })
+
+  it('missing branches yield undefined instead of crashing', () => {
+    expect(evaluate('if(true)')).toBeUndefined()
+    expect(evaluate('if(false, 1)')).toBeUndefined()
+    expect(evaluate('if()')).toBeUndefined()
+  })
+})
+
+describe('function edge cases', () => {
+  it('min()/max() with no args are undefined, not ±Infinity', () => {
+    expect(evaluate('min()')).toBeUndefined()
+    expect(evaluate('max()')).toBeUndefined()
+  })
+})
+
+describe('string escapes translate, not drop', () => {
+  it('\\n \\t \\r become control chars; quotes and backslash unescape', () => {
+    expect(evaluate("'a\\nb'")).toBe('a\nb')
+    expect(evaluate("'a\\tb'")).toBe('a\tb')
+    expect(evaluate('"say \\"hi\\""')).toBe('say "hi"')
+    expect(evaluate("'back\\\\slash'")).toBe('back\\slash')
+  })
+})
+
+describe('hostile nesting fails as ExprError, never RangeError', () => {
+  it('deeply nested parens are rejected at parse', () => {
+    const src = '('.repeat(5000) + '1' + ')'.repeat(5000)
+    expect(() => evaluate(src)).toThrow(ExprError)
+  })
+
+  it('a deep unary chain is rejected at parse', () => {
+    expect(() => evaluate('!'.repeat(5000) + 'true')).toThrow(ExprError)
+  })
+
+  it('a huge flat operator chain is capped by the evaluator depth guard', () => {
+    const src = Array.from({ length: 5000 }, () => '1').join(' + ')
+    expect(() => evaluate(src)).toThrow(ExprError)
+  })
+})
+
 describe('analyze — editor diagnostics', () => {
   it('reports unknown variables against a known catalog', () => {
     const r = analyze('fps.current + fps.max', ['fps.current'])
