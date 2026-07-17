@@ -11,7 +11,7 @@ import { useSelection, useSelectionState } from './use-selection'
 import { useUndo } from './use-undo'
 import { flattenLayers, type LayerRow } from './layers-model'
 import { filterRows, ancestorsOf, LAYER_FILTERS, type LayerFilter } from './layers-filter'
-import { useVirtualRows } from './use-virtual-rows'
+import { useVirtualRows } from '@/shared/virtual'
 import './layers.css'
 
 const ROW_H = 26
