@@ -221,6 +221,9 @@ export function defaultVariables(): VariableRecord[] {
     { id: 'deck.accent', name: 'Accent Colour', scope: 'global', type: 'color', value: '#4c9aff', updatedAt: BASE_TS },
     { id: 'deck.title', name: 'Deck Title', scope: 'global', type: 'string', value: 'Battlestation', updatedAt: BASE_TS },
     { id: 'deck.mode', name: 'Deck Mode', scope: 'global', type: 'enum', value: 'gaming', options: ['gaming', 'work', 'idle'], updatedAt: BASE_TS },
+    // An author-owned secret (engine secret store, not the project doc) — the one
+    // secret in the set that is editable; env/plugin secrets are owned elsewhere.
+    { id: 'deck.webhook', name: 'Webhook Token', scope: 'global', type: 'secret', value: 'whk-live-9f3a2b', updatedAt: BASE_TS },
     { id: 'page.home.visits', name: 'Home Visits', scope: 'page', type: 'number', value: 3, updatedAt: BASE_TS },
     { id: 'run.stream.live', name: 'Stream Live', scope: 'runtime', type: 'boolean', value: false, updatedAt: BASE_TS },
     { id: 'run.scene.last', name: 'Last Scene', scope: 'runtime', type: 'string', value: 'Starting Soon', updatedAt: BASE_TS },

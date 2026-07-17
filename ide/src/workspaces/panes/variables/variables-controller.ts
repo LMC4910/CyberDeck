@@ -6,9 +6,10 @@
 // fetches only the pages the scroll window actually overlaps. So {filter, sort,
 // page, limit} are real server params on every keystroke and every scroll — the
 // table never receives the whole set and never filters it (CD-401 AC).
-import { createStore, type Store } from '@/stores'
+import { createStore, optimistic, type Store } from '@/stores'
 import type { VariableRecord } from './variables-model'
 import type {
+  VariableDraft,
   VariableFilter,
   VariablePage,
   VariableQuery,
@@ -39,12 +40,17 @@ export interface VariablesState {
   selectedIds: string[]
   /** ⇧-range anchor. */
   anchor?: string
+  /**
+   * id → revealed secret value (CD-402). Secrets are masked in every query payload,
+   * so a value only exists here after an explicit reveal, and only until release.
+   */
+  revealed: Record<string, unknown>
 }
 
 const INITIAL_SORT: VariableSort = { field: 'name', dir: 'asc' }
 
 export function initialVariablesState(): VariablesState {
-  return { filter: {}, sort: INITIAL_SORT, pages: {}, total: 0, loading: true, selectedIds: [] }
+  return { filter: {}, sort: INITIAL_SORT, pages: {}, total: 0, loading: true, selectedIds: [], revealed: {} }
 }
 
 export class VariablesController {
@@ -197,6 +203,106 @@ export class VariablesController {
     this.store.setState((s) => ({ ...s, selectedIds: [], anchor: undefined }))
   }
 
+  /** Ids of every row currently cached — the dialog's local uniqueness check. */
+  knownIds(): string[] {
+    return this.orderedIds()
+  }
+
+  // ── mutations (CD-402) ───────────────────────────────────────────────────────
+
+  /**
+   * Inline value edit. Optimistic: the row shows the new value at once, the repo
+   * write follows, and a failure restores the previous value and says so — the
+   * store's rollback contract (CD-133) doing the work, not a hand-rolled undo.
+   * Returns false when the write failed.
+   */
+  async writeValue(id: string, value: unknown): Promise<boolean> {
+    try {
+      await optimistic<VariablesState, VariableRecord>({
+        store: this.store,
+        apply: (s) => ({ ...s, notice: undefined, pages: patchRow(s.pages, id, (r) => ({ ...r, value })) }),
+        commit: () => this.source.write(id, value),
+        // The server's row is authoritative (it stamps updatedAt, may coerce).
+        reconcile: (s, result) => ({ ...s, pages: patchRow(s.pages, id, () => result) }),
+      })
+      return true
+    } catch (error) {
+      this.setNotice({ kind: 'error', text: `Could not update ${id}: ${messageOf(error)}` })
+      return false
+    }
+  }
+
+  /** Create a variable, then re-query — the server decides where the row sorts. */
+  async createVariable(draft: VariableDraft): Promise<VariableRecord | undefined> {
+    try {
+      const row = await this.source.create(draft)
+      this.refresh()
+      this.store.setState((s) => ({
+        ...s,
+        selectedIds: [row.id],
+        anchor: row.id,
+        notice: { kind: 'info', text: `Created ${row.id}` },
+      }))
+      return row
+    } catch (error) {
+      this.setNotice({ kind: 'error', text: `Could not create ${draft.id}: ${messageOf(error)}` })
+      return undefined
+    }
+  }
+
+  /**
+   * Delete one or more rows (multi-select op). Optimistic, then a re-query because
+   * removing rows shifts every page after them. A failure rolls the rows back and
+   * re-queries anyway, so a partial delete reconciles with the server truth.
+   */
+  async removeMany(ids: string[]): Promise<boolean> {
+    if (ids.length === 0) return true
+    const doomed = new Set(ids)
+    try {
+      await optimistic<VariablesState, void>({
+        store: this.store,
+        apply: (s) => ({
+          ...s,
+          notice: undefined,
+          pages: dropRows(s.pages, doomed),
+          total: Math.max(0, s.total - ids.length),
+          selectedIds: s.selectedIds.filter((x) => !doomed.has(x)),
+        }),
+        commit: async () => {
+          for (const id of ids) await this.source.remove(id)
+        },
+      })
+      this.refresh()
+      this.setNotice({ kind: 'info', text: `Deleted ${ids.length === 1 ? ids[0]! : `${ids.length} variables`}` })
+      return true
+    } catch (error) {
+      this.setNotice({ kind: 'error', text: `Could not delete: ${messageOf(error)}` })
+      this.refresh() // the commit may have removed some before failing
+      return false
+    }
+  }
+
+  // ── secrets (CD-402) ─────────────────────────────────────────────────────────
+
+  /** Fetch a masked secret's value (reveal-on-hold press). */
+  async revealSecret(id: string): Promise<void> {
+    try {
+      const value = await this.source.reveal(id)
+      this.store.setState((s) => ({ ...s, revealed: { ...s.revealed, [id]: value } }))
+    } catch (error) {
+      this.setNotice({ kind: 'error', text: `Could not reveal ${id}: ${messageOf(error)}` })
+    }
+  }
+
+  /** Drop a revealed value (release / blur) — back to masked. */
+  hideSecret(id: string): void {
+    if (!(id in this.state.revealed)) return
+    this.store.setState((s) => {
+      const { [id]: _dropped, ...rest } = s.revealed
+      return { ...s, revealed: rest }
+    })
+  }
+
   setNotice(notice: VariablesNotice | undefined): void {
     this.store.setState((s) => ({ ...s, notice }))
   }
@@ -211,6 +317,39 @@ export class VariablesController {
 
 function pageOf(index: number): number {
   return Math.floor(index / PAGE_SIZE) + 1
+}
+
+/** Replace one row wherever it is cached, leaving untouched pages referentially equal. */
+function patchRow(
+  pages: Record<number, VariableRecord[]>,
+  id: string,
+  fn: (row: VariableRecord) => VariableRecord,
+): Record<number, VariableRecord[]> {
+  const out: Record<number, VariableRecord[]> = {}
+  for (const [key, rows] of Object.entries(pages)) {
+    const index = rows.findIndex((r) => r.id === id)
+    if (index < 0) {
+      out[Number(key)] = rows
+      continue
+    }
+    const next = [...rows]
+    next[index] = fn(rows[index]!)
+    out[Number(key)] = next
+  }
+  return out
+}
+
+/** Remove rows from every cached page (optimistic delete). */
+function dropRows(
+  pages: Record<number, VariableRecord[]>,
+  ids: ReadonlySet<string>,
+): Record<number, VariableRecord[]> {
+  const out: Record<number, VariableRecord[]> = {}
+  for (const [key, rows] of Object.entries(pages)) {
+    const kept = rows.filter((r) => !ids.has(r.id))
+    out[Number(key)] = kept.length === rows.length ? rows : kept
+  }
+  return out
 }
 
 /** Drop empty filter keys so the params carry only what the user actually set. */
