@@ -28,7 +28,10 @@ export function Minimap({ pageId }: { pageId: string }) {
   const centerFromEvent = (clientX: number, clientY: number) => {
     const rect = boxRef.current?.getBoundingClientRect()
     if (!rect) return
-    const world = { x: (clientX - rect.left) / scale, y: (clientY - rect.top) / scale }
+    const world = {
+      x: (clientX - rect.left) / scale + board.origin.x,
+      y: (clientY - rect.top) / scale + board.origin.y,
+    }
     bus.centerOn(world)
     void screenToWorld
   }
@@ -60,8 +63,8 @@ export function Minimap({ pageId }: { pageId: string }) {
             className="dd-minimap-cell"
             data-cell={c.id}
             style={{
-              left: c.frame.x * scale,
-              top: c.frame.y * scale,
+              left: (c.frame.x - board.origin.x) * scale,
+              top: (c.frame.y - board.origin.y) * scale,
               width: Math.max(1, c.frame.w * scale),
               height: Math.max(1, c.frame.h * scale),
               background: c.color ?? undefined,
@@ -72,7 +75,7 @@ export function Minimap({ pageId }: { pageId: string }) {
         <div
           className="dd-minimap-viewport"
           data-testid="minimap-viewport"
-          style={{ left: vp.x * scale, top: vp.y * scale, width: vp.w * scale, height: vp.h * scale }}
+          style={{ left: (vp.x - board.origin.x) * scale, top: (vp.y - board.origin.y) * scale, width: vp.w * scale, height: vp.h * scale }}
         />
       )}
     </div>

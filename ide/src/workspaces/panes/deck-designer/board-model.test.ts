@@ -33,6 +33,31 @@ describe('selectBoardModel (CD-314)', () => {
     expect(selectBoardModel(m, 'page_bmtst1').bounds).toEqual({ w: 140, h: 80 })
   })
 
+  it('extends origin/bounds to include negative coordinates (nothing clips)', () => {
+    const m = new ProjectModel({
+      format: 'cyberdeck.project',
+      version: 1,
+      meta: { name: 'B' },
+      pages: [
+        {
+          id: 'page_bmtst2',
+          name: 'P',
+          widgets: [
+            w('w_aaaaaa', { frame: { x: -50, y: -20, w: 40, h: 30 } }),
+            w('w_bbbbbb', { frame: { x: 100, y: 50, w: 40, h: 30 } }),
+          ],
+        },
+      ],
+    })
+    const b = selectBoardModel(m, 'page_bmtst2')
+    expect(b.origin).toEqual({ x: -50, y: -20 })
+    expect(b.bounds).toEqual({ w: 190, h: 100 })
+  })
+
+  it('origin stays (0,0) for positive-only content and canvas pages', () => {
+    expect(selectBoardModel(model(), 'page_bmtst0').origin).toEqual({ x: 0, y: 0 })
+  })
+
   it('reflects model changes (live)', () => {
     const m = model()
     m.addWidget('page_bmtst0', w('w_cccccc'))

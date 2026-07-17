@@ -18,6 +18,9 @@ export interface BoardModel {
   cells: BoardCell[]
   /** World bounds: the page canvas if set, else the widgets' bounding box. */
   bounds: { w: number; h: number }
+  /** World coordinate of the board's top-left (non-zero when widgets sit at
+   *  negative coords) — consumers subtract it so nothing renders off-board. */
+  origin: { x: number; y: number }
 }
 
 export function selectBoardModel(model: ProjectModel, pageId: string): BoardModel {
@@ -28,11 +31,16 @@ export function selectBoardModel(model: ProjectModel, pageId: string): BoardMode
     return { id: w.id, frame: w.frame, type: w.type, color: cfg.colorLabel, hidden: !!cfg.hidden }
   })
   let bounds = { w: page?.canvas?.w ?? 0, h: page?.canvas?.h ?? 0 }
+  let origin = { x: 0, y: 0 }
   if (!bounds.w || !bounds.h) {
     const box = boundingFrame(widgets.map((w) => w.frame))
-    bounds = box ? { w: box.x + box.w, h: box.y + box.h } : { w: 1, h: 1 }
+    // The board always includes the world origin, extended to any negative extent.
+    origin = box ? { x: Math.min(0, box.x), y: Math.min(0, box.y) } : origin
+    bounds = box
+      ? { w: Math.max(1, box.x + box.w - origin.x), h: Math.max(1, box.y + box.h - origin.y) }
+      : { w: 1, h: 1 }
   }
-  return { cells, bounds }
+  return { cells, bounds, origin }
 }
 
 /** Subscribed, memoized board model — recomputes only when the document changes. */

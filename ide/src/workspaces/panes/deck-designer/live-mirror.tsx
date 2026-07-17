@@ -54,8 +54,8 @@ export function LiveMirror({ pageId }: { pageId: string }) {
               className="dd-mirror-cell"
               data-cell={c.id}
               style={{
-                left: c.frame.x * boardScale,
-                top: c.frame.y * boardScale,
+                left: (c.frame.x - board.origin.x) * boardScale,
+                top: (c.frame.y - board.origin.y) * boardScale,
                 width: Math.max(1, c.frame.w * boardScale),
                 height: Math.max(1, c.frame.h * boardScale),
                 background: c.color ?? undefined,
