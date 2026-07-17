@@ -5,15 +5,15 @@
 
 ## Board
 
-- [ ] CD-401 Vars: table + scopes + filters/sort
-- [ ] CD-402 Vars: CRUD + inline edit + secret masking
+- [x] CD-401 Vars: table + scopes + filters/sort — ✅ Done 2026-07-17
+- [x] CD-402 Vars: CRUD + inline edit + secret masking — ✅ Done 2026-07-17
 - [ ] CD-403 Vars: computed vars + inspector + references
 - [ ] CD-404 Library workspace (3 registry tabs)
-- [ ] CD-405 Projects: dashboard + browse + inspector
-- [ ] CD-406 Projects: wizard + open flow + recents
-- [ ] CD-407 Runtime: log view
-- [ ] CD-408 Runtime: perf panel + rails
-- [ ] CD-409 Flows: model + tabs + armed
+- [x] CD-405 Projects: dashboard + browse + inspector — ✅ Done 2026-07-17
+- [ ] CD-406 Projects: wizard + open flow + recents — 🚧 open-flow + wizard UI + recents landed & tested; wizard-input-validation test pending
+- [x] CD-407 Runtime: log view — ✅ Done 2026-07-17 (Runtime workspace replaces Home placeholder)
+- [ ] CD-408 Runtime: perf panel + rails — 🚧 feed groundwork stashed; perf/rails UI not built
+- [ ] CD-409 Flows: model + tabs + armed — 🚧 model/ops/tabs/service+tests stashed; unfinished logic + 2 typecheck fixes remain
 - [ ] CD-410 Flows: node render + palette + drag-add
 - [ ] CD-411 Flows: edge engine + branches
 - [ ] CD-412 Flows: multi-select/duplicate + graph nav parity
