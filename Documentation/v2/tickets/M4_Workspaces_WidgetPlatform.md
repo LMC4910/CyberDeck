@@ -13,7 +13,7 @@
 - [x] CD-406 Projects: wizard + open flow + recents — ✅ Done 2026-07-17
 - [x] CD-407 Runtime: log view — ✅ Done 2026-07-17 (Runtime workspace replaces Home placeholder)
 - [ ] CD-408 Runtime: perf panel + rails — 🚧 feed groundwork stashed; perf/rails UI not built
-- [ ] CD-409 Flows: model + tabs + armed — 🚧 model/ops/tabs/service+tests stashed; unfinished logic + 2 typecheck fixes remain
+- [x] CD-409 Flows: model + tabs + armed — ✅ Done 2026-07-17
 - [ ] CD-410 Flows: node render + palette + drag-add
 - [ ] CD-411 Flows: edge engine + branches
 - [ ] CD-412 Flows: multi-select/duplicate + graph nav parity
