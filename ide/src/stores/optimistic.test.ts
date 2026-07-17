@@ -55,6 +55,24 @@ describe('optimistic — failure path (rollback + corrective event)', () => {
     expect(corrective.mock.calls[0]![1]).toEqual({ items: ['a'] })
   })
 
+  it('does not clobber a change that landed while the commit was in flight', async () => {
+    const store = makeStore()
+    const corrective = vi.fn()
+    await optimistic({
+      store,
+      apply: (s) => ({ items: [...s.items, 'ghost'] }),
+      commit: async () => {
+        // another write lands mid-commit — a snapshot restore would erase it
+        store.setState((s) => ({ items: [...s.items, 'interleaved'] }))
+        throw new Error('boom')
+      },
+      onRollback: corrective,
+    }).catch(() => {})
+    // state left as-is; the corrective event carries it for reconciliation
+    expect(store.getState().items).toEqual(['a', 'ghost', 'interleaved'])
+    expect(corrective.mock.calls[0]![1]).toEqual({ items: ['a', 'ghost', 'interleaved'] })
+  })
+
   it('the optimistic value was visible before the failure resolved', async () => {
     const store = makeStore()
     let seenDuringFlight: string[] | undefined
