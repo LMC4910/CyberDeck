@@ -22,7 +22,6 @@ const project = (ctx: CrumbContext): CrumbSegment => ({
 })
 
 export const BREADCRUMB_SEGMENTS: Record<string, SegmentBuilder> = {
-  home: (ctx) => [project(ctx), { label: 'Home', navigate: 'home' }],
   'deck-designer': (ctx) => [
     project(ctx),
     { label: 'Deck Designer', navigate: 'deck-designer' },
@@ -45,6 +44,11 @@ export const BREADCRUMB_SEGMENTS: Record<string, SegmentBuilder> = {
     ...(ctx.leaf ? [{ label: ctx.leaf }] : []),
   ],
   projects: () => [{ label: 'Projects', navigate: 'projects' }],
+  runtime: (ctx) => [
+    project(ctx),
+    { label: 'Runtime', navigate: 'runtime' },
+    ...(ctx.leaf ? [{ label: ctx.leaf }] : []),
+  ],
 }
 
 /** Build the crumb segments for a workspace (falls back to a single label). */

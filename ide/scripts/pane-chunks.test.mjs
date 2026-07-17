@@ -9,7 +9,7 @@ import { join } from 'node:path'
 const dist = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'assets')
 
 const PANES = [
-  'home',
+  'runtime',
   'deck-designer',
   'flows',
   'variables',

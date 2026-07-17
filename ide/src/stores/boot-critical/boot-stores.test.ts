@@ -16,6 +16,10 @@ describe('boot-critical stores — restore at declared stages', () => {
     expect(stores.ui.descriptor.kind).toBe('temp') // not persisted
   })
 
+  it('the workspace store defaults to a real workspace id (first-boot landing)', () => {
+    expect(createBootCriticalStores().workspace.getState().workspaceId).toBe('projects')
+  })
+
   it('the StoreManager restores persisted boot-critical stores from storage', () => {
     const adapter = new MemoryStorageAdapter({
       'cdk-prefs': JSON.stringify({ version: 1, density: 'compact' }),

@@ -25,7 +25,9 @@ export function createPreferencesStore(
 export type WorkspaceState = CyberDeckWorkspaceLayoutConfiguration
 
 export function createWorkspaceStore(
-  initial: WorkspaceState = { version: 1, workspaceId: 'home', panels: [] },
+  // First boot lands on Projects (recents + templates) — the natural entry point.
+  // Session restore (CD-212) overrides this on every later boot.
+  initial: WorkspaceState = { version: 1, workspaceId: 'projects', panels: [] },
 ): Store<WorkspaceState> {
   return createStore(initial, {
     name: 'workspace',

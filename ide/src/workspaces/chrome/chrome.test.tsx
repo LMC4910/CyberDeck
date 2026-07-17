@@ -16,6 +16,10 @@ describe('breadcrumb segments — per-workspace mapping', () => {
       'Stream Start',
     ])
     expect(crumbFor('projects', {}).map((s) => s.label)).toEqual(['Projects'])
+    expect(crumbFor('runtime', { projectName: 'Deck' }).map((s) => s.label)).toEqual([
+      'Deck',
+      'Runtime',
+    ])
   })
 })
 
@@ -38,10 +42,10 @@ describe('Breadcrumb — clickable segments navigate', () => {
 
   it('the last segment is aria-current=page and not a link', () => {
     const { container } = renderWithProviders(
-      <Breadcrumb activeWorkspace="home" context={{ projectName: 'Deck' }} onNavigate={() => {}} />,
+      <Breadcrumb activeWorkspace="runtime" context={{ projectName: 'Deck' }} onNavigate={() => {}} />,
     )
     const current = container.querySelector('[aria-current="page"]')
-    expect(current).toHaveTextContent('Home')
+    expect(current).toHaveTextContent('Runtime')
     expect(container.querySelector('[data-crumb="projects"]')).toBeInTheDocument() // Project link
   })
 })
