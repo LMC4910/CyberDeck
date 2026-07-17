@@ -3,7 +3,7 @@
 // resolves the Runtime ring-buffer store + the live feed from their injection
 // points and drives the feed while the workspace is open (the CD-326 precedent).
 import { useEffect } from 'react'
-import { LogView } from './runtime/log-view'
+import { RuntimeView } from './runtime/runtime-view'
 import { useRuntimeFeed, useRuntimeStore } from './runtime/use-runtime'
 import './runtime/runtime.css'
 
@@ -20,7 +20,7 @@ export default function RuntimePane() {
 
   return (
     <section className="rt-pane" data-pane="runtime" aria-label="Runtime workspace">
-      <LogView feed={feed} store={store} />
+      <RuntimeView feed={feed} store={store} />
     </section>
   )
 }
