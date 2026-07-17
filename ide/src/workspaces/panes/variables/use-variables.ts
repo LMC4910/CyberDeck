@@ -11,10 +11,15 @@ export function useVariablesController(source: VariablesSource): VariablesContro
   const [controller] = useState(() => new VariablesController(source))
   useEffect(() => {
     controller.bind(source)
+    // Build the derived-variable graph and subscribe to dependency ticks (CD-403).
+    // Re-runs on a source swap so the computed engine tracks the new backend.
+    void controller.refreshComputed()
   }, [controller, source])
   // First load: the constructor stays side-effect free, so the mount kicks it off.
   useEffect(() => {
     controller.refresh()
+    // Release the live tick subscription when the pane unmounts.
+    return () => controller.dispose()
   }, [controller])
   return controller
 }

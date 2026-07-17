@@ -12,6 +12,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import {
   formatRaw,
   formatValue,
+  isDerivedScope,
   isReadOnly,
   parseValue,
   readOnlyReason,
@@ -33,9 +34,39 @@ export interface ValueCellProps {
 }
 
 export function ValueCell(props: ValueCellProps) {
+  if (isDerivedScope(props.row.scope)) return <DerivedCell {...props} />
   if (props.row.type === 'secret') return <SecretCell {...props} />
   if (props.editing && !isReadOnly(props.row)) return <ValueEditor {...props} />
   return <ReadOnlyOrIdle {...props} />
+}
+
+/**
+ * Computed/expression value (CD-403). Not editable — the expression is edited
+ * elsewhere — so the cell shows the LIVE engine evaluation (state.computed), which
+ * re-renders on every dependency tick. A cyclic/invalid expression resolves to an
+ * error result and shows an honest "⚠ error" marker whose reason rides in the title.
+ */
+function DerivedCell({ controller, row }: ValueCellProps) {
+  const result = useVariablesState(controller, (s) => s.computed[row.id])
+  const reason = 'Derived from an expression — edit the expression instead'
+  return (
+    <span
+      className="vars-value-text"
+      data-testid={`value-${row.id}`}
+      data-readonly
+      data-computed={result ? (result.ok ? 'ok' : 'error') : 'pending'}
+      title={result && !result.ok ? result.error : reason}
+    >
+      {!result
+        ? formatValue(row) // engine not wired / first eval pending: stored snapshot
+        : result.ok
+          ? formatRaw(result.value, row.type)
+          : '⚠ error'}
+      <span className="vars-lock" aria-label={reason} role="img">
+        ƒ
+      </span>
+    </span>
+  )
 }
 
 function ReadOnlyOrIdle({ row, onBeginEdit }: ValueCellProps) {

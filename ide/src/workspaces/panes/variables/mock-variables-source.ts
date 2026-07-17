@@ -52,7 +52,7 @@ export class MockVariablesSource implements VariablesSource {
 
   constructor(options: MockVariablesSourceOptions = {}) {
     for (const r of options.seed ?? defaultVariables()) this.rows.set(r.id, { ...r })
-    this.refs = options.references ?? {}
+    this.refs = options.references ?? defaultReferences()
     this.failWrite = options.failWrite
   }
 
@@ -137,6 +137,21 @@ export class MockVariablesSource implements VariablesSource {
 
   async references(id: string): Promise<VariableReference[]> {
     return this.refs[id] ?? []
+  }
+
+  /** Every derived variable + its expression (CD-403). Never touches `queries`. */
+  async derived(): Promise<VariableRecord[]> {
+    return [...this.rows.values()].filter((r) => isDerivedScope(r.scope) && r.expr).map((r) => ({ ...r }))
+  }
+
+  /** Current values for a set of paths (CD-403). Never touches `queries`. */
+  async values(ids: string[]): Promise<Record<string, unknown>> {
+    const out: Record<string, unknown> = {}
+    for (const id of ids) {
+      const row = this.rows.get(id)
+      if (row) out[id] = row.value
+    }
+    return out
   }
 
   async history(id: string): Promise<VariableHistoryEntry[]> {
@@ -235,6 +250,32 @@ export function defaultVariables(): VariableRecord[] {
     { id: 'plug.spotify.key', name: 'Spotify API Key', scope: 'plugin', type: 'secret', value: 'sk-live-abcdef', plugin: 'spotify', updatedAt: BASE_TS },
     { id: 'plug.obs.scene', name: 'OBS Scene', scope: 'plugin', type: 'string', value: 'Main', plugin: 'obs', updatedAt: BASE_TS },
   ]
+}
+
+/**
+ * Where the default variables are used (CD-403 "used by"). Keyed by variable id →
+ * the entities that bind it, each naming a workspace + target so a click can route
+ * and select. Kept disjoint from the ids the mutation tests delete.
+ */
+export function defaultReferences(): Record<string, VariableReference[]> {
+  return {
+    'sys.cpu.load': [
+      { workspace: 'deck-designer', targetId: 'w_cpu_gauge', label: 'CPU Gauge', kind: 'component', via: 'value' },
+      { workspace: 'flows', targetId: 'flow_thermal', label: 'Thermal Guard', kind: 'flow', via: 'trigger' },
+    ],
+    'sys.gpu.temp': [
+      { workspace: 'deck-designer', targetId: 'w_gpu_stat', label: 'GPU Stat', kind: 'component', via: 'value' },
+    ],
+    'sys.fps': [
+      { workspace: 'deck-designer', targetId: 'w_fps_gauge', label: 'FPS Gauge', kind: 'component', via: 'value' },
+    ],
+    'deck.accent': [
+      { workspace: 'deck-designer', targetId: 'page_home', label: 'Home', kind: 'page', via: 'accent' },
+    ],
+    'calc.cpu.headroom': [
+      { workspace: 'deck-designer', targetId: 'w_headroom_bar', label: 'Headroom Bar', kind: 'component', via: 'value' },
+    ],
+  }
 }
 
 const FIXTURE_SCOPES: VariableScope[] = ['global', 'page', 'runtime', 'environment', 'plugin', 'system']

@@ -7,6 +7,7 @@
 // page, limit} are real server params on every keystroke and every scroll — the
 // table never receives the whole set and never filters it (CD-401 AC).
 import { createStore, optimistic, type Store } from '@/stores'
+import { ComputedEngine, type ComputedDef, type ComputedResult } from './computed-engine'
 import type { VariableRecord } from './variables-model'
 import type {
   VariableDraft,
@@ -45,12 +46,18 @@ export interface VariablesState {
    * so a value only exists here after an explicit reveal, and only until release.
    */
   revealed: Record<string, unknown>
+  /**
+   * id → the live evaluation of a derived (computed/expression) variable (CD-403).
+   * The computed engine writes here on every dependency tick; the value cell and the
+   * inspector read it. A cyclic or invalid expression lands as `{ ok: false, error }`.
+   */
+  computed: Record<string, ComputedResult>
 }
 
 const INITIAL_SORT: VariableSort = { field: 'name', dir: 'asc' }
 
 export function initialVariablesState(): VariablesState {
-  return { filter: {}, sort: INITIAL_SORT, pages: {}, total: 0, loading: true, selectedIds: [], revealed: {} }
+  return { filter: {}, sort: INITIAL_SORT, pages: {}, total: 0, loading: true, selectedIds: [], revealed: {}, computed: {} }
 }
 
 export class VariablesController {
@@ -59,12 +66,19 @@ export class VariablesController {
   /** Bumped on every query change so late responses from an old query are dropped. */
   private generation = 0
   private readonly inflight = new Set<number>()
+  /** Derived-variable evaluator (CD-403); its results land in state.computed. */
+  private readonly engine: ComputedEngine
+  /** Live tick subscription feeding the engine — released on dispose/rebind. */
+  private tickUnsub?: () => void
 
   constructor(source: VariablesSource) {
     this.source = source
     this.store = createStore<VariablesState>(initialVariablesState(), {
       name: 'variablesPane',
       kind: 'temp',
+    })
+    this.engine = new ComputedEngine((results) => {
+      this.store.setState((s) => ({ ...s, computed: Object.fromEntries(results) }))
     })
   }
 
@@ -206,6 +220,59 @@ export class VariablesController {
   /** Ids of every row currently cached — the dialog's local uniqueness check. */
   knownIds(): string[] {
     return this.orderedIds()
+  }
+
+  /** The cached row for an id (inspector lookup), or undefined if not loaded. */
+  rowById(id: string): VariableRecord | undefined {
+    for (const rows of Object.values(this.state.pages)) {
+      const found = rows.find((r) => r.id === id)
+      if (found) return found
+    }
+    return undefined
+  }
+
+  // ── computed / expression variables (CD-403) ─────────────────────────────────
+
+  /**
+   * (Re)build the derived-variable graph and start tracking dependency ticks. Loads
+   * the whole derived set (not a page) so cycles are detectable, seeds each
+   * dependency's current value, then subscribes so a tick re-evaluates exactly the
+   * derived vars that read the ticked path.
+   */
+  async refreshComputed(): Promise<void> {
+    if (!this.source.derived) return
+    let defs: ComputedDef[]
+    try {
+      const rows = await this.source.derived()
+      defs = rows.flatMap((r) => (r.expr ? [{ id: r.id, expr: r.expr }] : []))
+    } catch (error) {
+      this.setNotice({ kind: 'error', text: `Could not load computed variables: ${messageOf(error)}` })
+      return
+    }
+    this.engine.setDefinitions(defs)
+    const deps = this.engine.dependencyPaths()
+    if (deps.length && this.source.values) {
+      try {
+        this.engine.seed(await this.source.values(deps))
+      } catch {
+        // Leave dependencies undefined — the sandbox's safe default handles it.
+      }
+    }
+    this.tickUnsub?.()
+    this.tickUnsub = this.source.subscribe?.((e) => {
+      this.engine.onTick(e.id, e.value)
+    })
+  }
+
+  /** The variable paths a derived var reads (inspector "depends on" list). */
+  dependenciesOf(id: string): string[] {
+    return this.engine.dependenciesOf(id)
+  }
+
+  /** Release the live tick subscription (pane unmount). */
+  dispose(): void {
+    this.tickUnsub?.()
+    this.tickUnsub = undefined
   }
 
   // ── mutations (CD-402) ───────────────────────────────────────────────────────

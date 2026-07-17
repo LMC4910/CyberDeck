@@ -11,6 +11,7 @@ import { ValueCell } from './variables/value-cell'
 import { NewVariableDialog } from './variables/new-variable-dialog'
 import { DeleteVariableDialog } from './variables/delete-variable-dialog'
 import { MockVariablesSource } from './variables/mock-variables-source'
+import { VariablesInspector } from './variables/variables-inspector'
 import { useVariablesSourceOptional, type VariableDraft } from './variables/variables-source'
 import { useVariablesController, useVariablesState, shallowArrayEqual } from './variables/use-variables'
 import { isReadOnly, type VariableRecord } from './variables/variables-model'
@@ -62,8 +63,15 @@ export default function VariablesPane() {
     void controller.removeMany(ids)
   }, [controller, deleting])
 
+  const inspectorOpen = selectedIds.length === 1
+
   return (
-    <section className="vars-pane" data-pane="variables" aria-label="Variables workspace">
+    <section
+      className="vars-pane"
+      data-pane="variables"
+      data-inspector={inspectorOpen ? 'open' : undefined}
+      aria-label="Variables workspace"
+    >
       <ScopesRail value={scope} onChange={(next) => controller.setFilter({ scope: next })} />
 
       <div className="vars-main">
@@ -97,6 +105,8 @@ export default function VariablesPane() {
           </p>
         ) : null}
       </div>
+
+      <VariablesInspector controller={controller} source={source} />
 
       <NewVariableDialog
         open={newOpen}

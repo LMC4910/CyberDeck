@@ -357,3 +357,117 @@
 .vars-ref-via {
   opacity: 0.6;
 }
+
+/* ── inspector (CD-403) ────────────────────────────────────────────────────── */
+.vars-inspector {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 6px 8px;
+  border-left: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  overflow-y: auto;
+}
+
+.vars-details {
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vars-detail-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+
+.vars-detail-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+  margin: 0;
+}
+
+.vars-detail-value {
+  margin: 0;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.vars-expr,
+.vars-detail-value code {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.vars-dep-list {
+  margin: 0;
+  padding-left: 14px;
+}
+
+.vars-muted {
+  opacity: 0.55;
+}
+
+.vars-ok {
+  color: var(--ok-fg, #7ee0a1);
+}
+
+.vars-history-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vars-history-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'when source' 'value value';
+  gap: 1px 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.06));
+}
+
+.vars-history-when {
+  grid-area: when;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.vars-history-value {
+  grid-area: value;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.vars-history-source {
+  grid-area: source;
+  font-size: 9px;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.vars-ref-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.vars-ref-btn:hover:not(:disabled) {
+  background: var(--row-hover, rgba(255, 255, 255, 0.06));
+}
+
+.vars-ref-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

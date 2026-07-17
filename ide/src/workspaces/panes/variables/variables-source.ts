@@ -113,6 +113,20 @@ export interface VariablesSource {
   references?(id: string): Promise<VariableReference[]>
   /** Recent writes (CD-403). Optional. */
   history?(id: string): Promise<VariableHistoryEntry[]>
+  /**
+   * Every derived variable (scope computed/expression) with its expression (CD-403).
+   * The computed engine needs the whole derived set — not a paged slice — to build
+   * the dependency graph and detect cycles. Kept off `query` so it never pollutes the
+   * table's page bookkeeping. Optional: without it the workspace shows derived rows'
+   * stored snapshot but does not live-evaluate.
+   */
+  derived?(): Promise<VariableRecord[]>
+  /**
+   * Current values for a set of paths (CD-403) — seeds the computed engine's
+   * dependency values before the first tick. Optional; a missing dependency simply
+   * evaluates as undefined (the sandbox's safe default).
+   */
+  values?(ids: string[]): Promise<Record<string, unknown>>
 }
 
 const SourceContext = createContext<VariablesSource | null>(null)
