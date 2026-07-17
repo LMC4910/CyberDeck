@@ -52,9 +52,21 @@ function cloneSubtree(model: ProjectModel, rootId: string): { clones: WidgetInst
   return { clones, newRootId: idMap.get(rootId)! }
 }
 
+/** Selected widgets minus any whose ancestor is also selected — cloning a container
+ *  already clones its subtree, so a selected descendant must not clone twice. */
+function selectionRoots(model: ProjectModel, engine: SelectionEngine): WidgetInstance[] {
+  const selected = new Set(engine.state.ids)
+  return selectedWidgets(model, engine).filter((w) => {
+    for (let p = model.parentOf(w.id); p; p = model.parentOf(p)) {
+      if (selected.has(p)) return false
+    }
+    return true
+  })
+}
+
 /** Duplicate the selection (offset +16,+16); selects the copies. One undo entry. */
 export function duplicateSelection({ model, engine, undo }: CanvasCtx): void {
-  const roots = selectedWidgets(model, engine)
+  const roots = selectionRoots(model, engine)
   if (roots.length === 0) return
   const pageId = model.pageOf(roots[0]!.id)
   if (!pageId) return

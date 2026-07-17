@@ -65,7 +65,11 @@ export function useCanvasShortcuts({ element, model, engine, undo, commands }: O
         const t = sess.targets.get(id)!
         sess.targets.set(id, { ...t, x: t.x + dir.x * step, y: t.y + dir.y * step })
       }
-      const { start, targets } = sess
+      // Snapshot the session maps: the entry's apply/inverse must not see later
+      // keypresses mutate sess.targets (redo would otherwise jump to the final
+      // burst position if coalescing was ever interrupted mid-burst).
+      const start = new Map(sess.start)
+      const targets = new Map(sess.targets)
       // Coalesced by key: rapid nudges of the same selection collapse to one entry
       // whose inverse restores the pre-burst frames.
       undo.execUndoable(
