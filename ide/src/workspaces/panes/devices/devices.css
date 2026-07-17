@@ -1,0 +1,207 @@
+/* Devices workspace (CD-415). A responsive grid of device cards over one heartbeat
+   stream; tokens match the shared panel palette (var fallbacks keep it honest in
+   isolation/tests). */
+.dv-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 18px;
+  font-size: 12px;
+  color: var(--panel-fg, rgba(255, 255, 255, 0.86));
+}
+
+.dv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dv-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dv-pair-reason {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.dv-btn {
+  font: inherit;
+  color: inherit;
+  background: var(--input-bg, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.dv-btn-primary {
+  background: var(--accent-bg, rgba(76, 154, 255, 0.25));
+}
+
+.dv-btn-danger {
+  border-color: var(--level-error, #e5484d);
+  color: var(--level-error, #e5484d);
+}
+
+.dv-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dv-btn:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+
+.dv-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.dv-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  background: var(--panel-raised, rgba(255, 255, 255, 0.03));
+}
+
+.dv-card[data-status='revoked'] {
+  opacity: 0.6;
+}
+
+.dv-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dv-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dv-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.dv-class {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.dv-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.dv-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--panel-border, rgba(255, 255, 255, 0.3));
+}
+
+.dv-status[data-status='online'] .dv-dot {
+  background: var(--level-ok, #46a758);
+}
+
+.dv-status[data-status='offline'] .dv-dot {
+  background: var(--panel-border, rgba(255, 255, 255, 0.3));
+}
+
+.dv-status[data-status='revoked'] .dv-dot {
+  background: var(--level-error, #e5484d);
+}
+
+.dv-meta {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dv-meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dv-meta-row dt {
+  opacity: 0.55;
+  font-size: 11px;
+}
+
+.dv-meta-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.dv-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dv-empty {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.dv-notice {
+  margin: 0;
+  font-size: 11px;
+}
+
+.dv-notice[data-kind='error'] {
+  color: var(--level-error, #e5484d);
+}
+
+/* --- revoke confirm dialog (uses the shared a11y Dialog shell) --- */
+.dv-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 280px;
+  max-width: 360px;
+}
+
+.dv-confirm-title {
+  margin: 0;
+  font-size: 14px;
+}
+
+.dv-confirm-body {
+  margin: 0;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.dv-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
