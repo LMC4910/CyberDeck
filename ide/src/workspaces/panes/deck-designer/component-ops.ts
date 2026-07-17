@@ -34,12 +34,43 @@ function templateBounds(def: ComponentDef): Frame {
   return boundingFrame(def.widgets.map((w) => w.frame)) ?? { x: 0, y: 0, w: 100, h: 100 }
 }
 
-/** Clone template widgets to fresh ids, offset from the component origin to `at`. */
-function expandTemplate(model: ProjectModel, def: ComponentDef, at: { x: number; y: number }): WidgetInstance[] {
+/** The effective prop bag an instance resolves to: master defaults ← variant
+ *  overrides ← instance overrides (CD-318 resolution chain). */
+function resolvedProps(def: ComponentDef, variantId?: string, overrides?: WidgetInstance['overrides']): Record<string, unknown> {
+  const variant = variantId ? def.variants?.find((v) => v.id === variantId) : undefined
+  return { ...(def.props ?? {}), ...(variant?.overrides ?? {}), ...(overrides ?? {}) }
+}
+
+/** Bake resolved props into a template copy's config, for the keys the widget's
+ *  config already defines (those are the props the widget consumes). Detaching
+ *  keeps what the user resolved to, not the bare master default. */
+function bakeProps(w: WidgetInstance, props: Record<string, unknown>): void {
+  const cfg = (w.config ?? {}) as Record<string, unknown>
+  let changed = false
+  for (const [k, v] of Object.entries(props)) {
+    if (k in cfg && cfg[k] !== v) {
+      cfg[k] = v
+      changed = true
+    }
+  }
+  if (changed) w.config = cfg
+}
+
+/** Clone template widgets to fresh ids, offset from the component origin to `at`,
+ *  baking the resolved (variant → instance override) props into each copy. */
+function expandTemplate(
+  model: ProjectModel,
+  def: ComponentDef,
+  at: { x: number; y: number },
+  variantId?: string,
+  overrides?: WidgetInstance['overrides'],
+): WidgetInstance[] {
+  const props = resolvedProps(def, variantId, overrides)
   return def.widgets.map((t) => {
     const c = structuredClone(t)
     c.id = model.newId('widget')
     c.frame = { ...t.frame, x: t.frame.x + at.x, y: t.frame.y + at.y }
+    bakeProps(c, props)
     return c
   })
 }
@@ -121,7 +152,8 @@ export function swapVariant(ctx: CompCtx, instanceId: string, variantId: string 
   undo.execUndoable('Swap variant', () => model.setVariant(instanceId, variantId))
 }
 
-/** Cycle an instance's variant (,/. keys). Undoable. */
+/** Cycle an instance's variant (,/. keys). Undoable. From "no variant", forward
+ *  lands on the first variant and backward on the last. */
 export function cycleVariant(ctx: CompCtx, instanceId: string, dir: 1 | -1): void {
   const { model } = ctx
   const inst = model.widget(instanceId)
@@ -129,7 +161,7 @@ export function cycleVariant(ctx: CompCtx, instanceId: string, dir: 1 | -1): voi
   const variants = def?.variants ?? []
   if (variants.length === 0) return
   const cur = variants.findIndex((v) => v.id === inst!.variant)
-  const next = (((cur < 0 ? -dir : cur) + dir) + variants.length) % variants.length
+  const next = cur < 0 ? (dir === 1 ? 0 : variants.length - 1) : (cur + dir + variants.length) % variants.length
   swapVariant(ctx, instanceId, variants[next]!.id)
 }
 
@@ -177,12 +209,21 @@ export function componentRefs(model: ProjectModel, componentId: string, seen: st
   return out
 }
 
-/** The nested-component name path for a component (breadcrumb "Outer › Inner"). */
+/** The nested-component name path for a component (breadcrumb "Outer › Inner").
+ *  Cycle-safe: a corrupt (cyclic) document degrades to the names found so far
+ *  instead of crashing the breadcrumb render. */
 export function nestingPath(model: ProjectModel, componentId: string): string[] {
   const names: string[] = []
   const def = model.component(componentId)
   if (def) names.push(def.name)
-  for (const ref of componentRefs(model, componentId)) {
+  let refs: Set<string>
+  try {
+    refs = componentRefs(model, componentId)
+  } catch (e) {
+    if (e instanceof CircularComponentError) return names
+    throw e
+  }
+  for (const ref of refs) {
     const d = model.component(ref)
     if (d) names.push(d.name)
   }
@@ -199,20 +240,25 @@ export function expandComponentDeep(
   componentId: string,
   at: { x: number; y: number },
   seen: string[] = [],
+  variantId?: string,
+  overrides?: WidgetInstance['overrides'],
 ): WidgetInstance[] {
   if (seen.includes(componentId)) throw new CircularComponentError([...seen, componentId])
   const def = model.component(componentId)
   if (!def) return []
+  const props = resolvedProps(def, variantId, overrides)
   const out: WidgetInstance[] = []
   for (const t of def.widgets) {
     const pos = { x: t.frame.x + at.x, y: t.frame.y + at.y }
     if (t.component) {
-      // nested master → deep-instantiate its template with fresh ids
-      out.push(...expandComponentDeep(model, t.component, pos, [...seen, componentId]))
+      // nested master → deep-instantiate its template with fresh ids, resolving
+      // the nested instance's OWN variant/overrides at its level
+      out.push(...expandComponentDeep(model, t.component, pos, [...seen, componentId], t.variant, t.overrides))
     } else {
       const c = structuredClone(t)
       c.id = model.newId('widget')
       c.frame = { ...t.frame, x: pos.x, y: pos.y }
+      bakeProps(c, props)
       out.push(c)
     }
   }
@@ -224,7 +270,7 @@ export function deepDetachInstance(ctx: CompCtx, instanceId: string): string[] {
   const { model, engine, undo, pageId } = ctx
   const inst = model.widget(instanceId)
   if (!inst?.component) return []
-  const widgets = expandComponentDeep(model, inst.component, { x: inst.frame.x, y: inst.frame.y })
+  const widgets = expandComponentDeep(model, inst.component, { x: inst.frame.x, y: inst.frame.y }, [], inst.variant, inst.overrides)
   undo.execUndoable('Detach (deep)', () => {
     const removed = model.removeWidget(instanceId)
     const added = widgets.map((c) => model.addWidget(pageId, c))
@@ -237,14 +283,15 @@ export function deepDetachInstance(ctx: CompCtx, instanceId: string): string[] {
   return widgets.map((c) => c.id)
 }
 
-/** Detach an instance: replace it with fresh copies of the master template. */
+/** Detach an instance: replace it with fresh copies of the master template with
+ *  the instance's resolved (variant → override) props baked in. */
 export function detachInstance(ctx: CompCtx, instanceId: string): string[] {
   const { model, engine, undo, pageId } = ctx
   const inst = model.widget(instanceId)
   if (!inst?.component) return []
   const def = model.component(inst.component)
   if (!def) return []
-  const copies = expandTemplate(model, def, { x: inst.frame.x, y: inst.frame.y })
+  const copies = expandTemplate(model, def, { x: inst.frame.x, y: inst.frame.y }, inst.variant, inst.overrides)
   undo.execUndoable('Detach instance', () => {
     const removed = model.removeWidget(instanceId)
     const added = copies.map((c) => model.addWidget(pageId, c))
