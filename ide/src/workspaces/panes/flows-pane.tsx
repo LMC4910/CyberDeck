@@ -14,15 +14,20 @@ import {
   addFlowNode,
   connectNodes,
   deleteEdge,
+  deleteSelection,
+  duplicateSelection,
   moveFlowNode,
+  moveFlowNodes,
   type FlowsCtx,
 } from './flows/flow-ops'
 import {
   clearSelection,
   clickNode,
   EMPTY_SELECTION,
+  isNodeSelected,
   marqueeNodes,
   selectEdge,
+  selectNodes,
   type FlowSelection,
 } from './flows/flow-selection'
 import type { BranchLabel, FlowEdge, FlowModel, NodeKind } from './flows/flow-model'
@@ -86,11 +91,55 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
     (kind: NodeKind) => onAddNode(kind, visibleCenterWorld(surfaceRef)),
     [onAddNode],
   )
+  // Group-drag baselines, snapshotted once per gesture key so every selected node
+  // moves by the same delta off its own pre-drag position (one coalesced undo entry).
+  const groupDrag = useRef<{ key: string; bases: Map<string, Point> } | null>(null)
   const onMoveNode = useCallback(
     (nodeId: string, from: Point, to: Point, key: string) => {
-      if (activeId) moveFlowNode(ctx, activeId, nodeId, from, to, key)
+      if (!activeId) return
+      const multi = selection.nodes.size > 1 && isNodeSelected(selection, nodeId)
+      if (!multi) {
+        moveFlowNode(ctx, activeId, nodeId, from, to, key)
+        return
+      }
+      if (groupDrag.current?.key !== key) {
+        const drawn = new Map(model.graphNodes(activeId).map((g) => [g.id, g.pos]))
+        const bases = new Map<string, Point>()
+        for (const id of selection.nodes) {
+          const base = id === nodeId ? from : drawn.get(id)
+          if (base) bases.set(id, base)
+        }
+        groupDrag.current = { key, bases }
+      }
+      const delta = { x: to.x - from.x, y: to.y - from.y }
+      const moves = [...groupDrag.current.bases].map(([id, base]) => ({
+        nodeId: id,
+        from: base,
+        to: { x: base.x + delta.x, y: base.y + delta.y },
+      }))
+      moveFlowNodes(ctx, activeId, moves, key)
     },
-    [ctx, activeId],
+    [ctx, activeId, model, selection],
+  )
+
+  // ⌘D duplicates the selection (copies land selected); ⌫/Delete removes it. Ignored
+  // while typing in the tab-rename input so those keys still edit text.
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!activeId) return
+      const t = e.target as HTMLElement
+      if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault()
+        const created = duplicateSelection(ctx, activeId, selection)
+        if (created.length) setSelection(selectNodes(created))
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selection.nodes.size === 0 && !selection.edge) return
+        e.preventDefault()
+        if (deleteSelection(ctx, activeId, selection)) setSelection(clearSelection())
+      }
+    },
+    [ctx, activeId, selection],
   )
 
   const onNodeClick = useCallback(
@@ -124,7 +173,13 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
   )
 
   return (
-    <section className="fw-pane" data-pane="flows" data-status="ready" aria-label="Flows workspace">
+    <section
+      className="fw-pane"
+      data-pane="flows"
+      data-status="ready"
+      aria-label="Flows workspace"
+      onKeyDown={onKeyDown}
+    >
       <FlowTabs ctx={ctx} activeId={activeId} onActivate={setSelectedId} />
       {activeId ? (
         <div className="fw-body">

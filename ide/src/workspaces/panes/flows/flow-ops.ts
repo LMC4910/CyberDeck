@@ -4,17 +4,21 @@
 // flow edit just like a canvas edit. Nothing here mutates the model outside an
 // `execUndoable` — a direct mutation would be invisible to history (CD-329).
 import type { UndoStack } from '@/platform/undo'
+import type { Inverse } from '@/shared/project'
 import type { Point } from '@/shared/canvas'
 import {
   blankFlow,
   edgesEqual,
+  writeUiPos,
   TRIGGER_NODE_ID,
   type BranchLabel,
   type FlowEdge,
   type FlowModel,
+  type FlowNode,
   type NodeKind,
 } from './flow-model'
 import { makeNode, labelForKind } from './flow-catalog'
+import type { FlowSelection } from './flow-selection'
 import type { FlowsService } from './flows-service'
 
 export interface FlowsCtx {
@@ -146,4 +150,102 @@ export function setFlowArmed({ model, undo, service }: FlowsCtx, flowId: string,
       void service.arm(flowId, !armed)
     }
   })
+}
+
+// ── multi-node ops (CD-412) ──────────────────────────────────────────────────────
+
+/** How far a duplicate is offset from its source so the copy is visibly distinct. */
+const DUPLICATE_OFFSET = 24
+
+/** Run a list of model mutations as ONE undo entry: its inverse replays each
+ *  mutation's own inverse in reverse order. */
+function undoableBatch(undo: UndoStack, label: string, applies: () => Inverse[]): void {
+  undo.execUndoable(label, () => {
+    const inverses = applies()
+    return () => {
+      for (let i = inverses.length - 1; i >= 0; i--) inverses[i]!()
+    }
+  })
+}
+
+/**
+ * Move several nodes by one gesture as a single coalesced undo entry (multi-drag).
+ * Each move carries its own absolute `from`→`to`, captured at drag start, so undo
+ * restores every node's pre-drag position exactly (redo-safe, mirrors moveFlowNode).
+ */
+export function moveFlowNodes(
+  { model, undo }: FlowsCtx,
+  flowId: string,
+  moves: readonly { nodeId: string; from: Point; to: Point }[],
+  gestureKey: string,
+): void {
+  const real = moves.filter((m) => m.from.x !== m.to.x || m.from.y !== m.to.y)
+  if (real.length === 0) return
+  undo.execUndoable(
+    real.length > 1 ? 'Move nodes' : 'Move node',
+    () => {
+      for (const m of real) model.moveNode(flowId, m.nodeId, m.to)
+      return () => {
+        for (const m of real) model.moveNode(flowId, m.nodeId, m.from)
+      }
+    },
+    { coalesceKey: gestureKey },
+  )
+}
+
+/**
+ * Duplicate the selected nodes and the edges *internal* to the selection (both
+ * endpoints selected), offset so the copies are visible, with FRESH ids. One undo
+ * entry. Returns the new node ids so the caller can select the copies. The synthetic
+ * trigger root is never duplicable (a flow has exactly one).
+ */
+export function duplicateSelection({ model, undo }: FlowsCtx, flowId: string, selection: FlowSelection): string[] {
+  const doc = model.flow(flowId)
+  if (!doc) return []
+  const sourceIds = [...selection.nodes].filter((id) => id !== TRIGGER_NODE_ID && model.node(flowId, id))
+  if (sourceIds.length === 0) return []
+
+  // Positions the graph actually draws (a node with no stored pos still has a column).
+  const drawn = new Map(model.graphNodes(flowId).map((g) => [g.id, g.pos]))
+  // Mint every new id ONCE, outside the undoable, so redo reuses them (CD-302 id contract).
+  const idMap = new Map<string, string>()
+  const clones: FlowNode[] = sourceIds.map((id) => {
+    const src = model.node(flowId, id)!
+    const newId = model.newNodeId()
+    idMap.set(id, newId)
+    const base = drawn.get(id) ?? { x: 0, y: 0 }
+    const params = writeUiPos(structuredClone(src.params ?? {}) as Record<string, unknown>, {
+      x: base.x + DUPLICATE_OFFSET,
+      y: base.y + DUPLICATE_OFFSET,
+    })
+    return { ...structuredClone(src), id: newId, params } as FlowNode
+  })
+  const internalEdges: FlowEdge[] = doc.edges
+    .filter((e) => idMap.has(e.from) && idMap.has(e.to))
+    .map((e) => ({ ...structuredClone(e), from: idMap.get(e.from)!, to: idMap.get(e.to)! }))
+
+  undoableBatch(undo, clones.length > 1 ? 'Duplicate nodes' : 'Duplicate node', () => [
+    ...clones.map((c) => model.addNode(flowId, c)),
+    ...internalEdges.map((e) => model.addEdge(flowId, e)),
+  ])
+  return clones.map((c) => c.id)
+}
+
+/**
+ * Delete the current selection: the selected edge, or the selected nodes and every
+ * edge incident to them (removeNode drops incident edges). The trigger root is never
+ * deletable. One undo entry; returns true when something was removed.
+ */
+export function deleteSelection(ctx: FlowsCtx, flowId: string, selection: FlowSelection): boolean {
+  const { model, undo } = ctx
+  if (selection.edge) {
+    deleteEdge(ctx, flowId, selection.edge)
+    return true
+  }
+  const ids = [...selection.nodes].filter((id) => id !== TRIGGER_NODE_ID && model.node(flowId, id))
+  if (ids.length === 0) return false
+  undoableBatch(undo, ids.length > 1 ? 'Delete nodes' : 'Delete node', () =>
+    ids.map((id) => model.removeNode(flowId, id)),
+  )
+  return true
 }
