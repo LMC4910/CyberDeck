@@ -41,10 +41,15 @@ export interface DeviceCardProps {
   /** Clock for the last-seen readout (injectable for deterministic tests). */
   now: number
   onRevoke: (device: DeviceRecord) => void
+  /** Assignable pages (CD-418): choose which layout this device renders. */
+  pages?: readonly { id: string; label: string }[]
+  onAssign?: (pageId: string) => void
+  /** Open the player preview for this device (its assigned layout). */
+  onPreview?: () => void
 }
 
-export function DeviceCard({ device, revoking, now, onRevoke }: DeviceCardProps) {
-  const { id, name, deviceClass, resolution, status, lastHeartbeatTs, latencyMs } = device
+export function DeviceCard({ device, revoking, now, onRevoke, pages, onAssign, onPreview }: DeviceCardProps) {
+  const { id, name, deviceClass, resolution, status, lastHeartbeatTs, latencyMs, assignedPageId } = device
   const isRevoked = status === 'revoked'
   const cardLabel = `${name} — ${classLabel(deviceClass)}, ${STATUS_LABEL[status]}`
 
@@ -80,7 +85,39 @@ export function DeviceCard({ device, revoking, now, onRevoke }: DeviceCardProps)
         </div>
       </dl>
 
+      {pages && pages.length > 0 ? (
+        <label className="dv-assign" data-testid="device-assign">
+          <span className="dv-assign-label">Layout</span>
+          <select
+            value={assignedPageId ?? ''}
+            aria-label={`Assign layout to ${name}`}
+            onChange={(e) => {
+              if (e.target.value) onAssign?.(e.target.value)
+            }}
+          >
+            <option value="">Unassigned</option>
+            {pages.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+
       <div className="dv-card-actions">
+        {onPreview ? (
+          <button
+            type="button"
+            className="dv-btn"
+            data-testid="device-preview"
+            disabled={isRevoked}
+            aria-label={`Preview ${name}`}
+            onClick={onPreview}
+          >
+            Preview
+          </button>
+        ) : null}
         <button
           type="button"
           className="dv-btn dv-btn-danger"

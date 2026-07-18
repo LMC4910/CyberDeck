@@ -206,3 +206,27 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+/* --- layout assignment (CD-418) --- */
+.dv-assign {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.dv-assign-label {
+  opacity: 0.7;
+}
+.dv-assign select {
+  flex: 1 1 auto;
+  padding: 3px 6px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.15));
+  border-radius: 5px;
+  background: var(--input-bg, rgba(0, 0, 0, 0.2));
+  color: inherit;
+  font: inherit;
+}
+.dv-assign select:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}

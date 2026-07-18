@@ -119,6 +119,25 @@ export class DevicesController {
     }
   }
 
+  /**
+   * Assign a page to a device (CD-418), then re-list so the roster reflects the
+   * source's persisted assignment (AC: assignment persists). Errors surface a notice.
+   */
+  async assign(id: string, pageId: string): Promise<boolean> {
+    try {
+      await this.source.assignLayout(id, pageId)
+      this.refresh()
+      this.store.setState((s) => ({ ...s, notice: { kind: 'info', text: `Assigned layout to ${id}` } }))
+      return true
+    } catch (error) {
+      this.store.setState((s) => ({
+        ...s,
+        notice: { kind: 'error', text: `Could not assign layout to ${id}: ${messageOf(error)}` },
+      }))
+      return false
+    }
+  }
+
   /** Whether the source can pair — false on mocks (needs the engine, M5). */
   canPair(): boolean {
     return typeof this.source.pair === 'function'

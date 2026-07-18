@@ -76,6 +76,12 @@ export class MockDevicesSource implements DevicesSource {
     return Promise.resolve()
   }
 
+  assignLayout(id: string, pageId: string): Promise<void> {
+    // Persisted: a later list() carries the assignment — the CD-418 round-trip proof.
+    this.devices = this.devices.map((d) => (d.id === id ? { ...d, assignedPageId: pageId } : d))
+    return Promise.resolve()
+  }
+
   onHeartbeat(handler: (e: DeviceHeartbeatEvent) => void): () => void {
     this.handlers.add(handler)
     return () => {

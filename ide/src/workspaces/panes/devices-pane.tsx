@@ -8,6 +8,7 @@
 // "Pair New Device" is an honest disabled stub: the real pairing handshake needs the
 // engine (M5, CD-417/418), so the control states its reason rather than pretending.
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { CyberDeckPublishedLayoutDocumentCyberdeckLayout as PreviewLayout } from '@/shared/contract'
 import { Dialog } from '@/shared/a11y'
 import { flattenForDevice } from '@/shared/publish'
 import { starterProject } from '@/shared/project'
@@ -51,7 +52,7 @@ export default function DevicesPane() {
   }, [provided, fallback])
 
   const [confirming, setConfirming] = useState<DeviceRecord | null>(null)
-  const [previewOpen, setPreviewOpen] = useState(false)
+  const [preview, setPreview] = useState<{ layout: PreviewLayout; deviceClass?: string } | null>(null)
 
   const onConfirmRevoke = useCallback(() => {
     const device = confirming
@@ -59,19 +60,32 @@ export default function DevicesPane() {
     if (device) void controller.revoke(device.id)
   }, [controller, confirming])
 
-  // The published layout the preview renders (CD-416 flatten of the starter project's
-  // first page). Per-device assigned layouts arrive with CD-418.
-  const previewLayout = useMemo(() => {
+  // The assignable pages (CD-418) and a flattener that publishes any one of them.
+  const project = useMemo(() => {
     try {
-      const project = starterProject()
-      const page = project.pages[0]
-      if (!page) return null
-      const device = { id: 'dev_preview01', name: 'Preview', deviceClass: 'preview', pageId: page.id }
-      return flattenForDevice(project, device as Parameters<typeof flattenForDevice>[1], { version: 1 })
+      return starterProject()
     } catch {
       return null
     }
   }, [])
+  const pages = useMemo(
+    () => (project?.pages ?? []).map((p) => ({ id: p.id, label: p.name ?? p.id })),
+    [project],
+  )
+  const layoutForPage = useCallback(
+    (pageId: string | undefined): PreviewLayout | null => {
+      if (!project) return null
+      const page = project.pages.find((p) => p.id === pageId) ?? project.pages[0]
+      if (!page) return null
+      try {
+        const device = { id: 'dev_preview01', name: 'Preview', deviceClass: 'preview', pageId: page.id }
+        return flattenForDevice(project, device as Parameters<typeof flattenForDevice>[1], { version: 1 })
+      } catch {
+        return null
+      }
+    },
+    [project],
+  )
 
   return (
     <section className="dv-pane" data-pane="devices" aria-label="Devices workspace">
@@ -81,9 +95,12 @@ export default function DevicesPane() {
           type="button"
           className="dv-btn"
           data-testid="open-preview"
-          disabled={!previewLayout}
-          title={previewLayout ? undefined : 'No page to preview yet'}
-          onClick={() => setPreviewOpen(true)}
+          disabled={pages.length === 0}
+          title={pages.length ? undefined : 'No page to preview yet'}
+          onClick={() => {
+            const layout = layoutForPage(undefined)
+            if (layout) setPreview({ layout })
+          }}
         >
           Player Preview
         </button>
@@ -125,6 +142,12 @@ export default function DevicesPane() {
               revoking={revoking.includes(device.id)}
               now={now}
               onRevoke={setConfirming}
+              pages={pages}
+              onAssign={(pageId) => void controller.assign(device.id, pageId)}
+              onPreview={() => {
+                const layout = layoutForPage(device.assignedPageId)
+                if (layout) setPreview({ layout, deviceClass: device.deviceClass })
+              }}
             />
           ))}
         </ul>
@@ -160,8 +183,12 @@ export default function DevicesPane() {
         </div>
       </Dialog>
 
-      {previewOpen && previewLayout ? (
-        <PreviewScreen layout={previewLayout} onClose={() => setPreviewOpen(false)} />
+      {preview ? (
+        <PreviewScreen
+          layout={preview.layout}
+          initialDeviceId={preview.deviceClass === 'deck-mini' ? 'deckmini' : preview.deviceClass}
+          onClose={() => setPreview(null)}
+        />
       ) : null}
     </section>
   )

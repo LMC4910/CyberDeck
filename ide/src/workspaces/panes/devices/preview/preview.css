@@ -119,3 +119,80 @@
   font-weight: 600;
   opacity: 1;
 }
+
+/* --- touch simulation (CD-418) --- */
+.pv-touch-toggle {
+  padding: 4px 10px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.2));
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+}
+.pv-touch-toggle[aria-pressed='true'] {
+  background: var(--accent, #4c9aff);
+  border-color: var(--accent, #4c9aff);
+  color: #fff;
+}
+.pv-touch-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+.pv-widget {
+  position: relative;
+  transition: transform 0.08s ease;
+}
+.pv-layout[data-interactive] .pv-widget {
+  cursor: pointer;
+}
+.pv-widget[data-pressed] {
+  transform: scale(0.95);
+  background: var(--widget-press, rgba(76, 154, 255, 0.28));
+}
+.pv-ripple {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  animation: pv-ripple 0.45s ease-out forwards;
+}
+@keyframes pv-ripple {
+  from { transform: scale(1); opacity: 0.6; }
+  to { transform: scale(14); opacity: 0; }
+}
+.pv-events {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 220px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--panel-bg, rgba(20, 24, 30, 0.9));
+  font-size: 12px;
+}
+.pv-events__head {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.pv-events__empty {
+  opacity: 0.55;
+  margin: 0;
+}
+.pv-events__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pv-events__list code {
+  font-family: var(--font-mono, monospace);
+  opacity: 0.85;
+}

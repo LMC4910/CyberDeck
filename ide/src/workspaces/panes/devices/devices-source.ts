@@ -36,6 +36,8 @@ export interface DeviceRecord {
   lastHeartbeatTs?: number
   /** Round-trip latency in ms from the most recent heartbeat. */
   latencyMs?: number
+  /** Page id assigned to this device (CD-418) — the layout it renders. Undefined until assigned. */
+  assignedPageId?: string
 }
 
 export interface DevicesSource {
@@ -43,6 +45,8 @@ export interface DevicesSource {
   list(): Promise<DeviceRecord[]>
   /** Revoke a device's pairing (devices.revoke). Round-trips: `list` reflects it after. */
   revoke(id: string): Promise<void>
+  /** Assign the page a device renders (CD-418). Persisted: a later `list` reflects it. */
+  assignLayout(id: string, pageId: string): Promise<void>
   /** Subscribe to heartbeat frames (devices.heartbeat); returns an unsubscribe. */
   onHeartbeat(handler: (e: DeviceHeartbeatEvent) => void): () => void
   /**
