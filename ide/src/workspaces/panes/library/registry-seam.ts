@@ -19,6 +19,11 @@ export {
   type InsertManifest,
 } from '../deck-designer/insert-catalog'
 
+// CD-421: the registry-backed live catalog the Library reads (falls back to the static
+// INSERT_CATALOG until the shell binds the platform WidgetRegistry). Re-pointing the
+// Library at the platform registry is now this single export.
+export { useInsertCatalog } from '../deck-designer/widget-catalog'
+
 // Styles registry (CD-321) + recolor/link ops + resolution helpers.
 export {
   STYLE_KINDS,

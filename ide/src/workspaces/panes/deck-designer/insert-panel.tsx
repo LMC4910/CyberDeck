@@ -8,7 +8,8 @@ import { useSelection } from './use-selection'
 import { useUndo } from './use-undo'
 import { useCanvasViewBus } from './use-canvas-view'
 import { visibleWorldRect } from '@/shared/canvas'
-import { INSERT_CATALOG, INSERT_DND_TYPE, insertManifest, type InsertManifest } from './insert-catalog'
+import { INSERT_DND_TYPE, insertManifest, type InsertManifest } from './insert-catalog'
+import { useInsertCatalog } from './widget-catalog'
 import { instantiateComponent } from './component-ops'
 import './insert.css'
 
@@ -18,10 +19,12 @@ export function InsertPanel({ pageId }: { pageId: string }) {
   const undo = useUndo()
   const viewBus = useCanvasViewBus()
   const [query, setQuery] = useState('')
+  // CD-421: the catalog comes from the platform registry (with the static fallback).
+  const catalog = useInsertCatalog()
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const matches = INSERT_CATALOG.filter((m) => !q || m.label.toLowerCase().includes(q) || m.type.includes(q))
+    const matches = catalog.filter((m) => !q || m.label.toLowerCase().includes(q) || m.type.includes(q))
     const byCat = new Map<string, InsertManifest[]>()
     for (const m of matches) {
       const g = byCat.get(m.category) ?? []
@@ -29,7 +32,7 @@ export function InsertPanel({ pageId }: { pageId: string }) {
       byCat.set(m.category, g)
     }
     return [...byCat.entries()]
-  }, [query])
+  }, [query, catalog])
 
   const canvasCenter = () => {
     const { transform, size } = viewBus.getView()

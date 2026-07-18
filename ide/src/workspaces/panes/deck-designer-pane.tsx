@@ -19,7 +19,8 @@ import { SelectionGizmo } from './deck-designer/selection-gizmo'
 import { SelectionMinibar } from './deck-designer/selection-minibar'
 import { useCanvasViewBus } from './deck-designer/use-canvas-view'
 import { screenToWorld } from '@/shared/canvas'
-import { INSERT_CATALOG, INSERT_DND_TYPE, insertManifest } from './deck-designer/insert-catalog'
+import { INSERT_DND_TYPE, insertManifest } from './deck-designer/insert-catalog'
+import { useInsertCatalog } from './deck-designer/widget-catalog'
 import { useVariableRuntimeOptional } from './deck-designer/use-variable-runtime'
 import { seedRuntime, startMockTicks } from './deck-designer/variables-catalog'
 import './deck-designer/deck-designer.css'
@@ -74,17 +75,19 @@ export default function DeckDesignerPane() {
     [selection],
   )
 
+  // CD-421: resolve the dropped widget type against the live (registry-backed) catalog.
+  const catalog = useInsertCatalog()
   const onCanvasDrop = useCallback(
     (e: React.DragEvent) => {
       const type = e.dataTransfer.getData(INSERT_DND_TYPE)
-      const manifest = INSERT_CATALOG.find((m) => m.type === type)
+      const manifest = catalog.find((m) => m.type === type)
       if (!manifest) return
       e.preventDefault()
       const rect = surfaceRef.current?.getElement()?.getBoundingClientRect()
       const world = screenToWorld(getTransform(), { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) })
       insertManifest({ model, undo, engine, pageId }, manifest, world)
     },
-    [model, undo, engine, pageId, getTransform],
+    [model, undo, engine, pageId, getTransform, catalog],
   )
 
   return (

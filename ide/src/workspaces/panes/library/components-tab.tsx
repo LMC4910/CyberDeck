@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react'
 import { fuzzyFilter } from '@/shared/fuzzy'
 import type { StorageAdapter } from '@/services/persistence'
-import { INSERT_CATALOG, insertManifest, type InsertManifest } from './registry-seam'
+import { insertManifest, useInsertCatalog, type InsertManifest } from './registry-seam'
 import { useLibraryContext } from './use-library'
 import { useFavorites } from './favorites'
 import { LibraryToolbar, LibraryBody, LibraryTile, PreviewCard, PreviewEmpty, type Chip } from './library-ui'
@@ -19,20 +19,22 @@ export function ComponentsTab({ storage }: { storage?: StorageAdapter }) {
   const [search, setSearch] = useState('')
   const [chip, setChip] = useState(ALL)
   const [preview, setPreview] = useState<InsertManifest | null>(null)
+  // CD-421: the same registry-backed catalog the Insert panel + canvas read.
+  const catalog = useInsertCatalog()
 
-  const categories = useMemo(() => [...new Set(INSERT_CATALOG.map((m) => m.category))].sort(), [])
+  const categories = useMemo(() => [...new Set(catalog.map((m) => m.category))].sort(), [catalog])
   const chips: Chip[] = [
-    { id: ALL, label: 'All', count: INSERT_CATALOG.length },
+    { id: ALL, label: 'All', count: catalog.length },
     { id: FAVS, label: '★ Favorites', count: favorites.favs.size },
     ...categories.map((c) => ({ id: c, label: c })),
   ]
 
   const items = useMemo(() => {
-    let list = INSERT_CATALOG
+    let list = catalog
     if (chip === FAVS) list = list.filter((m) => favorites.isFav(m.type))
     else if (chip !== ALL) list = list.filter((m) => m.category === chip)
     return fuzzyFilter(search, list, (m) => `${m.label} ${m.type}`).map((s) => s.item)
-  }, [search, chip, favorites])
+  }, [search, chip, favorites, catalog])
 
   const insert = (m: InsertManifest) => insertManifest({ model, undo, engine, pageId }, m, center())
 
