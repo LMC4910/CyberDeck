@@ -27,3 +27,20 @@ export {
   type WidgetManifest,
   type WidgetCapability,
 } from './types'
+// CD-422 permissions.
+export {
+  WidgetPermissionsStore,
+  type WidgetPermissionsStoreOptions,
+} from './permissions-store'
+export {
+  WidgetCapabilityBroker,
+  type WidgetCapabilityBrokerOptions,
+} from './capability-broker'
+export {
+  WidgetPermissionError,
+  WidgetPermissionDeniedError,
+  type PermissionDecision,
+  type PermissionState,
+  type WidgetPermissionRequest,
+  type WidgetPermissionPrompt,
+} from './permissions'

@@ -1,0 +1,109 @@
+/* Widget permission UI (CD-422): prompt modal, inspector list, Platform tab. */
+.wperm-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+}
+.wperm-prompt {
+  min-width: 320px;
+  max-width: 420px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: var(--color-surface-1, #1c1e24);
+  color: var(--color-text, #e6e8ec);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.wperm-prompt__title {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.wperm-prompt__body {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.wperm-prompt__reason {
+  color: var(--color-text-muted, #8a8f98);
+}
+.wperm-prompt__actions,
+.wperm-row__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.wperm-btn {
+  padding: 3px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.14));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.wperm-btn--grant[aria-pressed='true'] {
+  background: var(--color-success-bg, rgba(80, 200, 120, 0.16));
+  border-color: var(--color-success-border, #50c878);
+}
+.wperm-btn--deny[aria-pressed='true'] {
+  background: var(--color-danger-bg, rgba(255, 107, 107, 0.14));
+  border-color: var(--color-danger-border, #ff6b6b);
+}
+.wperm-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.wperm-panel__head {
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.wperm-panel__empty {
+  font-size: 12px;
+  color: var(--color-text-muted, #8a8f98);
+}
+.wperm-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wperm-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.wperm-row__cap {
+  font-family: var(--font-mono, monospace);
+}
+.wperm-row__state {
+  text-transform: capitalize;
+  color: var(--color-text-muted, #8a8f98);
+}
+.wperm-row__state--granted {
+  color: var(--color-success-fg, #50c878);
+}
+.wperm-row__state--denied {
+  color: var(--color-danger-fg, #ff6b6b);
+}
+
+.wperm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.wperm-table th,
+.wperm-table td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+}
