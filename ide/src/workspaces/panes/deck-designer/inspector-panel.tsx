@@ -2,8 +2,9 @@
 // selection store: nothing selected → Page Properties; a single widget → Layer +
 // Transform + its type section (CD-313 registry); a multi-selection → Arrange
 // (align / distribute / group). Every field writes through an undoable model command.
-import { useSyncExternalStore } from 'react'
+import { createContext, useCallback, useContext, useSyncExternalStore } from 'react'
 import { isContainer, type ProjectModel } from '@/shared/project'
+import { ConfigurationService } from '@/services/configuration'
 import type { UndoStack } from '@/platform/undo'
 import { useProjectModel } from './use-project-model'
 import { useSelection, useSelectionState } from './use-selection'
@@ -45,28 +46,132 @@ function useModelRevision(model: ProjectModel): number {
   return useSyncExternalStore((cb) => model.subscribe(cb), () => model.revision)
 }
 
+// ── density (CD-424): Beginner vs Power authoring complexity ─────────────────────
+// A persisted config value (never a store, never hardcoded): Power surfaces every pro
+// section; Beginner hides them behind a signposted "Advanced" stub so no content ever
+// vanishes silently. The Inspector + Layers panels read the SAME config, so switching
+// density in one is reflected in the other. Defaults to Power (nothing hidden).
+export type Density = 'beginner' | 'power'
+const DENSITY_PATH = 'workspace.density'
+const DEFAULT_DENSITY: Density = 'power'
+
+// The ConfigurationService backing density. In the app this is the kernel's service,
+// supplied via DensityConfigProvider (so a write persists through CD-118). Standalone
+// — tests, or before App wires the provider — a shared in-memory instance keeps the
+// two panels in sync within the session. Either way writes go through set() on the
+// user layer (validated), never a raw JSON poke.
+const DensityConfigContext = createContext<ConfigurationService | null>(null)
+export const DensityConfigProvider = DensityConfigContext.Provider
+
+let sharedDensityConfig: ConfigurationService | undefined
+function fallbackDensityConfig(): ConfigurationService {
+  return (sharedDensityConfig ??= new ConfigurationService({
+    layers: { defaults: { workspace: { density: DEFAULT_DENSITY } } },
+  }))
+}
+
+export function useDensityConfig(): ConfigurationService {
+  return useContext(DensityConfigContext) ?? fallbackDensityConfig()
+}
+
+/** Live density + a persisted setter (mirrors config like useConfigValue — no local state). */
+export function useDensity(): [Density, (d: Density) => void] {
+  const config = useDensityConfig()
+  const subscribe = useCallback((cb: () => void) => config.watch(DENSITY_PATH, () => cb()), [config])
+  const snapshot = useCallback(() => config.get<Density>(DENSITY_PATH) ?? DEFAULT_DENSITY, [config])
+  const density = useSyncExternalStore(subscribe, snapshot)
+  const setDensity = useCallback((d: Density) => config.set(DENSITY_PATH, d, 'user'), [config])
+  return [density, setDensity]
+}
+
 export function InspectorPanel({ pageId }: { pageId: string }) {
   const model = useProjectModel()
   const engine = useSelection()
   const undo = useUndo()
   const selection = useSelectionState()
+  const [density, setDensity] = useDensity()
   useModelRevision(model)
 
   const ids = selection.kind === 'widget' ? selection.ids : []
   const single = ids.length === 1 ? model.widget(ids[0]!) : undefined
+  const power = density === 'power'
   return (
-    <div className="dd-inspector" data-testid="inspector-panel" data-mode={inspectorMode(selection.kind, ids.length)}>
+    <div className="dd-inspector" data-testid="inspector-panel" data-mode={inspectorMode(selection.kind, ids.length)} data-density={density}>
+      <DensityToggle density={density} onChange={setDensity} />
       {ids.length === 0 && <PageProperties model={model} pageId={pageId} undo={undo} />}
       {ids.length === 1 && <SingleWidget model={model} id={ids[0]!} undo={undo} />}
-      {ids.length === 1 && !single?.component && <StylesSection model={model} widgetId={ids[0]!} undo={undo} engine={engine} />}
-      {ids.length === 1 && <BindingsSection model={model} widgetId={ids[0]!} undo={undo} />}
-      {ids.length === 1 && <StatesSection model={model} widgetId={ids[0]!} undo={undo} />}
-      {ids.length === 1 && <EventsSection model={model} widgetId={ids[0]!} undo={undo} />}
+      {ids.length === 1 && !single?.component && power && <StylesSection model={model} widgetId={ids[0]!} undo={undo} engine={engine} />}
+      {ids.length === 1 && power && <BindingsSection model={model} widgetId={ids[0]!} undo={undo} />}
+      {ids.length === 1 && power && <StatesSection model={model} widgetId={ids[0]!} undo={undo} />}
+      {ids.length === 1 && power && <EventsSection model={model} widgetId={ids[0]!} undo={undo} />}
+      {ids.length === 1 && !power && <AdvancedStub model={model} widgetId={ids[0]!} hasStyles={!single?.component} onSwitch={() => setDensity('power')} />}
       {single?.component && <ComponentSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <VariantSection model={model} instanceId={single.id} componentId={single.component} undo={undo} engine={engine} pageId={pageId} />}
       {single?.component && <OverrideSection model={model} instanceId={single.id} undo={undo} engine={engine} />}
       {ids.length > 1 && <MultiArrange model={model} ids={ids} undo={undo} />}
     </div>
+  )
+}
+
+// ── density toggle (CD-424) ──────────────────────────────────────────────────────
+// Persisted Beginner/Power switch pinned at the top of every inspector face. Beginner
+// trades the pro sections for a signposted Advanced stub; Power surfaces everything.
+function DensityToggle({ density, onChange }: { density: Density; onChange: (d: Density) => void }) {
+  return (
+    <div className="dd-density-toggle" data-testid="density-toggle">
+      <span className="dd-field-label" id="dd-density-label">Density</span>
+      <span className="dd-segmented" role="group" aria-labelledby="dd-density-label">
+        {(['beginner', 'power'] as Density[]).map((d) => (
+          <button
+            key={d}
+            type="button"
+            className="dd-segment"
+            aria-pressed={density === d}
+            data-density-option={d}
+            onClick={() => onChange(d)}
+          >
+            {d === 'beginner' ? 'Beginner' : 'Power'}
+          </button>
+        ))}
+      </span>
+    </div>
+  )
+}
+
+// ── advanced stub (CD-424): the anti-"silent vanish" signpost ─────────────────────
+// In Beginner density the pro sections (Styles / Bindings / States / Events) are hidden.
+// Rather than disappearing, they collapse into this one row that names exactly what is
+// hidden, counts the live bindings, and offers a one-click switch to Power — so hidden
+// content is always accounted for, never silently gone.
+function AdvancedStub({ model, widgetId, hasStyles, onSwitch }: { model: ProjectModel; widgetId: string; hasStyles: boolean; onSwitch: () => void }) {
+  const bindings = Object.keys(model.bindingsOf(widgetId) ?? {}).length
+  const events = Object.keys(model.eventsOf(widgetId) ?? {}).length
+  const customStates = allStates(model, widgetId).filter((s) => !STANDARD_STATES.includes(s as never)).length
+  const hidden: { label: string; count?: number }[] = [
+    ...(hasStyles ? [{ label: 'Styles' }] : []),
+    { label: 'Bindings', count: bindings },
+    { label: 'States', count: customStates },
+    { label: 'Events', count: events },
+  ]
+  return (
+    <InspectorSection title="Advanced">
+      <div className="dd-advanced-stub" data-testid="advanced-stub" data-bindings={bindings}>
+        <p className="dd-advanced-note">
+          Advanced ({bindings} binding{bindings === 1 ? '' : 's'}) — hidden in Beginner density.
+        </p>
+        <ul className="dd-advanced-list" aria-label="Hidden advanced sections">
+          {hidden.map((h) => (
+            <li key={h.label} className="dd-advanced-item" data-advanced-section={h.label}>
+              {h.label}
+              {h.count ? <span className="dd-advanced-count"> · {h.count}</span> : null}
+            </li>
+          ))}
+        </ul>
+        <button type="button" className="dd-insp-btn" data-testid="switch-to-power" onClick={onSwitch}>
+          Switch to Power to edit
+        </button>
+      </div>
+    </InspectorSection>
   )
 }
 

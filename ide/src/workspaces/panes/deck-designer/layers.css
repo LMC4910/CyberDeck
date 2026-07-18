@@ -63,6 +63,23 @@
   outline: 2px solid var(--focus-ring, #4c9aff);
 }
 
+/* Density signpost (CD-424): Beginner-mode hint that advanced authoring lives in
+   the Inspector, with a one-click switch-to-Power affordance (the .dd-chip button
+   carries the shared focus-visible ring). */
+.dd-layers-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  font-size: 10px;
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 8%, transparent);
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+}
+.dd-layers-hint-text {
+  flex: 1 1 auto;
+  opacity: 0.85;
+}
+
 .dd-layers-breadcrumb {
   display: flex;
   flex-wrap: wrap;

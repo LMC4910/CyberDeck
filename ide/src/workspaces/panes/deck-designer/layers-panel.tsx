@@ -11,6 +11,7 @@ import { useSelection, useSelectionState } from './use-selection'
 import { useUndo } from './use-undo'
 import { flattenLayers, type LayerRow } from './layers-model'
 import { filterRows, ancestorsOf, LAYER_FILTERS, type LayerFilter } from './layers-filter'
+import { useDensity } from './inspector-panel'
 import { useVirtualRows } from '@/shared/virtual'
 import './layers.css'
 
@@ -28,6 +29,7 @@ export function LayersPanel({ pageId }: { pageId: string }) {
   const engine = useSelection()
   const undo = useUndo()
   const selection = useSelectionState()
+  const [density, setDensity] = useDensity()
   useModelRevision(model)
 
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
@@ -39,6 +41,16 @@ export function LayersPanel({ pageId }: { pageId: string }) {
   const dragId = useRef<string | null>(null)
   const [dropHint, setDropHint] = useState<{ overId: string; pos: DropPos } | null>(null)
   const typeahead = useRef({ buf: '', time: 0 })
+
+  // Density signpost (CD-424): in Beginner density the Inspector trades its pro
+  // sections (Styles/Bindings/States/Events) for an Advanced stub. Layers — the other
+  // half of the same authoring context, reading the SAME persisted density config —
+  // carries a matching hint so the hidden complexity is accounted for here too, with a
+  // one-click switch to Power. Never a silent vanish. Power mode shows nothing extra.
+  const bindingCount = useMemo(
+    () => model.widgetsOf(pageId).reduce((n, wgt) => n + Object.keys(model.bindingsOf(wgt.id) ?? {}).length, 0),
+    [model, pageId, model.revision],
+  )
 
   const allRows = useMemo(() => flattenLayers(model, pageId, collapsed), [model, pageId, collapsed, model.revision])
   const rows = useMemo(() => filterRows(allRows, filter, query), [allRows, filter, query])
@@ -149,6 +161,21 @@ export function LayersPanel({ pageId }: { pageId: string }) {
           </button>
         </div>
       </div>
+      {density === 'beginner' && (
+        <div className="dd-layers-hint" role="note" data-testid="layers-density-hint" data-bindings={bindingCount}>
+          <span className="dd-layers-hint-text">
+            Beginner density — Advanced ({bindingCount} binding{bindingCount === 1 ? '' : 's'}) is hidden in the Inspector.
+          </span>
+          <button
+            type="button"
+            className="dd-chip"
+            data-testid="layers-switch-to-power"
+            onClick={() => setDensity('power')}
+          >
+            Switch to Power
+          </button>
+        </div>
+      )}
       {crumbs.length > 1 && (
         <nav className="dd-layers-breadcrumb" aria-label="Nesting">
           {crumbs.map((c, i) => (
