@@ -1,0 +1,174 @@
+/* Canon widget visuals (CD-423). Minimal, self-contained presentation for each
+   platform-loaded canon widget; each fills its host box. */
+.cw {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font: inherit;
+  color: var(--widget-fg, #e6e8ec);
+}
+
+.cw-gauge {
+  position: relative;
+}
+.cw-gauge__ring {
+  width: 100%;
+  height: 100%;
+}
+.cw-gauge__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 3;
+}
+.cw-gauge__fill {
+  fill: none;
+  stroke: var(--accent, #4c9aff);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+.cw-gauge__value {
+  position: absolute;
+  font-weight: 600;
+}
+
+.cw-stat {
+  flex-direction: column;
+  gap: 2px;
+}
+.cw-stat__value {
+  font-size: 1.6em;
+  font-weight: 700;
+}
+.cw-stat__label {
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
+.cw-chart__svg {
+  width: 100%;
+  height: 100%;
+}
+.cw-chart__line {
+  fill: none;
+  stroke: var(--accent, #4c9aff);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.cw-button {
+  border-radius: 8px;
+  background: var(--accent, #4c9aff);
+  color: #fff;
+  font-weight: 600;
+}
+.cw-button[data-style='ghost'] {
+  background: transparent;
+  border: 1px solid var(--accent, #4c9aff);
+  color: var(--accent, #4c9aff);
+}
+
+.cw-toggle {
+  gap: 8px;
+}
+.cw-toggle__track {
+  width: 34px;
+  height: 18px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.2);
+  position: relative;
+  flex: 0 0 auto;
+}
+.cw-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.15s ease;
+}
+.cw-toggle[data-on] .cw-toggle__track {
+  background: var(--accent, #4c9aff);
+}
+.cw-toggle[data-on] .cw-toggle__knob {
+  left: 18px;
+}
+
+.cw-slider__track {
+  position: relative;
+  width: 80%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+}
+.cw-slider__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent, #4c9aff);
+}
+.cw-slider__knob {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.cw-input {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0 8px;
+  justify-content: flex-start;
+}
+.cw-input__text {
+  opacity: 0.7;
+}
+
+.cw-text {
+  padding: 0 4px;
+  text-align: center;
+}
+
+.cw-image {
+  object-fit: cover;
+}
+.cw-image--empty {
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 1.6em;
+}
+
+.cw-media {
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.25);
+}
+.cw-media__play {
+  font-size: 1.4em;
+}
+.cw-media__title {
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+.cw-container {
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 4px 6px;
+}
+.cw-container__label {
+  font-size: 0.75em;
+  opacity: 0.6;
+}
