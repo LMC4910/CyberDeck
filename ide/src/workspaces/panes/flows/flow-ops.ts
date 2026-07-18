@@ -4,7 +4,9 @@
 // flow edit just like a canvas edit. Nothing here mutates the model outside an
 // `execUndoable` — a direct mutation would be invisible to history (CD-329).
 import type { UndoStack } from '@/platform/undo'
-import { blankFlow, type FlowModel } from './flow-model'
+import type { Point } from '@/shared/canvas'
+import { blankFlow, type FlowModel, type NodeKind } from './flow-model'
+import { makeNode, labelForKind } from './flow-catalog'
 import type { FlowsService } from './flows-service'
 
 export interface FlowsCtx {
@@ -38,6 +40,43 @@ export function renameFlow({ model, undo }: FlowsCtx, flowId: string, label: str
   const current = model.flow(flowId)
   if (!current || trimmed === '' || trimmed === current.label) return
   undo.execUndoable('Rename flow', () => model.renameFlow(flowId, trimmed))
+}
+
+/**
+ * Add a node of `kind` to a flow, centred on the world `center` (the drop point, or
+ * the visible-graph centre for a double-click add). Returns its id. The id is minted
+ * ONCE outside the undoable so redo re-adds the SAME node key (CD-302 id contract).
+ */
+export function addFlowNode({ model, undo }: FlowsCtx, flowId: string, kind: NodeKind, center: Point): string {
+  const node = makeNode(model.newNodeId(), kind, center)
+  undo.execUndoable(`Add ${labelForKind(kind)}`, () => model.addNode(flowId, node))
+  return node.id
+}
+
+/**
+ * Move a node (or the synthetic trigger root) from `from` to `to` (both world
+ * top-left). Coalesced by `gestureKey` so a whole pointer drag collapses to ONE undo
+ * entry whose inverse restores the pre-drag position (mirrors the canvas nudge, CD-308).
+ * `from` is captured once at drag start, so it stays absolute and redo-safe: the
+ * gesture's final apply lands `to`, and undo always returns to the original `from`.
+ */
+export function moveFlowNode(
+  { model, undo }: FlowsCtx,
+  flowId: string,
+  nodeId: string,
+  from: Point,
+  to: Point,
+  gestureKey: string,
+): void {
+  if (from.x === to.x && from.y === to.y) return
+  undo.execUndoable(
+    'Move node',
+    () => {
+      model.moveNode(flowId, nodeId, to)
+      return () => void model.moveNode(flowId, nodeId, from)
+    },
+    { coalesceKey: gestureKey },
+  )
 }
 
 /**

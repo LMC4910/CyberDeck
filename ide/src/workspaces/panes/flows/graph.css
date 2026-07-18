@@ -1,0 +1,218 @@
+/* Flow graph + node palette (CD-410 → CD-414). The workspace body is the palette rail
+   beside the PanZoomSurface graph; nodes draw in world space, coloured by their 6
+   categories. Edges (CD-411), inspector (CD-413) and the test-run overlay (CD-414)
+   layer on top of the same surface. */
+
+/* --- workspace body: palette | graph | inspector --- */
+.fw-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.fw-graph {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+.fw-graph[data-locked='true'] {
+  cursor: not-allowed;
+}
+
+/* --- node palette --- */
+.fw-palette {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 180px;
+  min-height: 0;
+  border-right: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  background: var(--panel-bg, rgba(255, 255, 255, 0.02));
+}
+.fw-palette-title {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+.fw-palette-search {
+  margin: 0 8px 6px;
+  padding: 4px 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--input-bg, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.14));
+  border-radius: 4px;
+}
+.fw-palette-search:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+.fw-palette-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0 8px 8px;
+}
+.fw-palette-empty {
+  opacity: 0.55;
+  padding: 8px 2px;
+}
+.fw-palette-cat {
+  margin-top: 8px;
+}
+.fw-palette-cat-title {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.5;
+}
+.fw-palette-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  margin-bottom: 2px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--chip-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid transparent;
+  border-left: 3px solid var(--cat-color, rgba(255, 255, 255, 0.4));
+  border-radius: 4px;
+  cursor: grab;
+}
+.fw-palette-tile:hover {
+  background: var(--chip-bg-hover, rgba(255, 255, 255, 0.08));
+}
+.fw-palette-tile:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+.fw-palette-icon {
+  width: 16px;
+  text-align: center;
+  color: var(--cat-color, inherit);
+}
+.fw-palette-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- category palette (6 kinds; the trigger colour is the synthetic root only) --- */
+.fw-palette-tile[data-category='logic'],
+.fw-node[data-category='logic'] {
+  --cat-color: #6ea8fe;
+}
+.fw-palette-tile[data-category='data'],
+.fw-node[data-category='data'] {
+  --cat-color: #4fd1c5;
+}
+.fw-palette-tile[data-category='integration'],
+.fw-node[data-category='integration'] {
+  --cat-color: #c792ea;
+}
+.fw-palette-tile[data-category='action'],
+.fw-node[data-category='action'] {
+  --cat-color: #f6a94a;
+}
+.fw-palette-tile[data-category='structure'],
+.fw-node[data-category='structure'] {
+  --cat-color: #9aa5b1;
+}
+.fw-node[data-category='trigger'] {
+  --cat-color: #46d17f;
+}
+
+/* --- nodes (world space) --- */
+.fw-node {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--node-bg, #26262c);
+  color: var(--panel-fg, rgba(255, 255, 255, 0.9));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.14));
+  border-left: 4px solid var(--cat-color, rgba(255, 255, 255, 0.4));
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+  user-select: none;
+}
+.fw-node[data-trigger='true'] {
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--cat-color, #46d17f) 16%, #26262c);
+}
+.fw-node[data-dragging='true'] {
+  cursor: grabbing;
+  z-index: 3;
+}
+.fw-node[data-selected='true'] {
+  border-color: var(--focus-ring, #4c9aff);
+  box-shadow: 0 0 0 1px var(--focus-ring, #4c9aff), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.fw-node:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 2px;
+}
+.fw-node-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--cat-color, #888) 22%, transparent);
+  color: var(--cat-color, inherit);
+  font-size: 13px;
+}
+.fw-node-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.fw-node-title {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fw-node-kind {
+  font-size: 10px;
+  opacity: 0.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- test-run visuals (CD-414) --- */
+.fw-node[data-run='pending'] {
+  opacity: 0.4;
+}
+.fw-node[data-run='active'] {
+  border-color: var(--armed, #46d17f);
+  box-shadow: 0 0 0 2px var(--armed, #46d17f), 0 0 12px color-mix(in srgb, var(--armed, #46d17f) 60%, transparent);
+  animation: fw-pulse 0.7s ease-in-out infinite;
+}
+.fw-node[data-run='done'] {
+  border-color: color-mix(in srgb, var(--armed, #46d17f) 60%, transparent);
+}
+@keyframes fw-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--armed, #46d17f), 0 0 6px color-mix(in srgb, var(--armed, #46d17f) 40%, transparent); }
+  50% { box-shadow: 0 0 0 2px var(--armed, #46d17f), 0 0 16px color-mix(in srgb, var(--armed, #46d17f) 75%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-node[data-run='active'] { animation: none; }
+}
