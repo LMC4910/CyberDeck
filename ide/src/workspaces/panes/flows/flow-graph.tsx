@@ -1,11 +1,12 @@
-// Flow graph surface (CD-410). Mounts the shared PanZoomSurface (CD-301) — so it
-// inherits the authoring canvas's navigation verbatim (wheel pan, ⌘/ctrl-wheel
+// Flow graph surface (CD-410 → CD-414). Mounts the shared PanZoomSurface (CD-301) — so
+// it inherits the authoring canvas's navigation verbatim (wheel pan, ⌘/ctrl-wheel
 // zoom-to-cursor, Space-drag / middle-button pan, ⌘0 fit, ⌘±/⌘- zoom) — and draws the
-// active flow's nodes in WORLD space, coloured by their 6 categories. A node dragged
-// from the palette drops at the cursor; a node already on the graph drags to reposition
-// (coalesced to one undo entry). The graph fits its content on first open.
-// Edges (CD-411), inspectors (CD-413) and test-run (CD-414) build on this seam.
-import { useCallback, useEffect, useRef, type RefObject } from 'react'
+// active flow's nodes in WORLD space, coloured by their 6 categories, wired together by
+// branch-coloured edges (CD-411). A node dragged from the palette drops at the cursor; a
+// node on the graph drags to reposition (single, or the whole selection — CD-412); an
+// out-port drags to connect two nodes. Selection (nodes + one edge) is owned by the
+// workspace and threaded down. The graph fits its content on first open.
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import {
   PanZoomSurface,
   screenToWorld,
@@ -13,8 +14,16 @@ import {
   type Point,
   type Rect,
 } from '@/shared/canvas'
-import { useGraphNodes } from './use-flows'
-import { TRIGGER_NODE_ID, type FlowModel, type GraphNode, type NodeKind } from './flow-model'
+import { rectFromCorners } from '@/stores'
+import { useGraphEdges, useGraphNodes } from './use-flows'
+import {
+  TRIGGER_NODE_ID,
+  type BranchLabel,
+  type FlowEdge,
+  type FlowModel,
+  type GraphNode,
+  type NodeKind,
+} from './flow-model'
 import {
   NODE_W,
   NODE_H,
@@ -24,7 +33,18 @@ import {
   CATEGORY_LABELS,
   FLOW_NODE_DND_TYPE,
 } from './flow-catalog'
+import { nodeAt } from './flow-geometry'
+import { FlowEdges, type ConnectDraft } from './flow-edges'
+import { EMPTY_SELECTION, isNodeSelected, type FlowSelection } from './flow-selection'
 import './graph.css'
+
+/** Per-node phase during a test-run (CD-414). */
+export type RunPhase = 'pending' | 'active' | 'done'
+
+export interface MarqueeDraft {
+  a: Point
+  b: Point
+}
 
 export interface FlowGraphProps {
   model: FlowModel
@@ -33,14 +53,27 @@ export interface FlowGraphProps {
   surfaceRef: RefObject<PanZoomHandle | null>
   /** Add `kind` at a world position (the drop point). */
   onAddNode: (kind: NodeKind, world: Point) => void
-  /** Reposition a node: `from`→`to` (world top-left), coalesced by `gestureKey`. */
+  /** Reposition a node: `from`→`to` (world top-left), coalesced by `gestureKey`. When the
+   *  node is part of a multi-selection the workspace moves the whole set (CD-412). */
   onMoveNode: (nodeId: string, from: Point, to: Point, gestureKey: string) => void
-  /** Selected node ids (CD-412) — highlights + drives multi-drag callers. */
-  selectedIds?: ReadonlySet<string>
-  /** Node clicked (with modifiers) — selection wiring (CD-412). */
+  /** Node + edge selection (CD-411/412). */
+  selection?: FlowSelection
+  /** Node clicked (with modifiers) — selection wiring. */
   onNodeClick?: (nodeId: string, mods: { shift: boolean; meta: boolean }) => void
+  /** Connect `from`→`to` on `label` (drag-connect drop, CD-411). */
+  onConnect?: (from: string, to: string, label: BranchLabel) => void
+  /** An edge was clicked. */
+  onSelectEdge?: (edge: FlowEdge) => void
+  /** An edge's × hotspot was activated. */
+  onDeleteEdge?: (edge: FlowEdge) => void
+  /** Empty background was clicked (clear selection) or marquee-selected. */
+  onBackgroundClick?: () => void
+  /** Marquee-select nodes within a world rect (CD-412); additive with ⇧. */
+  onMarquee?: (rect: Rect, additive: boolean) => void
   /** Per-node run phase (CD-414 test-run visuals). */
-  runPhase?: (nodeId: string) => 'pending' | 'active' | 'done' | undefined
+  runPhase?: (nodeId: string) => RunPhase | undefined
+  /** Edge keys currently animating in a test-run (CD-414). */
+  activeEdgeKeys?: ReadonlySet<string>
   /** When set, the graph is read-only (a test-run is in progress, CD-414). */
   locked?: boolean
 }
@@ -51,21 +84,23 @@ export function FlowGraph({
   surfaceRef,
   onAddNode,
   onMoveNode,
-  selectedIds,
+  selection = EMPTY_SELECTION,
   onNodeClick,
+  onConnect,
+  onSelectEdge,
+  onDeleteEdge,
+  onBackgroundClick,
+  onMarquee,
   runPhase,
   locked = false,
 }: FlowGraphProps) {
   const nodes = useGraphNodes(model, flowId)
+  const edges = useGraphEdges(model, flowId)
 
-  const boundsOf = useCallback(
-    (): Rect | null => graphBounds(nodes.map((n) => n.pos)),
-    [nodes],
-  )
+  const boundsOf = useCallback((): Rect | null => graphBounds(nodes.map((n) => n.pos)), [nodes])
 
   // First-open fit: frame the flow's content the first time this flow's graph mounts
-  // with a measurable surface (and again when switching to a not-yet-fitted flow), so
-  // an engine-authored flow lands centred rather than off in the corner.
+  // with a measurable surface, so an engine-authored flow lands centred.
   const fitted = useRef<string | null>(null)
   useEffect(() => {
     if (fitted.current === flowId) return
@@ -73,28 +108,123 @@ export function FlowGraph({
     const el = surfaceRef.current?.getElement()
     if (!bounds || !el) return
     const r = el.getBoundingClientRect()
-    if (r.width === 0 || r.height === 0) return // not laid out yet — retry next paint
+    if (r.width === 0 || r.height === 0) return
     surfaceRef.current?.actions.fitTo(bounds)
     fitted.current = flowId
   }, [flowId, boundsOf, surfaceRef])
+
+  // Screen (client) → world, using the live transform + surface rect.
+  const toWorld = useCallback(
+    (clientX: number, clientY: number): Point => {
+      const el = surfaceRef.current?.getElement()
+      const rect = el?.getBoundingClientRect()
+      const transform = surfaceRef.current?.getTransform()
+      if (!transform) return { x: 0, y: 0 }
+      return screenToWorld(transform, { x: clientX - (rect?.left ?? 0), y: clientY - (rect?.top ?? 0) })
+    },
+    [surfaceRef],
+  )
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
       const kind = e.dataTransfer.getData(FLOW_NODE_DND_TYPE)
       if (!kind || locked) return
       e.preventDefault()
-      const el = surfaceRef.current?.getElement()
-      const rect = el?.getBoundingClientRect()
-      const transform = surfaceRef.current?.getTransform()
-      if (!transform) return
-      const world = screenToWorld(transform, {
-        x: e.clientX - (rect?.left ?? 0),
-        y: e.clientY - (rect?.top ?? 0),
-      })
-      onAddNode(kind as NodeKind, world)
+      onAddNode(kind as NodeKind, toWorld(e.clientX, e.clientY))
     },
-    [surfaceRef, onAddNode, locked],
+    [toWorld, onAddNode, locked],
   )
+
+  // ── drag-connect (CD-411) ──────────────────────────────────────────────────────
+  const [connect, setConnect] = useState<{
+    from: string
+    label: BranchLabel
+    start: Point
+    world: Point
+    target: string | null
+  } | null>(null)
+
+  const onPortDown = useCallback(
+    (e: React.PointerEvent, nodeId: string, label: BranchLabel, portWorld: Point) => {
+      if (locked || e.button !== 0) return
+      e.stopPropagation()
+      e.preventDefault()
+      setConnect({ from: nodeId, label, start: portWorld, world: portWorld, target: null })
+    },
+    [locked],
+  )
+
+  useEffect(() => {
+    if (!connect) return
+    const excludes = (n: GraphNode) => n.id === connect.from || n.id === TRIGGER_NODE_ID
+    const move = (e: PointerEvent) => {
+      const world = toWorld(e.clientX, e.clientY)
+      const target = nodeAt(nodes, world, excludes)?.id ?? null
+      setConnect((c) => (c ? { ...c, world, target } : c))
+    }
+    const up = (e: PointerEvent) => {
+      const world = toWorld(e.clientX, e.clientY)
+      const target = nodeAt(nodes, world, excludes)?.id ?? null
+      if (target) onConnect?.(connect.from, target, connect.label)
+      setConnect(null)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+  }, [connect, nodes, onConnect, toWorld])
+
+  const draft: ConnectDraft | null = connect
+    ? { from: connect.start, to: connect.world, label: connect.label }
+    : null
+
+  // ── marquee-select (CD-412) ─────────────────────────────────────────────────────
+  const [marquee, setMarquee] = useState<MarqueeDraft | null>(null)
+  const marqueeMoved = useRef(false)
+
+  const onSurfacePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      // Only a plain left-press on the empty background starts a marquee; node/port/edge
+      // presses stopPropagation, and the surface owns space/middle-button panning.
+      if (locked || e.button !== 0) return
+      const target = e.target as HTMLElement
+      if (!target.classList.contains('pz-surface') && !target.classList.contains('pz-world')) return
+      marqueeMoved.current = false
+      const world = toWorld(e.clientX, e.clientY)
+      setMarquee({ a: world, b: world })
+    },
+    [locked, toWorld],
+  )
+
+  useEffect(() => {
+    if (!marquee) return
+    const move = (e: PointerEvent) => {
+      marqueeMoved.current = true
+      setMarquee((m) => (m ? { ...m, b: toWorld(e.clientX, e.clientY) } : m))
+    }
+    const up = (e: PointerEvent) => {
+      if (marqueeMoved.current) {
+        const b = toWorld(e.clientX, e.clientY)
+        onMarquee?.(rectFromCorners(marquee.a, b), e.shiftKey || e.metaKey)
+      } else {
+        onBackgroundClick?.()
+      }
+      setMarquee(null)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+  }, [marquee, onMarquee, onBackgroundClick, toWorld])
+
+  const marqueeScreenRect = useMemo(() => (marquee ? worldRectToScreen(marquee, surfaceRef) : null), [
+    marquee,
+    surfaceRef,
+  ])
 
   return (
     <div
@@ -108,23 +238,56 @@ export function FlowGraph({
         }
       }}
       onDrop={onDrop}
+      onPointerDown={onSurfacePointerDown}
     >
       <PanZoomSurface ref={surfaceRef} aria-label="Flow graph" getFitBounds={boundsOf}>
+        <FlowEdges
+          nodes={nodes}
+          edges={edges}
+          selectedEdgeKey={selection.edge ? edgeSelectionKey(selection.edge) : null}
+          onSelectEdge={(edge) => onSelectEdge?.(edge)}
+          onDeleteEdge={(edge) => onDeleteEdge?.(edge)}
+          onPortDown={onPortDown}
+          draft={draft}
+          locked={locked}
+        />
         {nodes.map((n) => (
           <FlowNodeView
             key={n.id}
             node={n}
             surfaceRef={surfaceRef}
             onMoveNode={onMoveNode}
-            selected={selectedIds?.has(n.id) ?? false}
+            selected={isNodeSelected(selection, n.id)}
+            dropTarget={connect?.target === n.id}
             onNodeClick={onNodeClick}
             run={runPhase?.(n.id)}
             locked={locked}
           />
         ))}
       </PanZoomSurface>
+      {marqueeScreenRect && (
+        <div className="fw-marquee" data-testid="flow-marquee" style={marqueeScreenRect} />
+      )}
     </div>
   )
+}
+
+/** The selection key must match the edge layer's — mirror model.edgeKey without the
+ *  import churn (from/to/branch). */
+function edgeSelectionKey(e: FlowEdge): string {
+  return `${e.from}~${e.to}~${e.label ?? 'always'}`
+}
+
+function worldRectToScreen(m: MarqueeDraft, surfaceRef: RefObject<PanZoomHandle | null>): React.CSSProperties | null {
+  const t = surfaceRef.current?.getTransform()
+  if (!t) return null
+  const r = rectFromCorners(m.a, m.b)
+  return {
+    left: r.x * t.scale + t.tx,
+    top: r.y * t.scale + t.ty,
+    width: r.w * t.scale,
+    height: r.h * t.scale,
+  }
 }
 
 interface FlowNodeViewProps {
@@ -132,30 +295,26 @@ interface FlowNodeViewProps {
   surfaceRef: RefObject<PanZoomHandle | null>
   onMoveNode: (nodeId: string, from: Point, to: Point, gestureKey: string) => void
   selected: boolean
+  dropTarget: boolean
   onNodeClick?: (nodeId: string, mods: { shift: boolean; meta: boolean }) => void
-  run?: 'pending' | 'active' | 'done'
+  run?: RunPhase
   locked: boolean
 }
 
 let dragSeq = 0
 
-function FlowNodeView({ node, surfaceRef, onMoveNode, selected, onNodeClick, run, locked }: FlowNodeViewProps) {
+function FlowNodeView({ node, surfaceRef, onMoveNode, selected, dropTarget, onNodeClick, run, locked }: FlowNodeViewProps) {
   const isTrigger = node.id === TRIGGER_NODE_ID
-  // The trigger root shows the trigger kind ("event"); a catalog node shows its label.
   const kindLabel = isTrigger ? node.kind.split('.').at(-1) ?? node.kind : labelForKind(node.kind)
   const icon = isTrigger ? '◆' : manifestOf(node.kind)?.icon ?? '•'
   const categoryLabel = CATEGORY_LABELS[node.category]
 
-  // Pointer drag: convert the screen delta to world (÷ scale) off the pre-drag node
-  // position, so the whole gesture coalesces to one undo entry that reverts to `from`.
   const drag = useRef<{ key: string; from: Point; startClient: Point; moved: boolean } | null>(null)
-  // A drag that actually moved must swallow the trailing click so it doesn't select.
   const draggedRef = useRef(false)
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (locked || e.button !== 0) return
-      // Let Space-drag (hand tool) pan through the node instead of grabbing it.
       e.stopPropagation()
       ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
       drag.current = {
@@ -197,6 +356,7 @@ function FlowNodeView({ node, surfaceRef, onMoveNode, selected, onNodeClick, run
       data-category={node.category}
       data-trigger={isTrigger || undefined}
       data-selected={selected || undefined}
+      data-drop-target={dropTarget || undefined}
       data-run={run}
       role="button"
       tabIndex={0}
@@ -208,7 +368,6 @@ function FlowNodeView({ node, surfaceRef, onMoveNode, selected, onNodeClick, run
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onClick={(e) => {
-        // A drag that moved shouldn't also register as a select-click.
         if (draggedRef.current) {
           draggedRef.current = false
           return

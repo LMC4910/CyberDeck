@@ -425,6 +425,32 @@ export class FlowModel {
       this.emit([flowId, edge.from, edge.to], true)
     }
   }
+
+  /** Retarget an edge's branch label in place (CD-411 branch toggle). Restores the
+   *  edge exactly on undo (index-stable, same as removeEdge). */
+  setEdgeLabel(flowId: string, edge: FlowEdge, label: BranchLabel): Inverse {
+    const doc = this.flow(flowId)
+    const index = doc?.edges.findIndex((e) => sameEdge(e, edge)) ?? -1
+    if (!doc || index < 0 || (doc.edges[index]!.label ?? 'always') === label) return () => {}
+    const before = structuredClone(doc.edges[index]!)
+    doc.edges[index] = { ...before, label }
+    this.emit([flowId, edge.from, edge.to], true)
+    return () => {
+      const d = this.flow(flowId)
+      if (d && index < d.edges.length) d.edges[index] = structuredClone(before)
+      this.emit([flowId, edge.from, edge.to], true)
+    }
+  }
+}
+
+/** True when two edges denote the same connection (from/to/branch). */
+export function edgesEqual(a: FlowEdge, b: FlowEdge): boolean {
+  return sameEdge(a, b)
+}
+
+/** A stable string key for an edge — its identity in selection + as a test id. */
+export function edgeKey(e: FlowEdge): string {
+  return `${e.from}~${e.to}~${e.label ?? 'always'}`
 }
 
 function sameEdge(a: FlowEdge, b: FlowEdge): boolean {

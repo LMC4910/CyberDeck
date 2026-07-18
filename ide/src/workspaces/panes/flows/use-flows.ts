@@ -7,7 +7,7 @@
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from 'react'
 import { LocalStorageAdapter } from '@/services/persistence'
 import { FlowsService, localFlowsPersistence, type FlowsStatus, type SaveState } from './flows-service'
-import type { FlowDocument, FlowModel, GraphNode } from './flow-model'
+import type { FlowDocument, FlowEdge, FlowModel, GraphNode } from './flow-model'
 
 const FlowsContext = createContext<FlowsService | null>(null)
 export const FlowsProvider = FlowsContext.Provider
@@ -70,4 +70,14 @@ export function useGraphNodes(model: FlowModel, flowId: string): GraphNode[] {
   )
   const rev = useSyncExternalStore(subscribe, () => model.structuralRev + model.version(flowId))
   return useMemo(() => model.graphNodes(flowId), [model, flowId, rev])
+}
+
+/** The flow's edges; re-reads when the flow's structure or nodes change (CD-411). */
+export function useGraphEdges(model: FlowModel, flowId: string): readonly FlowEdge[] {
+  const subscribe = useCallback(
+    (cb: () => void) => model.subscribe((c) => (c.structural || c.dirtyIds.includes(flowId)) && cb()),
+    [model, flowId],
+  )
+  const rev = useSyncExternalStore(subscribe, () => model.structuralRev + model.version(flowId))
+  return useMemo(() => model.flow(flowId)?.edges ?? [], [model, flowId, rev])
 }

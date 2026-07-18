@@ -197,6 +197,118 @@
   text-overflow: ellipsis;
 }
 
+.fw-node[data-drop-target='true'] {
+  border-color: var(--armed, #46d17f);
+  box-shadow: 0 0 0 2px var(--armed, #46d17f);
+}
+
+/* --- edges (CD-411) --- */
+/* The svg sits in the world layer at the origin; overflow is visible so paths at
+   negative world coords still draw. pointer-events are re-enabled only on the
+   interactive bits so the layer never eats a node click. */
+.fw-edges {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+.fw-edge-line {
+  fill: none;
+  stroke: var(--branch-color, #9aa5b1);
+  stroke-width: 2;
+}
+.fw-edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.fw-edge[data-selected='true'] .fw-edge-line {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 3px var(--branch-color, #9aa5b1));
+}
+.fw-edge-ghost {
+  fill: none;
+  stroke: var(--branch-color, #9aa5b1);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.fw-arrow path {
+  fill: var(--branch-color, #9aa5b1);
+}
+/* Branch colours: true = green, false = red, always = neutral. */
+.fw-edge[data-branch='true'],
+.fw-edge-ghost[data-branch='true'] {
+  --branch-color: #46d17f;
+}
+.fw-edge[data-branch='false'],
+.fw-edge-ghost[data-branch='false'] {
+  --branch-color: #f6675e;
+}
+.fw-arrow-true path {
+  fill: #46d17f;
+}
+.fw-arrow-false path {
+  fill: #f6675e;
+}
+.fw-arrow-always path {
+  fill: #9aa5b1;
+}
+
+.fw-edge-x {
+  cursor: pointer;
+  pointer-events: auto;
+}
+.fw-edge-x-bg {
+  fill: #26262c;
+  stroke: var(--branch-color, #9aa5b1);
+  stroke-width: 1.5;
+}
+.fw-edge-x-mark {
+  stroke: var(--panel-fg, rgba(255, 255, 255, 0.9));
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.fw-edge-x:focus-visible .fw-edge-x-bg {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+}
+
+/* out-ports (drag-connect handles) */
+.fw-port {
+  fill: var(--branch-color, var(--cat-color, #9aa5b1));
+  stroke: #1c1c22;
+  stroke-width: 1.5;
+  pointer-events: auto;
+  cursor: crosshair;
+  opacity: 0.55;
+  transition: opacity 0.1s ease, r 0.1s ease;
+}
+.fw-port[data-branch='true'] {
+  --branch-color: #46d17f;
+}
+.fw-port[data-branch='false'] {
+  --branch-color: #f6675e;
+}
+.fw-port:hover {
+  opacity: 1;
+}
+
+/* --- marquee (CD-412) --- */
+.fw-marquee {
+  position: absolute;
+  z-index: 4;
+  border: 1px solid var(--focus-ring, #4c9aff);
+  background: color-mix(in srgb, var(--focus-ring, #4c9aff) 14%, transparent);
+  pointer-events: none;
+}
+
 /* --- test-run visuals (CD-414) --- */
 .fw-node[data-run='pending'] {
   opacity: 0.4;

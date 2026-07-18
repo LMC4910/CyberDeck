@@ -5,7 +5,15 @@
 // `execUndoable` — a direct mutation would be invisible to history (CD-329).
 import type { UndoStack } from '@/platform/undo'
 import type { Point } from '@/shared/canvas'
-import { blankFlow, type FlowModel, type NodeKind } from './flow-model'
+import {
+  blankFlow,
+  edgesEqual,
+  TRIGGER_NODE_ID,
+  type BranchLabel,
+  type FlowEdge,
+  type FlowModel,
+  type NodeKind,
+} from './flow-model'
 import { makeNode, labelForKind } from './flow-catalog'
 import type { FlowsService } from './flows-service'
 
@@ -77,6 +85,49 @@ export function moveFlowNode(
     },
     { coalesceKey: gestureKey },
   )
+}
+
+// ── edge ops (CD-411) ──────────────────────────────────────────────────────────
+
+/**
+ * Connect `from`→`to` on the given branch. Rejects self-loops, the trigger root as an
+ * endpoint (it fires roots implicitly — never an edge endpoint), and a duplicate of an
+ * existing edge. Returns true when an edge was actually added. One undo entry.
+ */
+export function connectNodes(
+  { model, undo }: FlowsCtx,
+  flowId: string,
+  from: string,
+  to: string,
+  label: BranchLabel = 'always',
+): boolean {
+  if (from === to || from === TRIGGER_NODE_ID || to === TRIGGER_NODE_ID) return false
+  const doc = model.flow(flowId)
+  if (!doc || !model.node(flowId, from) || !model.node(flowId, to)) return false
+  const edge: FlowEdge = { from, to, label }
+  if (doc.edges.some((e) => edgesEqual(e, edge))) return false
+  undo.execUndoable('Connect nodes', () => model.addEdge(flowId, edge))
+  return true
+}
+
+/** Delete an edge. One undo entry. */
+export function deleteEdge({ model, undo }: FlowsCtx, flowId: string, edge: FlowEdge): void {
+  if (!model.flow(flowId)) return
+  undo.execUndoable('Delete edge', () => model.removeEdge(flowId, edge))
+}
+
+/** Retarget an edge's branch to `label`. Returns the retargeted edge (so the caller can
+ *  keep it selected), or null when nothing changed. One undo entry. */
+export function setEdgeBranch(
+  { model, undo }: FlowsCtx,
+  flowId: string,
+  edge: FlowEdge,
+  label: BranchLabel,
+): FlowEdge | null {
+  if ((edge.label ?? 'always') === label) return null
+  if (!model.flow(flowId)) return null
+  undo.execUndoable('Set branch', () => model.setEdgeLabel(flowId, edge, label))
+  return { ...edge, label }
 }
 
 /**

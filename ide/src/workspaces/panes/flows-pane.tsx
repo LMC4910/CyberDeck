@@ -4,14 +4,28 @@
 // node palette + PanZoomSurface graph author the active flow's nodes. Its own chunk via
 // import().
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { screenToWorld, type PanZoomHandle, type Point } from '@/shared/canvas'
+import { screenToWorld, type PanZoomHandle, type Point, type Rect } from '@/shared/canvas'
 import { useUndo } from './deck-designer/use-undo'
 import { FlowTabs } from './flows/flow-tabs'
 import { FlowGraph } from './flows/flow-graph'
 import { NodePalette } from './flows/node-palette'
 import { defaultFlowsService, useFlowIds, useFlowsOptional, useFlowsState } from './flows/use-flows'
-import { addFlowNode, moveFlowNode, type FlowsCtx } from './flows/flow-ops'
-import type { FlowModel, NodeKind } from './flows/flow-model'
+import {
+  addFlowNode,
+  connectNodes,
+  deleteEdge,
+  moveFlowNode,
+  type FlowsCtx,
+} from './flows/flow-ops'
+import {
+  clearSelection,
+  clickNode,
+  EMPTY_SELECTION,
+  marqueeNodes,
+  selectEdge,
+  type FlowSelection,
+} from './flows/flow-selection'
+import type { BranchLabel, FlowEdge, FlowModel, NodeKind } from './flows/flow-model'
 import type { FlowsService } from './flows/flows-service'
 import './flows/flows.css'
 
@@ -56,6 +70,11 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
   const activeId = selectedId && ids.includes(selectedId) ? selectedId : (ids[0] ?? null)
   const surfaceRef = useRef<PanZoomHandle | null>(null)
 
+  // Graph selection (nodes + one edge). Local to the workspace — cleared when the
+  // active flow changes so a stale node id never highlights another flow's graph.
+  const [selection, setSelection] = useState<FlowSelection>(EMPTY_SELECTION)
+  useEffect(() => setSelection(EMPTY_SELECTION), [activeId])
+
   const onAddNode = useCallback(
     (kind: NodeKind, world: Point) => {
       if (activeId) addFlowNode(ctx, activeId, kind, world)
@@ -74,6 +93,36 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
     [ctx, activeId],
   )
 
+  const onNodeClick = useCallback(
+    (nodeId: string, mods: { shift: boolean; meta: boolean }) =>
+      setSelection((s) => clickNode(s, nodeId, mods)),
+    [],
+  )
+  const onConnect = useCallback(
+    (from: string, to: string, label: BranchLabel) => {
+      if (activeId) connectNodes(ctx, activeId, from, to, label)
+    },
+    [ctx, activeId],
+  )
+  const onSelectEdge = useCallback((edge: FlowEdge) => setSelection(selectEdge(edge)), [])
+  const onDeleteEdge = useCallback(
+    (edge: FlowEdge) => {
+      if (activeId) deleteEdge(ctx, activeId, edge)
+      setSelection(clearSelection())
+    },
+    [ctx, activeId],
+  )
+  const onBackgroundClick = useCallback(() => setSelection(clearSelection()), [])
+  const onMarquee = useCallback(
+    (rect: Rect, additive: boolean) => {
+      const graph = model.graphNodes(activeId ?? '')
+      setSelection((s) =>
+        marqueeNodes(s, { x: rect.x, y: rect.y }, { x: rect.x + rect.w, y: rect.y + rect.h }, graph, additive),
+      )
+    },
+    [model, activeId],
+  )
+
   return (
     <section className="fw-pane" data-pane="flows" data-status="ready" aria-label="Flows workspace">
       <FlowTabs ctx={ctx} activeId={activeId} onActivate={setSelectedId} />
@@ -87,6 +136,13 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
             surfaceRef={surfaceRef}
             onAddNode={onAddNode}
             onMoveNode={onMoveNode}
+            selection={selection}
+            onNodeClick={onNodeClick}
+            onConnect={onConnect}
+            onSelectEdge={onSelectEdge}
+            onDeleteEdge={onDeleteEdge}
+            onBackgroundClick={onBackgroundClick}
+            onMarquee={onMarquee}
           />
         </div>
       ) : (
