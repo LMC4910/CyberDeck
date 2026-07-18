@@ -8,6 +8,7 @@ import { screenToWorld, type PanZoomHandle, type Point, type Rect } from '@/shar
 import { useUndo } from './deck-designer/use-undo'
 import { FlowTabs } from './flows/flow-tabs'
 import { FlowGraph } from './flows/flow-graph'
+import { FlowInspector } from './flows/flow-inspector'
 import { NodePalette } from './flows/node-palette'
 import { defaultFlowsService, useFlowIds, useFlowsOptional, useFlowsState } from './flows/use-flows'
 import {
@@ -199,6 +200,7 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
             onBackgroundClick={onBackgroundClick}
             onMarquee={onMarquee}
           />
+          <FlowInspector ctx={ctx} flowId={activeId} selection={selection} setSelection={setSelection} />
         </div>
       ) : (
         <p className="fw-empty">No flows yet — use + to create one.</p>

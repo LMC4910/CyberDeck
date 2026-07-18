@@ -11,11 +11,13 @@ import {
   edgesEqual,
   writeUiPos,
   TRIGGER_NODE_ID,
+  UI_PARAM_KEY,
   type BranchLabel,
   type FlowEdge,
   type FlowModel,
   type FlowNode,
   type NodeKind,
+  type TriggerKind,
 } from './flow-model'
 import { makeNode, labelForKind } from './flow-catalog'
 import type { FlowSelection } from './flow-selection'
@@ -229,6 +231,46 @@ export function duplicateSelection({ model, undo }: FlowsCtx, flowId: string, se
     ...internalEdges.map((e) => model.addEdge(flowId, e)),
   ])
   return clones.map((c) => c.id)
+}
+
+// ── per-node / trigger param edits (CD-413 inspector) ────────────────────────────
+
+/**
+ * Set one authored param on a node from the inspector. `undefined` clears the key so
+ * the stored bag stays minimal. Coalesced by node+key, so typing a field collapses to
+ * one undo entry; the reserved `ui` position is preserved by setNodeParams.
+ */
+export function setNodeParam({ model, undo }: FlowsCtx, flowId: string, nodeId: string, key: string, value: unknown): void {
+  const node = model.node(flowId, nodeId)
+  if (!node) return
+  const { [key]: _drop, ...rest } = (node.params ?? {}) as Record<string, unknown>
+  const params = value === undefined ? rest : { ...rest, [key]: value }
+  undo.execUndoable('Edit node', () => model.setNodeParams(flowId, nodeId, params), {
+    coalesceKey: `flow-param:${nodeId}:${key}`,
+  })
+}
+
+/** Set one field on the trigger's config (CD-413). Preserves the reserved ui position
+ *  and the trigger kind; coalesced by key. */
+export function setTriggerParam({ model, undo }: FlowsCtx, flowId: string, key: string, value: unknown): void {
+  const t = model.trigger(flowId)
+  if (!t) return
+  const { [key]: _drop, ...rest } = (t.config ?? {}) as Record<string, unknown>
+  const config = value === undefined ? rest : { ...rest, [key]: value }
+  const trigger = Object.keys(config).length ? { kind: t.kind, config } : { kind: t.kind }
+  undo.execUndoable('Edit trigger', () => model.setTrigger(flowId, trigger), {
+    coalesceKey: `flow-trigger:${key}`,
+  })
+}
+
+/** Change the trigger kind (CD-413). Drops the previous kind's config but keeps the
+ *  node's ui position, and no-ops on an unchanged kind. */
+export function setTriggerKind({ model, undo }: FlowsCtx, flowId: string, kind: TriggerKind): void {
+  const t = model.trigger(flowId)
+  if (!t || t.kind === kind) return
+  const ui = (t.config ?? {})[UI_PARAM_KEY]
+  const config = ui !== undefined ? { [UI_PARAM_KEY]: ui } : undefined
+  undo.execUndoable('Change trigger', () => model.setTrigger(flowId, config ? { kind, config } : { kind }))
 }
 
 /**

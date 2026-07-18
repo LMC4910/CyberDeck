@@ -328,3 +328,76 @@
 @media (prefers-reduced-motion: reduce) {
   .fw-node[data-run='active'] { animation: none; }
 }
+
+/* --- inspector (CD-413): right column, generated per-kind param fields --- */
+.fw-inspector {
+  flex: 0 0 240px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  border-left: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  background: var(--panel-bg, rgba(255, 255, 255, 0.02));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fw-inspector__head {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.fw-inspector__hint {
+  font-size: 12px;
+  opacity: 0.6;
+  margin: 0;
+}
+.fw-inspector__edge {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  opacity: 0.85;
+  margin: 0;
+}
+.fw-inspector__delete {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 1px solid var(--danger, #e5484d);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--danger, #e5484d);
+  cursor: pointer;
+  font-size: 12px;
+}
+.fw-inspector__delete:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+.fw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+.fw-field > span {
+  opacity: 0.75;
+}
+.fw-field input[type='text'],
+.fw-field input[type='number'],
+.fw-field select {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.15));
+  border-radius: 5px;
+  background: var(--input-bg, rgba(0, 0, 0, 0.2));
+  color: inherit;
+  font: inherit;
+}
+.fw-field input:focus-visible,
+.fw-field select:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+.fw-field--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
