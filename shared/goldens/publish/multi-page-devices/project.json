@@ -1,0 +1,28 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "meta": { "name": "Multi Page" },
+  "pages": [
+    {
+      "id": "page_a00001",
+      "name": "Page A",
+      "canvas": { "w": 1000, "h": 800 },
+      "widgets": [
+        { "id": "w_a0000001", "type": "stat.readout", "name": "A stat", "frame": { "x": 0, "y": 0, "w": 100, "h": 100 } }
+      ]
+    },
+    {
+      "id": "page_b00001",
+      "name": "Page B",
+      "canvas": { "w": 1200, "h": 900 },
+      "widgets": [
+        { "id": "w_b0000001", "type": "chart.line", "name": "B chart", "frame": { "x": 50, "y": 50, "w": 300, "h": 200 } }
+      ]
+    }
+  ],
+  "devices": [
+    { "id": "dev_pad0001", "name": "iPad", "deviceClass": "ipad", "pageId": "page_a00001" },
+    { "id": "dev_pix0001", "name": "Pixel", "deviceClass": "pixel", "pageId": "page_b00001" },
+    { "id": "dev_dck0001", "name": "Deck Mini", "deviceClass": "deck", "pageId": "page_a00001" }
+  ]
+}

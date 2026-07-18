@@ -1,0 +1,38 @@
+{
+  "device": {
+    "deviceClass": "ipad",
+    "id": "dev_pad0001",
+    "name": "Studio iPad"
+  },
+  "format": "cyberdeck.layout",
+  "pages": [
+    {
+      "grid": {
+        "columns": 24,
+        "deviceClass": "ipad",
+        "rows": 18
+      },
+      "id": "page_main01",
+      "name": "Main",
+      "version": 0,
+      "widgets": [
+        {
+          "config": {
+            "max": 100
+          },
+          "id": "w_gauge01a",
+          "placement": {
+            "col": 2,
+            "colSpan": 4,
+            "row": 2,
+            "rowSpan": 3
+          },
+          "type": "gauge.circular"
+        }
+      ]
+    }
+  ],
+  "projectId": "proj_min0001",
+  "publishedAt": "2026-07-18T09:00:00Z",
+  "version": 1
+}

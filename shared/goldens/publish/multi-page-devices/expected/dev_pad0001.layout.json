@@ -1,0 +1,34 @@
+{
+  "device": {
+    "deviceClass": "ipad",
+    "id": "dev_pad0001",
+    "name": "iPad"
+  },
+  "format": "cyberdeck.layout",
+  "pages": [
+    {
+      "grid": {
+        "columns": 24,
+        "deviceClass": "ipad",
+        "rows": 18
+      },
+      "id": "page_a00001",
+      "name": "Page A",
+      "version": 2,
+      "widgets": [
+        {
+          "id": "w_a0000001",
+          "placement": {
+            "col": 0,
+            "colSpan": 2,
+            "row": 0,
+            "rowSpan": 2
+          },
+          "type": "stat.readout"
+        }
+      ]
+    }
+  ],
+  "publishedAt": "2026-07-18T12:30:00Z",
+  "version": 3
+}

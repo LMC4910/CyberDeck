@@ -1,0 +1,79 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "meta": { "name": "Nested Overrides" },
+  "pages": [
+    {
+      "id": "page_np0001",
+      "name": "Cards",
+      "canvas": { "w": 1200, "h": 900 },
+      "widgets": [
+        {
+          "id": "w_ina0001a",
+          "type": "core.instance",
+          "name": "Card A",
+          "frame": { "x": 0, "y": 0, "w": 200, "h": 100 },
+          "component": "cmp_outer01",
+          "variant": "var_dark001",
+          "overrides": { "title": "Custom A" }
+        },
+        {
+          "id": "w_ina0002a",
+          "type": "core.instance",
+          "name": "Card B",
+          "frame": { "x": 400, "y": 0, "w": 200, "h": 100 },
+          "component": "cmp_outer01"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "cmp_inner01",
+      "name": "Inner",
+      "props": { "color": "#888888", "size": 10 },
+      "widgets": [
+        {
+          "id": "w_ilabel01",
+          "type": "text.label",
+          "name": "inner label",
+          "frame": { "x": 0, "y": 0, "w": 80, "h": 30 },
+          "config": { "color": "#888888", "text": "lbl" }
+        }
+      ]
+    },
+    {
+      "id": "cmp_outer01",
+      "name": "Outer",
+      "props": { "title": "Outer" },
+      "widgets": [
+        {
+          "id": "w_otitle01",
+          "type": "text.label",
+          "name": "title",
+          "frame": { "x": 0, "y": 0, "w": 120, "h": 30 },
+          "config": { "title": "Outer" }
+        },
+        {
+          "id": "w_oinner01",
+          "type": "core.instance",
+          "name": "inner instance",
+          "frame": { "x": 0, "y": 40, "w": 80, "h": 30 },
+          "component": "cmp_inner01",
+          "overrides": { "color": "#00ff00" }
+        }
+      ],
+      "variants": [
+        { "id": "var_dark001", "name": "Dark", "overrides": { "title": "Dark Outer" } }
+      ]
+    }
+  ],
+  "bindings": {
+    "w_otitle01": {
+      "title": { "mode": "variable", "src": "deck.title" }
+    }
+  },
+  "devices": [
+    { "id": "dev_np0001", "name": "Design iPad", "deviceClass": "ipad", "pageId": "page_np0001" }
+  ]
+}

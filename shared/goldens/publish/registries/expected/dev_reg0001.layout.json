@@ -1,0 +1,101 @@
+{
+  "device": {
+    "deviceClass": "ipad",
+    "id": "dev_reg0001"
+  },
+  "format": "cyberdeck.layout",
+  "pages": [
+    {
+      "grid": {
+        "columns": 24,
+        "deviceClass": "ipad",
+        "rows": 18
+      },
+      "id": "page_reg001",
+      "name": "Instruments",
+      "version": 1,
+      "widgets": [
+        {
+          "appearance": {
+            "stateBinding": "sys.cpu.load",
+            "style": {
+              "color": "#00ffff"
+            },
+            "valueRules": [
+              {
+                "active": false,
+                "kind": "state",
+                "props": {
+                  "color": "#ff0000"
+                },
+                "state": "crit"
+              },
+              {
+                "active": true,
+                "kind": "state",
+                "props": {
+                  "color": "#ffaa00"
+                },
+                "state": "warn"
+              }
+            ]
+          },
+          "config": {
+            "color": "#ffaa00",
+            "label": "CPU",
+            "max": 100
+          },
+          "id": "w_cpu0001a",
+          "placement": {
+            "col": 0,
+            "colSpan": 6,
+            "row": 0,
+            "rowSpan": 3
+          },
+          "type": "gauge.circular"
+        },
+        {
+          "appearance": {
+            "valueRules": [
+              {
+                "expr": "fps.current",
+                "kind": "expr",
+                "prop": "value"
+              }
+            ]
+          },
+          "config": {
+            "label": "FPS"
+          },
+          "id": "w_stat001a",
+          "placement": {
+            "col": 6,
+            "colSpan": 3,
+            "row": 0,
+            "rowSpan": 3
+          },
+          "type": "stat.readout"
+        },
+        {
+          "id": "w_btn0001a",
+          "interaction": {
+            "hold": {
+              "flow": "flow_reset1"
+            },
+            "tap": {
+              "flow": "flow_mute01"
+            }
+          },
+          "placement": {
+            "col": 0,
+            "colSpan": 3,
+            "row": 3,
+            "rowSpan": 3
+          },
+          "type": "button.action"
+        }
+      ]
+    }
+  ],
+  "version": 2
+}

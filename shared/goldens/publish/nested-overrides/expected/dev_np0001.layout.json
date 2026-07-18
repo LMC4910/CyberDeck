@@ -1,0 +1,84 @@
+{
+  "device": {
+    "deviceClass": "ipad",
+    "id": "dev_np0001",
+    "name": "Design iPad"
+  },
+  "format": "cyberdeck.layout",
+  "pages": [
+    {
+      "grid": {
+        "columns": 24,
+        "deviceClass": "ipad",
+        "rows": 18
+      },
+      "id": "page_np0001",
+      "name": "Cards",
+      "version": 0,
+      "widgets": [
+        {
+          "appearance": {
+            "stateBinding": "deck.title"
+          },
+          "config": {
+            "title": "Custom A"
+          },
+          "id": "w_ina0001a-w-otitle01",
+          "placement": {
+            "col": 0,
+            "colSpan": 2,
+            "row": 0,
+            "rowSpan": 1
+          },
+          "type": "text.label"
+        },
+        {
+          "config": {
+            "color": "#00ff00",
+            "text": "lbl"
+          },
+          "id": "w_ina0001a-w-oinner01-w-ilabel01",
+          "placement": {
+            "col": 0,
+            "colSpan": 2,
+            "row": 1,
+            "rowSpan": 1
+          },
+          "type": "text.label"
+        },
+        {
+          "appearance": {
+            "stateBinding": "deck.title"
+          },
+          "config": {
+            "title": "Outer"
+          },
+          "id": "w_ina0002a-w-otitle01",
+          "placement": {
+            "col": 8,
+            "colSpan": 2,
+            "row": 0,
+            "rowSpan": 1
+          },
+          "type": "text.label"
+        },
+        {
+          "config": {
+            "color": "#00ff00",
+            "text": "lbl"
+          },
+          "id": "w_ina0002a-w-oinner01-w-ilabel01",
+          "placement": {
+            "col": 8,
+            "colSpan": 2,
+            "row": 1,
+            "rowSpan": 1
+          },
+          "type": "text.label"
+        }
+      ]
+    }
+  ],
+  "projectId": "proj_nest001",
+  "version": 5
+}

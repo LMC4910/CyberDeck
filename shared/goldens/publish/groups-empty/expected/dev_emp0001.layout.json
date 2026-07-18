@@ -1,0 +1,22 @@
+{
+  "device": {
+    "deviceClass": "pixel",
+    "id": "dev_emp0001",
+    "name": "Blank Pixel"
+  },
+  "format": "cyberdeck.layout",
+  "pages": [
+    {
+      "grid": {
+        "columns": 24,
+        "deviceClass": "pixel",
+        "rows": 18
+      },
+      "id": "page_empty1",
+      "name": "Blank",
+      "version": 0,
+      "widgets": []
+    }
+  ],
+  "version": 1
+}

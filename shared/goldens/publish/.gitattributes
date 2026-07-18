@@ -1,0 +1,5 @@
+# Publish goldens are a BYTE-STABLE contract (CD-416 → CD-506 Go port). The
+# canonical serializer emits LF line endings with no trailing newline; git must
+# never rewrite these files to CRLF on Windows checkout or the cross-platform
+# byte comparison breaks. Force LF for every file in this tree.
+* text eol=lf

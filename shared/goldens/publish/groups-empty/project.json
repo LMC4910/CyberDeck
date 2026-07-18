@@ -1,0 +1,49 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "meta": { "name": "Groups and Empty" },
+  "pages": [
+    {
+      "id": "page_ge0001",
+      "name": "Grouped",
+      "canvas": { "w": 1200, "h": 900 },
+      "widgets": [
+        {
+          "id": "w_group001",
+          "type": "core.group",
+          "name": "Cluster",
+          "frame": { "x": 0, "y": 0, "w": 400, "h": 400 },
+          "config": { "childIds": ["w_child001", "w_child002"] }
+        },
+        {
+          "id": "w_child001",
+          "type": "stat.readout",
+          "name": "Child 1",
+          "frame": { "x": 10, "y": 10, "w": 100, "h": 100 }
+        },
+        {
+          "id": "w_child002",
+          "type": "button.action",
+          "name": "Child 2",
+          "frame": { "x": 120, "y": 10, "w": 100, "h": 100 }
+        },
+        {
+          "id": "w_solo0001",
+          "type": "text.label",
+          "name": "Solo",
+          "frame": { "x": 0, "y": 500, "w": 200, "h": 50 }
+        }
+      ]
+    },
+    {
+      "id": "page_empty1",
+      "name": "Blank",
+      "canvas": { "w": 1200, "h": 900 },
+      "widgets": []
+    }
+  ],
+  "devices": [
+    { "id": "dev_ge00001", "name": "Grouped iPad", "deviceClass": "ipad", "pageId": "page_ge0001" },
+    { "id": "dev_emp0001", "name": "Blank Pixel", "deviceClass": "pixel", "pageId": "page_empty1" }
+  ]
+}

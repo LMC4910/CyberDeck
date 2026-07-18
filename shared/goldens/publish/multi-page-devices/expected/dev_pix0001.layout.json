@@ -1,0 +1,34 @@
+{
+  "device": {
+    "deviceClass": "pixel",
+    "id": "dev_pix0001",
+    "name": "Pixel"
+  },
+  "format": "cyberdeck.layout",
+  "pages": [
+    {
+      "grid": {
+        "columns": 24,
+        "deviceClass": "pixel",
+        "rows": 18
+      },
+      "id": "page_b00001",
+      "name": "Page B",
+      "version": 2,
+      "widgets": [
+        {
+          "id": "w_b0000001",
+          "placement": {
+            "col": 1,
+            "colSpan": 6,
+            "row": 1,
+            "rowSpan": 4
+          },
+          "type": "chart.line"
+        }
+      ]
+    }
+  ],
+  "publishedAt": "2026-07-18T12:30:00Z",
+  "version": 3
+}

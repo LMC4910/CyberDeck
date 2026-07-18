@@ -1,0 +1,25 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "savedAt": "2026-07-18T09:00:00Z",
+  "meta": { "name": "Minimal" },
+  "pages": [
+    {
+      "id": "page_main01",
+      "name": "Main",
+      "canvas": { "w": 1200, "h": 900 },
+      "widgets": [
+        {
+          "id": "w_gauge01a",
+          "type": "gauge.circular",
+          "name": "CPU Load",
+          "frame": { "x": 100, "y": 100, "w": 200, "h": 150 },
+          "config": { "max": 100 }
+        }
+      ]
+    }
+  ],
+  "devices": [
+    { "id": "dev_pad0001", "name": "Studio iPad", "deviceClass": "ipad", "pageId": "page_main01" }
+  ]
+}

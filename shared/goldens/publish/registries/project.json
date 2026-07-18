@@ -1,0 +1,65 @@
+{
+  "format": "cyberdeck.project",
+  "version": 1,
+  "meta": { "name": "Registries" },
+  "pages": [
+    {
+      "id": "page_reg001",
+      "name": "Instruments",
+      "canvas": { "w": 1200, "h": 900 },
+      "widgets": [
+        {
+          "id": "w_cpu0001a",
+          "type": "gauge.circular",
+          "name": "CPU",
+          "frame": { "x": 0, "y": 0, "w": 300, "h": 150 },
+          "config": { "max": 100, "styles": { "fill": "sty_accent1" } }
+        },
+        {
+          "id": "w_stat001a",
+          "type": "stat.readout",
+          "name": "FPS",
+          "frame": { "x": 300, "y": 0, "w": 150, "h": 150 },
+          "config": { "label": "FPS" }
+        },
+        {
+          "id": "w_btn0001a",
+          "type": "button.action",
+          "name": "Controls",
+          "frame": { "x": 0, "y": 150, "w": 150, "h": 150 }
+        }
+      ]
+    }
+  ],
+  "bindings": {
+    "w_cpu0001a": {
+      "value": { "mode": "variable", "src": "sys.cpu.load" },
+      "label": { "mode": "static", "val": "CPU" }
+    },
+    "w_stat001a": {
+      "value": { "mode": "expression", "expr": "fps.current" }
+    }
+  },
+  "states": {
+    "w_cpu0001a": {
+      "active": "warn",
+      "custom": ["warn", "crit"],
+      "ov": {
+        "warn": { "color": "#ffaa00" },
+        "crit": { "color": "#ff0000" }
+      }
+    }
+  },
+  "events": {
+    "w_btn0001a": {
+      "tap": "flow_mute01",
+      "hold": "flow_reset1"
+    }
+  },
+  "styles": {
+    "sty_accent1": { "kind": "fill", "name": "Accent", "props": { "color": "#00ffff" } }
+  },
+  "devices": [
+    { "id": "dev_reg0001", "deviceClass": "ipad", "pageId": "page_reg001" }
+  ]
+}

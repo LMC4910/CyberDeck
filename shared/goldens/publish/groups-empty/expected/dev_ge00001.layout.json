@@ -1,0 +1,53 @@
+{
+  "device": {
+    "deviceClass": "ipad",
+    "id": "dev_ge00001",
+    "name": "Grouped iPad"
+  },
+  "format": "cyberdeck.layout",
+  "pages": [
+    {
+      "grid": {
+        "columns": 24,
+        "deviceClass": "ipad",
+        "rows": 18
+      },
+      "id": "page_ge0001",
+      "name": "Grouped",
+      "version": 0,
+      "widgets": [
+        {
+          "id": "w_child001",
+          "placement": {
+            "col": 0,
+            "colSpan": 2,
+            "row": 0,
+            "rowSpan": 2
+          },
+          "type": "stat.readout"
+        },
+        {
+          "id": "w_child002",
+          "placement": {
+            "col": 2,
+            "colSpan": 2,
+            "row": 0,
+            "rowSpan": 2
+          },
+          "type": "button.action"
+        },
+        {
+          "id": "w_solo0001",
+          "placement": {
+            "col": 0,
+            "colSpan": 4,
+            "row": 10,
+            "rowSpan": 1
+          },
+          "type": "text.label"
+        }
+      ]
+    }
+  ],
+  "version": 1
+}
