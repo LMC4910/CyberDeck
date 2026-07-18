@@ -14,7 +14,7 @@
 - [x] CD-407 Runtime: log view — ✅ Done 2026-07-17 (Runtime workspace replaces Home placeholder)
 - [x] CD-408 Runtime: perf panel + rails — ✅ Done 2026-07-17
 - [x] CD-409 Flows: model + tabs + armed — ✅ Done 2026-07-17
-- [ ] CD-410 Flows: node render + palette + drag-add
+- [x] CD-410 Flows: node render + palette + drag-add — ✅ Done 2026-07-17
 - [ ] CD-411 Flows: edge engine + branches
 - [ ] CD-412 Flows: multi-select/duplicate + graph nav parity
 - [ ] CD-413 Flows: per-node param inspectors
