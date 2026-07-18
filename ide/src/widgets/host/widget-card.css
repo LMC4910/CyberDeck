@@ -1,0 +1,67 @@
+/* Widget card states (CD-420). Minimal, token-driven; the surfaces (board/canvas,
+   CD-421+) place these. Kept self-contained so the host renders standalone. */
+.wgt-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 64px;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.wgt-card--loading {
+  color: var(--color-text-muted, #8a8f98);
+  background: var(--color-surface-2, rgba(255, 255, 255, 0.03));
+}
+
+.wgt-card--empty {
+  color: var(--color-text-muted, #8a8f98);
+  border: 1px dashed var(--color-border, rgba(255, 255, 255, 0.12));
+}
+
+.wgt-card--error,
+.wgt-card--fallback {
+  color: var(--color-danger-fg, #ff6b6b);
+  background: var(--color-danger-bg, rgba(255, 107, 107, 0.08));
+  border: 1px solid var(--color-danger-border, rgba(255, 107, 107, 0.3));
+}
+
+.wgt-card__title {
+  font-weight: 600;
+}
+
+.wgt-card__reason {
+  color: var(--color-text-muted, #8a8f98);
+  word-break: break-word;
+}
+
+.wgt-card__retry {
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.wgt-card__spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: wgt-spin 0.7s linear infinite;
+}
+
+@keyframes wgt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
