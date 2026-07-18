@@ -17,7 +17,7 @@
 - [x] CD-410 Flows: node render + palette + drag-add — ✅ Done 2026-07-17
 - [x] CD-411 Flows: edge engine + branches — ✅ Done 2026-07-17
 - [x] CD-412 Flows: multi-select/duplicate + graph nav parity — ✅ Done 2026-07-18
-- [ ] CD-413 Flows: per-node param inspectors
+- [x] CD-413 Flows: per-node param inspectors — ✅ Done 2026-07-18
 - [ ] CD-414 Flows: test-run simulator
 - [x] CD-415 Devices: cards + status (mock) — ✅ Done 2026-07-17 (needs shell wiring: DevicesSourceProvider→DevicesRepository adapter)
 - [x] CD-416 Publish/flatten v0 (shared TS lib) — ✅ Done 2026-07-17 (canonical rules + goldens in shared/goldens/publish; CD-506 Go port notes in flatten.ts; v0 gap: instance-id registries unmapped)
