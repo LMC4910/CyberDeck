@@ -26,7 +26,7 @@
 - [x] CD-419 Widget platform: manifest loader/validator — ✅ Done 2026-07-17 (needs shell wiring: widget loader ports in boot-sequence)
 - [x] CD-420 Widget platform: lazy chunks + error boundaries — ✅ Done 2026-07-17
 - [ ] CD-421 Widget platform: registry→surfaces wiring
-- [ ] CD-422 Widget platform: permissions store + UI
+- [x] CD-422 Widget platform: permissions store + UI — ✅ Done 2026-07-18 (needs shell wiring: broker.prompt→controller, mount prompt modal, feed registry.list to perms tab)
 - [ ] CD-423 Canon widget set on platform loading
 - [x] CD-424 Density (Beginner/Power) + advanced stubs — ✅ Done 2026-07-17 (needs shell wiring: DensityConfigProvider→kernel ConfigurationService)
 - [ ] CD-425 **M4 gate review**
