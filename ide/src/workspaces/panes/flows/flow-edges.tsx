@@ -27,6 +27,8 @@ export interface FlowEdgesProps {
   /** The live ghost while connecting, or null. */
   draft: ConnectDraft | null
   locked: boolean
+  /** Edges pulsing in a test run (CD-414). */
+  activeKeys?: ReadonlySet<string>
 }
 
 export function FlowEdges({
@@ -38,6 +40,7 @@ export function FlowEdges({
   onPortDown,
   draft,
   locked,
+  activeKeys,
 }: FlowEdgesProps) {
   const resolved = resolveEdges(nodes, edges)
   return (
@@ -65,6 +68,7 @@ export function FlowEdges({
           key={edgeKey(r.edge)}
           r={r}
           selected={edgeKey(r.edge) === selectedEdgeKey}
+          active={activeKeys?.has(edgeKey(r.edge)) ?? false}
           onSelect={onSelectEdge}
           onDelete={onDeleteEdge}
           locked={locked}
@@ -103,16 +107,17 @@ export function FlowEdges({
 interface EdgeViewProps {
   r: ResolvedEdge
   selected: boolean
+  active: boolean
   onSelect: (edge: FlowEdge) => void
   onDelete: (edge: FlowEdge) => void
   locked: boolean
 }
 
-function EdgeView({ r, selected, onSelect, onDelete, locked }: EdgeViewProps) {
+function EdgeView({ r, selected, active, onSelect, onDelete, locked }: EdgeViewProps) {
   const d = edgePath(r.from, r.to)
   const key = edgeKey(r.edge)
   return (
-    <g className="fw-edge" data-branch={r.label} data-selected={selected || undefined}>
+    <g className="fw-edge" data-branch={r.label} data-selected={selected || undefined} data-active={active || undefined}>
       {/* Wide invisible hit path so the thin visible line is easy to click. */}
       <path
         className="fw-edge-hit"

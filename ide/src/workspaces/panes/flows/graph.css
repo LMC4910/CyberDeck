@@ -401,3 +401,84 @@
   align-items: center;
   gap: 6px;
 }
+
+/* --- test-run visuals (CD-414) --- */
+.fw-runbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+}
+.fw-run-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.2));
+  border-radius: 6px;
+  background: var(--accent, #4c9aff);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.fw-run-btn[data-running] {
+  background: var(--danger, #e5484d);
+}
+.fw-run-btn:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+.fw-run-warning {
+  font-size: 12px;
+  color: var(--warning, #f5a623);
+}
+
+/* nodes: dimmed unless part of the running trace; pulse when active, tick when done */
+.fw-graph[data-locked='true'] .fw-node:not([data-run]) {
+  opacity: 0.3;
+}
+.fw-node[data-run='active'] {
+  box-shadow: 0 0 0 2px var(--accent, #4c9aff), 0 0 12px var(--accent, #4c9aff);
+  animation: fw-pulse 0.8s ease-in-out infinite;
+}
+.fw-node[data-run='done'] {
+  box-shadow: 0 0 0 2px var(--ok, #30a46c);
+}
+.fw-node[data-run='pending'] {
+  opacity: 0.55;
+}
+@keyframes fw-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.35); }
+}
+.fw-edge[data-active] .fw-edge-line {
+  stroke: var(--accent, #4c9aff);
+  stroke-width: 3;
+}
+
+/* run step log in the inspector */
+.fw-run-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+.fw-run-log__row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 6px;
+  align-items: baseline;
+  padding: 2px 0;
+}
+.fw-run-log__n {
+  opacity: 0.5;
+  text-align: right;
+}
+.fw-run-log__id {
+  font-family: var(--font-mono, monospace);
+}
+.fw-run-log__t {
+  opacity: 0.6;
+}

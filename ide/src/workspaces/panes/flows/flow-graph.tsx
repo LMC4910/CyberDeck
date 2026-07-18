@@ -92,6 +92,7 @@ export function FlowGraph({
   onBackgroundClick,
   onMarquee,
   runPhase,
+  activeEdgeKeys,
   locked = false,
 }: FlowGraphProps) {
   const nodes = useGraphNodes(model, flowId)
@@ -250,6 +251,7 @@ export function FlowGraph({
           onPortDown={onPortDown}
           draft={draft}
           locked={locked}
+          activeKeys={activeEdgeKeys}
         />
         {nodes.map((n) => (
           <FlowNodeView

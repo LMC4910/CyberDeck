@@ -28,18 +28,51 @@ import { clearSelection, selectEdge, type FlowSelection } from './flow-selection
 /** Branch selectors offered in the edge inspector (flow.schema.json edge.label enum). */
 const BRANCH_LABELS: readonly BranchLabel[] = ['always', 'true', 'false']
 
+/** The test-run view (CD-414): a step log with timings, shown while a run is live. */
+export interface FlowRunView {
+  log: readonly { nodeId: string; order: number; atMs: number }[]
+  cycle: boolean
+  done: boolean
+}
+
 export interface FlowInspectorProps {
   ctx: FlowsCtx
   flowId: string
   selection: FlowSelection
   setSelection: (sel: FlowSelection) => void
+  /** When a test-run is live, the inspector shows its step log instead of the selection. */
+  run?: FlowRunView | null
 }
 
-export function FlowInspector({ ctx, flowId, selection, setSelection }: FlowInspectorProps) {
+export function FlowInspector({ ctx, flowId, selection, setSelection, run }: FlowInspectorProps) {
   const { model } = ctx
   // Subscribe so field values reflect edits (and undo) immediately.
   const doc = useFlow(model, flowId)
   if (!doc) return null
+
+  // A live test-run takes over the inspector with its step log (CD-414).
+  if (run) {
+    return (
+      <aside className="fw-inspector" data-inspector="run" aria-label="Flow inspector">
+        <header className="fw-inspector__head">{run.done ? 'Run complete' : 'Running…'}</header>
+        {run.cycle && (
+          <p className="fw-inspector__hint" data-run-cycle>
+            ⚠ Cycle detected — stopped at the back-edge.
+          </p>
+        )}
+        <ol className="fw-run-log">
+          {run.log.map((s) => (
+            <li key={s.order} className="fw-run-log__row" data-run-step={s.nodeId}>
+              <span className="fw-run-log__n">{s.order + 1}</span>
+              <span className="fw-run-log__id">{s.nodeId}</span>
+              <span className="fw-run-log__t">{s.atMs} ms</span>
+            </li>
+          ))}
+        </ol>
+        {run.log.length === 0 && <p className="fw-inspector__hint">No nodes executed.</p>}
+      </aside>
+    )
+  }
 
   if (selection.edge) {
     return <EdgeInspector ctx={ctx} flowId={flowId} edge={selection.edge} setSelection={setSelection} />

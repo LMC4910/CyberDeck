@@ -10,6 +10,7 @@ import { FlowTabs } from './flows/flow-tabs'
 import { FlowGraph } from './flows/flow-graph'
 import { FlowInspector } from './flows/flow-inspector'
 import { NodePalette } from './flows/node-palette'
+import { useFlowRun } from './flows/use-flow-run'
 import { defaultFlowsService, useFlowIds, useFlowsOptional, useFlowsState } from './flows/use-flows'
 import {
   addFlowNode,
@@ -81,6 +82,10 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
   const [selection, setSelection] = useState<FlowSelection>(EMPTY_SELECTION)
   useEffect(() => setSelection(EMPTY_SELECTION), [activeId])
 
+  // Test-run simulation (CD-414): drives the pulse/done visuals + step log and locks
+  // editing while a run is live.
+  const run = useFlowRun(model, activeId ?? '')
+
   const onAddNode = useCallback(
     (kind: NodeKind, world: Point) => {
       if (activeId) addFlowNode(ctx, activeId, kind, world)
@@ -127,7 +132,7 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
   // while typing in the tab-rename input so those keys still edit text.
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!activeId) return
+      if (!activeId || run.locked) return // editing is locked during a test-run
       const t = e.target as HTMLElement
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return
       if ((e.metaKey || e.ctrlKey) && (e.key === 'd' || e.key === 'D')) {
@@ -140,7 +145,7 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
         if (deleteSelection(ctx, activeId, selection)) setSelection(clearSelection())
       }
     },
-    [ctx, activeId, selection],
+    [ctx, activeId, selection, run.locked],
   )
 
   const onNodeClick = useCallback(
@@ -183,25 +188,52 @@ function FlowsWorkspace({ service, model }: { service: FlowsService; model: Flow
     >
       <FlowTabs ctx={ctx} activeId={activeId} onActivate={setSelectedId} />
       {activeId ? (
-        <div className="fw-body">
-          <NodePalette onPlace={onPlace} />
-          <FlowGraph
-            key={activeId}
-            model={model}
-            flowId={activeId}
-            surfaceRef={surfaceRef}
-            onAddNode={onAddNode}
-            onMoveNode={onMoveNode}
-            selection={selection}
-            onNodeClick={onNodeClick}
-            onConnect={onConnect}
-            onSelectEdge={onSelectEdge}
-            onDeleteEdge={onDeleteEdge}
-            onBackgroundClick={onBackgroundClick}
-            onMarquee={onMarquee}
-          />
-          <FlowInspector ctx={ctx} flowId={activeId} selection={selection} setSelection={setSelection} />
-        </div>
+        <>
+          <div className="fw-runbar">
+            <button
+              type="button"
+              className="fw-run-btn"
+              data-running={run.locked || undefined}
+              onClick={() => (run.locked ? run.stop() : run.start())}
+            >
+              {run.locked ? '■ Stop' : '▶ Test run'}
+            </button>
+            {run.done && <button type="button" className="fw-run-btn" onClick={() => run.start()}>↻ Replay</button>}
+            {run.cycle && (
+              <span className="fw-run-warning" role="status">
+                ⚠ Cycle detected — run stopped at the back-edge.
+              </span>
+            )}
+          </div>
+          <div className="fw-body">
+            <NodePalette onPlace={onPlace} />
+            <FlowGraph
+              key={activeId}
+              model={model}
+              flowId={activeId}
+              surfaceRef={surfaceRef}
+              onAddNode={onAddNode}
+              onMoveNode={onMoveNode}
+              selection={selection}
+              onNodeClick={onNodeClick}
+              onConnect={onConnect}
+              onSelectEdge={onSelectEdge}
+              onDeleteEdge={onDeleteEdge}
+              onBackgroundClick={onBackgroundClick}
+              onMarquee={onMarquee}
+              runPhase={run.runPhase}
+              activeEdgeKeys={run.activeEdgeKeys}
+              locked={run.locked}
+            />
+            <FlowInspector
+              ctx={ctx}
+              flowId={activeId}
+              selection={selection}
+              setSelection={setSelection}
+              run={run.locked ? { log: run.log, cycle: run.cycle, done: run.done } : null}
+            />
+          </div>
+        </>
       ) : (
         <p className="fw-empty">No flows yet — use + to create one.</p>
       )}
