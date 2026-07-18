@@ -19,7 +19,7 @@
 - [ ] CD-412 Flows: multi-select/duplicate + graph nav parity
 - [ ] CD-413 Flows: per-node param inspectors
 - [ ] CD-414 Flows: test-run simulator
-- [ ] CD-415 Devices: cards + status (mock)
+- [x] CD-415 Devices: cards + status (mock) — ✅ Done 2026-07-17 (needs shell wiring: DevicesSourceProvider→DevicesRepository adapter)
 - [ ] CD-416 Publish/flatten v0 (shared TS lib)
 - [ ] CD-417 Devices: player preview frames
 - [ ] CD-418 Devices: touch sim + layout assignment
