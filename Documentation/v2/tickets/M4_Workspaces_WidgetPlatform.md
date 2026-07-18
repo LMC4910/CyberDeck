@@ -28,7 +28,7 @@
 - [ ] CD-421 Widget platform: registry→surfaces wiring
 - [ ] CD-422 Widget platform: permissions store + UI
 - [ ] CD-423 Canon widget set on platform loading
-- [ ] CD-424 Density (Beginner/Power) + advanced stubs
+- [x] CD-424 Density (Beginner/Power) + advanced stubs — ✅ Done 2026-07-17 (needs shell wiring: DensityConfigProvider→kernel ConfigurationService)
 - [ ] CD-425 **M4 gate review**
 
 ---
