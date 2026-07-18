@@ -27,7 +27,7 @@
 - [x] CD-420 Widget platform: lazy chunks + error boundaries — ✅ Done 2026-07-17
 - [x] CD-421 Widget platform: registry→surfaces wiring — ✅ Done 2026-07-18 (useInsertCatalog hook; static fallback until shell binds registry)
 - [x] CD-422 Widget platform: permissions store + UI — ✅ Done 2026-07-18 (needs shell wiring: broker.prompt→controller, mount prompt modal, feed registry.list to perms tab)
-- [ ] CD-423 Canon widget set on platform loading
+- [x] CD-423 Canon widget set on platform loading — ✅ Done 2026-07-18 (11 manifests + lazy modules + resolver + zero-static-import gate; register+resolver wired at assembly)
 - [x] CD-424 Density (Beginner/Power) + advanced stubs — ✅ Done 2026-07-17 (needs shell wiring: DensityConfigProvider→kernel ConfigurationService)
 - [ ] CD-425 **M4 gate review**
 
