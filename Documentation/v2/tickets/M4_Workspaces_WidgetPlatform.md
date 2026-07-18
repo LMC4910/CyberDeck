@@ -20,7 +20,7 @@
 - [ ] CD-413 Flows: per-node param inspectors
 - [ ] CD-414 Flows: test-run simulator
 - [x] CD-415 Devices: cards + status (mock) — ✅ Done 2026-07-17 (needs shell wiring: DevicesSourceProvider→DevicesRepository adapter)
-- [ ] CD-416 Publish/flatten v0 (shared TS lib)
+- [x] CD-416 Publish/flatten v0 (shared TS lib) — ✅ Done 2026-07-17 (canonical rules + goldens in shared/goldens/publish; CD-506 Go port notes in flatten.ts; v0 gap: instance-id registries unmapped)
 - [ ] CD-417 Devices: player preview frames
 - [ ] CD-418 Devices: touch sim + layout assignment
 - [ ] CD-419 Widget platform: manifest loader/validator
