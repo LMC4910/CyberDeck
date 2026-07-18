@@ -21,7 +21,7 @@
 - [x] CD-414 Flows: test-run simulator — ✅ Done 2026-07-18 (FlowTraceAdapter seam stubbed for CD-518)
 - [x] CD-415 Devices: cards + status (mock) — ✅ Done 2026-07-17 (needs shell wiring: DevicesSourceProvider→DevicesRepository adapter)
 - [x] CD-416 Publish/flatten v0 (shared TS lib) — ✅ Done 2026-07-17 (canonical rules + goldens in shared/goldens/publish; CD-506 Go port notes in flatten.ts; v0 gap: instance-id registries unmapped)
-- [ ] CD-417 Devices: player preview frames
+- [x] CD-417 Devices: player preview frames — ✅ Done 2026-07-18
 - [ ] CD-418 Devices: touch sim + layout assignment
 - [x] CD-419 Widget platform: manifest loader/validator — ✅ Done 2026-07-17 (needs shell wiring: widget loader ports in boot-sequence)
 - [x] CD-420 Widget platform: lazy chunks + error boundaries — ✅ Done 2026-07-17
