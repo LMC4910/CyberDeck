@@ -1,0 +1,121 @@
+/* Player preview (CD-417): full-screen overlay, device frame, footer readout. */
+.pv-screen-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: var(--overlay-bg, rgba(8, 10, 14, 0.94));
+  color: var(--text, #e6e8ec);
+}
+.pv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+}
+.pv-device-tabs {
+  display: flex;
+  gap: 4px;
+}
+.pv-device-tab {
+  padding: 4px 12px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.2));
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+}
+.pv-device-tab[aria-selected='true'] {
+  background: var(--accent, #4c9aff);
+  border-color: var(--accent, #4c9aff);
+  color: #fff;
+}
+.pv-rotate,
+.pv-close {
+  padding: 4px 10px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.2));
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+}
+.pv-close {
+  margin-left: auto;
+}
+.pv-device-tab:focus-visible,
+.pv-rotate:focus-visible,
+.pv-close:focus-visible {
+  outline: 2px solid var(--focus-ring, #4c9aff);
+  outline-offset: 1px;
+}
+.pv-stage {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 24px;
+}
+
+.pv-frame {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.pv-screen {
+  background: var(--deck-bg, #11141a);
+  border: 8px solid #05070a;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  /* aspect-ratio + height set inline per device/orientation; the rotate animates it */
+  transition: aspect-ratio 0.35s ease, height 0.35s ease;
+}
+.pv-layout {
+  width: 100%;
+  height: 100%;
+  gap: 3px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.pv-widget {
+  background: var(--widget-bg, rgba(76, 154, 255, 0.14));
+  border: 1px solid var(--widget-border, rgba(76, 154, 255, 0.4));
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+.pv-widget__type {
+  font-size: 9px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.pv-layout__empty {
+  grid-column: 1 / -1;
+  align-self: center;
+  text-align: center;
+  opacity: 0.5;
+  font-size: 12px;
+}
+.pv-readout {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.pv-readout__device {
+  font-weight: 600;
+  opacity: 1;
+}

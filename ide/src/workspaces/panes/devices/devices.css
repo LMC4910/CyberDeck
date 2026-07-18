@@ -2,6 +2,7 @@
    stream; tokens match the shared panel palette (var fallbacks keep it honest in
    isolation/tests). */
 .dv-pane {
+  position: relative; /* anchors the CD-417 player-preview overlay */
   display: flex;
   flex-direction: column;
   gap: 12px;

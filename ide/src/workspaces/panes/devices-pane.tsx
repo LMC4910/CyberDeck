@@ -7,12 +7,15 @@
 //
 // "Pair New Device" is an honest disabled stub: the real pairing handshake needs the
 // engine (M5, CD-417/418), so the control states its reason rather than pretending.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Dialog } from '@/shared/a11y'
+import { flattenForDevice } from '@/shared/publish'
+import { starterProject } from '@/shared/project'
 import { DeviceCard } from './devices/device-card'
 import { MockDevicesSource } from './devices/mock-devices-source'
 import { useDevicesSourceOptional, type DeviceRecord } from './devices/devices-source'
 import { useDevicesController, useDevicesState } from './devices/use-devices'
+import { PreviewScreen } from './devices/preview/preview-screen'
 import './devices/devices.css'
 
 const PAIR_DISABLED_REASON = 'Pairing needs the engine — it arrives in M5'
@@ -48,6 +51,7 @@ export default function DevicesPane() {
   }, [provided, fallback])
 
   const [confirming, setConfirming] = useState<DeviceRecord | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const onConfirmRevoke = useCallback(() => {
     const device = confirming
@@ -55,10 +59,34 @@ export default function DevicesPane() {
     if (device) void controller.revoke(device.id)
   }, [controller, confirming])
 
+  // The published layout the preview renders (CD-416 flatten of the starter project's
+  // first page). Per-device assigned layouts arrive with CD-418.
+  const previewLayout = useMemo(() => {
+    try {
+      const project = starterProject()
+      const page = project.pages[0]
+      if (!page) return null
+      const device = { id: 'dev_preview01', name: 'Preview', deviceClass: 'preview', pageId: page.id }
+      return flattenForDevice(project, device as Parameters<typeof flattenForDevice>[1], { version: 1 })
+    } catch {
+      return null
+    }
+  }, [])
+
   return (
     <section className="dv-pane" data-pane="devices" aria-label="Devices workspace">
       <header className="dv-header">
         <h2 className="dv-title">Devices</h2>
+        <button
+          type="button"
+          className="dv-btn"
+          data-testid="open-preview"
+          disabled={!previewLayout}
+          title={previewLayout ? undefined : 'No page to preview yet'}
+          onClick={() => setPreviewOpen(true)}
+        >
+          Player Preview
+        </button>
         <button
           type="button"
           className="dv-btn dv-btn-primary"
@@ -131,6 +159,10 @@ export default function DevicesPane() {
           </div>
         </div>
       </Dialog>
+
+      {previewOpen && previewLayout ? (
+        <PreviewScreen layout={previewLayout} onClose={() => setPreviewOpen(false)} />
+      ) : null}
     </section>
   )
 }
